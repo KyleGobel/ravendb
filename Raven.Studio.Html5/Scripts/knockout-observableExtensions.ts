@@ -1,4 +1,4 @@
-/// <reference path="../3rdPartyLibs/typings/knockout/knockout.d.ts" />
+/// <reference path="./typings/knockout/knockout.d.ts" />
 
 /*
   Adds methods to observables for throttling, projection, and filtering.

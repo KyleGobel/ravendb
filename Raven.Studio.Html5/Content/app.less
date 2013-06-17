@@ -3,6 +3,63 @@
     height: 100%;
 }
 
+.splash {
+    text-align: center;
+    margin: 10% 0 0 0;
+
+    .message {
+        font-size: 5em;
+        line-height: 1.5em;
+        -webkit-text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 15px;
+        text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 15px;
+        text-transform: uppercase;
+    }
+
+    .icon-spinner {
+        text-align: center;
+        display: inline-block;
+        font-size: 5em;
+        margin-top: 50px;
+    }
+}
+
+.page-host {
+    position: relative;
+    top: 40px;
+}
+
+.navbar-fixed-top
+{
+    .navbar-inner
+    {
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+
+    .icon-home {
+        font-size: 18px
+    }
+}
+
+.loader {
+    margin: 6px 8px 4px 8px;
+    visibility: hidden;
+}
+
+.loader.active {
+    visibility: visible;
+}
+
+@media (max-width: 979px) {
+    .page-host {
+        top: 0;
+    }
+
+    .navbar-fixed-top {
+        margin-bottom: 0;
+    }
+}
+
 .page
 {
     padding: 0 10px 20px 10px;
@@ -35,67 +92,70 @@
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff0202', endColorstr='#f602ff',GradientType=0 ); /* IE6-9 */
 }
 
-.collection-color-strip
+.documents-page
 {
-    height: 20px;
-    width: 4px;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-.datatable
-{
-    display: block;
-    width: 100%;
-    overflow: auto;
-
-    tbody
+    .collection-color-strip
     {
-        tr
+        height: 20px;
+        width: 4px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .datatable
+    {
+        display: block;
+        width: 100%;
+        overflow: auto;
+
+        tbody
         {
-            &.checked
+            tr
             {
+                &.checked
+                {
+                    td
+                    {
+                        background-color: #ffc;
+
+                        .row-check
+                        {
+                            visibility: visible;
+                        }
+                    }
+                }
+
                 td
                 {
-                    background-color: #ffc;
+                    white-space: nowrap;
+                    max-width: 200px;
+                    -ms-text-overflow: ellipsis;
+                    -o-text-overflow: ellipsis;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                }
 
+                .row-check
+                {
+                    visibility: hidden;
+                }
+
+                &:hover
+                {
                     .row-check
                     {
                         visibility: visible;
                     }
                 }
             }
-
-            td
-            {
-                white-space: nowrap;
-                max-width: 200px;
-                -ms-text-overflow: ellipsis;
-                -o-text-overflow: ellipsis;
-                text-overflow: ellipsis;
-                overflow: hidden;
-            }
-
-            .row-check
-            {
-                visibility: hidden;
-            }
-
-            &:hover
-            {
-                .row-check
-                {
-                    visibility: visible;
-                }
-            }
         }
     }
-}
 
-.datatable-progress
-{
-    position: fixed;
-    bottom: 50px;
+    .datatable-progress
+    {
+        position: fixed;
+        bottom: 50px;
+    }
 }
 
 footer
