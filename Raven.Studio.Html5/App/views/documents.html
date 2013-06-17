@@ -1,0 +1,22 @@
+﻿<h2 data-bind="html: displayName"></h2>
+
+<div class="container-fluid documents-page">
+    <div class="row-fluid">
+        <div class="span2">
+            <ul class="nav nav-pills nav-stacked document-collections">
+                <li class="active">
+                    <a href="#">
+                        <div class="collection-color-strip rainbow-gradient"></div>
+                        <span>All Documents</span>
+                        <span>(5)</span>
+                    </a>
+                </li>
+                <li><a href="#">Blahs (3)</a></li>
+                <li><a href="#">Songs (2)</a></li>
+            </ul>
+        </div>
+        <div class="span10">
+            <div data-bind="widget: { kind: 'dataTable' }" style="overflow: auto;"></div>
+        </div>
+    </div>
+</div>
