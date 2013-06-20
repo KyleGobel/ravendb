@@ -272,9 +272,6 @@
                     } else if (module.shell != null) {
                         // TypeScript support for shell.js
                         settings.model = new module.shell(element, settings);
-                    } else if (module.ctor != null) {
-                        // TypeScript support for widgets.
-                        settings.model = new module.ctor(element, settings);
                     }
                     else {
                         settings.model = module;

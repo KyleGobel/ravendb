@@ -4,32 +4,14 @@
   Adds methods to observables for throttling, projection, and filtering.
 */
 
-interface KnockoutObservableString {
-    where: (predicate: (item: string) => bool) => KnockoutObservableString;
-    throttle: (throttleTimeInMs: number) => KnockoutObservableString;
-    select: (selector: (item: string) => any) => KnockoutObservableAny;
+interface KnockoutObservable<T> {
+    where: (predicate: (item: T) => bool) => KnockoutObservableString;
+    throttle: (throttleTimeInMs: number) => KnockoutObservable<T>;
+    select: (selector: (item: any) => any) => KnockoutObservable<TReturn>;
 }
 
-interface KnockoutObservableDate {
-    where: (predicate: (item: Date) => bool) => KnockoutObservableDate;
-    throttle: (throttleTimeInMs: number) => KnockoutObservableDate;
-    select: (selector: (item: Date) => any) => KnockoutObservableAny;
-}
-
-interface KnockoutObservableNumber {
-    where: (predicate: (item: number) => bool) => KnockoutObservableNumber;
-    throttle: (throttleTimeInMs: number) => KnockoutObservableNumber;
-    select: (selector: (item: number) => any) => KnockoutObservableAny;
-}
-
-interface KnockoutObservableAny {
-    where: (predicate: (item: any) => bool) => KnockoutObservableAny;
-    throttle: (throttleTimeInMs: number) => KnockoutObservableAny;
-    select: (selector: (item: any) => any) => KnockoutObservableAny;
-}
-
-interface KnockoutObservableArray { 
-    pushAll: (items: any[]) => number;
+interface KnockoutObservableArray<T> { 
+    pushAll: (items: T[]) => number;
 }
 
 var subscribableFn: any = ko.subscribable.fn;
@@ -37,7 +19,7 @@ var observabelArrayFn: any = ko.observableArray.fn;
 
 // observable.where
 subscribableFn.where = function (predicate: (item) => bool) {
-    var observable: KnockoutObservableAny = this;
+    var observable: KnockoutObservable<any> = this;
     var matches = ko.observable();
     observable.subscribe(val => {
         if (predicate(val)) {
@@ -56,7 +38,7 @@ subscribableFn.throttle = function (throttleTimeMs: number) {
 // observable.select
 subscribableFn.select = function (selector: (any) => any) {
     var observable = this;
-    var selectedResults = ko.observable();
+    var selectedResults = ko.observable(); 
     observable.subscribe(val => selectedResults(selector(val)));
     return selectedResults;
 }

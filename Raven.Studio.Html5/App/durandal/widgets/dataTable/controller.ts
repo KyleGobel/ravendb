@@ -3,42 +3,41 @@
 
 import widget = module("durandal/widget");
 
-export class Row { 
-    public isChecked = ko.observable(false);
-    constructor(public cells: KnockoutObservableArray) {
-    }
+interface cell {
+    templateName: string;
+    value: any;
 }
 
-export class Cell {
-    constructor(public templateName: string, public value: any) {
-    }
+interface row {
+    isChecked: KnockoutObservable<bool>; 
+    cells: KnockoutObservableArray<cell>;
 }
 
-export class ctor {
+class ctor {
 
     rows = ko.observableArray();
     columns = ko.observableArray();
     skip = 0;
     take = 100;
     totalRowsCount = 0;
-    isLoading = ko.observable(false);
-    allRowsChecked: KnockoutComputed;
-    selectionStack: Row[] = [];
+    isLoading = ko.observable(false); 
+    allRowsChecked: KnockoutComputed<bool>;
+    private selectionStack: row[] = [];
     isFirstRender = true;
 
     constructor(private element: HTMLElement, private settings) {
         this.fetchNextChunk();
-        
+            
         this.allRowsChecked = ko.computed({
             read: () => this.rows().length > 0 && this.rows().every(r => r.isChecked()),
             write: (val) => this.rows().forEach(r => r.isChecked(val))
-        }); 
+        });
 
         // Size the table to full height whenever the page height changes.
         $(window).resize(() => this.sizeTable());
     }
 
-    sizeTable() { 
+    sizeTable() {
         var tableElement = $(this.element).find(".datatable");
         if (tableElement) {
             var footerTop = $("footer").position().top;
@@ -52,10 +51,10 @@ export class ctor {
         if (this.isLoading()) {
             return;
         }
-            
+
         this.isLoading(true);
         var results = this.createDummyResults();
-        setTimeout(() => this.nextChunkFetched({ Items: results, TotalItems: 342 } ), Math.random() * 1000);
+        setTimeout(() => this.nextChunkFetched({ Items: results, TotalItems: 342 }), Math.random() * 1000);
     }
 
     nextChunkFetched(results) {
@@ -63,14 +62,14 @@ export class ctor {
 
         this.createCellsForColumns(this.rows(), this.getPropertyNames(results.Items));
 
-        var rows: Row[] = results.Items
+        var rows: row[] = results.Items
             .map(row => {
                 var cells = this
                     .columns()
-                    .map(c => new Cell(this.getTemplateForCell(c, row), row[c]));
-                return new Row(ko.observableArray(cells));
+                    .map(c => this.createCell(this.getTemplateForCell(c, row), row[c]));
+                return this.createRow(ko.observableArray(cells));
             });
-              
+            
         this.streamInRows(rows, () => {
             this.skip += results.Items.length;
             this.isLoading(false);
@@ -89,19 +88,19 @@ export class ctor {
         return propertyNames;
     }
 
-    createCellsForColumns(rows: Row[], columns: string[]) {
-            
+    private createCellsForColumns(rows: row[], columns: string[]) {
+
         var columnCount = this.columns().length;
         var newColumns = columns.filter(c => this.columns().indexOf(c) === -1);
-            
+
         if (newColumns.length > 0) {
-            var createCells = () => newColumns.map(c => new Cell("default-cell-template", ""));
+            var createCells = () => newColumns.map(c => this.createCell("default-cell-template", ""));
             this.columns.pushAll(newColumns);
             rows.forEach(r => r.cells.pushAll(createCells()));
         }
     }
 
-    toggleChecked(row, e) {            
+    toggleChecked(row, e) {
         row.isChecked(!row.isChecked());
         var rowIndex = this.rows.indexOf(row);
         if (row.isChecked()) {
@@ -111,7 +110,7 @@ export class ctor {
             if (indexOfRemovedItem >= 0) {
                 this.selectionStack.splice(indexOfRemovedItem, 1);
             }
-        }            
+        }
 
         // If the shift key was pressed, we want to select/deselect
         // everything between the row and the previous selected row.
@@ -122,7 +121,7 @@ export class ctor {
             if (validIndices) {
                 this.rows
                     .slice(Math.min(rowIndex, previousSelectionIndex), Math.max(rowIndex, previousSelectionIndex))
-                    .forEach((r: Row) => r.isChecked(newSelectionState));
+                    .forEach((r: row) => r.isChecked(newSelectionState));
             }
         }
     }
@@ -155,11 +154,11 @@ export class ctor {
             var lastRowIsVisible = lastRowPos && (lastRowPos.top - nearPadding) < tableBottom;
             if (lastRowIsVisible) {
                 this.fetchNextChunk();
-            }    
+            }
         }
     }
 
-    streamInRows(rowsToAdd: Row[], doneCallback: () => void) {
+    private streamInRows(rowsToAdd: row[], doneCallback: () => void ) {
         var chunkSize = 5;
         var removedRows = rowsToAdd.splice(0, chunkSize);
         this.rows.pushAll(removedRows);
@@ -186,7 +185,7 @@ export class ctor {
                     SongId: "songs/" + (i + 5),
                     UserId: "users/" + (i + 42)
                 }
-            }
+        }
             else if (random < .4) {
                 item = {
                     Id: "songs/" + (i + 1),
@@ -197,7 +196,7 @@ export class ctor {
                     Artist: "The Beatles",
                     CommunityRank: Math.floor(100 * random)
                 }
-            }
+        }
             else if (random < .6) {
                 item = {
                     Id: "visits/" + (i + 1),
@@ -205,7 +204,7 @@ export class ctor {
                     TotalPlays: Math.floor(random * 100),
                     UserId: "users/" + (i + 1)
                 }
-            }
+        }
             else if (random < .8) {
                 item = {
                     Id: "users/" + (i + 1),
@@ -213,14 +212,14 @@ export class ctor {
                     Preferences: "fasdf asdf asdfeqwerasdf eqwefasdfasdf",
                     TotalPlays: Math.floor(random * 1000)
                 }
-            }
+        }
             else {
                 item = {
                     Id: "logs/" + i,
                     Message: i + "qehqwet q asdfeqweerasdf eqwefasdfasdf",
                     TimeStamp: "2013-01-22T23:29:03.1445000",
                 }
-            }
+        }
             results.push(item);
         }
 
@@ -231,12 +230,28 @@ export class ctor {
         if (this.isFirstRender) {
             var dataTable = $(this.element).find(".datatable");
             if (dataTable != null) {
-                console.log("found datatable. Sizing.");
                 this.isFirstRender = false;
                 this.sizeTable();
                 dataTable.scroll(() => this.loadMoreIfNeeded());
             }
         }
     }
+
+    private createRow(cells: KnockoutObservableArray<cell>): row {
+        return {
+            cells: cells,
+            isChecked: ko.observable(false)
+        }
+    }
+
+    private createCell(templateName: string, value: any): cell {
+        return {
+            templateName: templateName,
+            value: value
+        }
+    }
 }
+
+export = ctor;
+
 

@@ -284,7 +284,7 @@ interface IViewModelDefaults {
       * called after deactivating a module
       */
     afterDeactivate(): any;
-};
+}
 
 interface IDurandalViewModelActiveItem {
     /**
@@ -339,7 +339,7 @@ interface IDurandalViewModelActiveItem {
       * Sets up a collection representing a pool of objects which the activator will activate. See below for details. Activators without an item bool always close their values on deactivate. Activators with an items pool only deactivate, but do not close them.
       */
     forItems(items): IDurandalViewModelActiveItem;
-};
+}
 
 /**
   * A router plugin, currently based on SammyJS. The router abstracts away the core configuration of Sammy and re-interprets it in terms of durandal's composition and activation mechanism. To use the router, you must require it, configure it and bind it in the UI.
@@ -364,8 +364,8 @@ declare module "durandal/plugins/router" {
         settings: Object;
         hash: string;
         /** only present on visible routes to track if they are active in the nav */
-        isActive?: KnockoutComputed;
-    };
+        isActive?: KnockoutComputed<bool>;
+    }
     /**
       * Parameters to the map function. e only required parameter is url the rest can be derived. The derivation 
       * happens by stripping parameters from the url and casing where appropriate. You can always explicitly provide 
@@ -389,19 +389,19 @@ declare module "durandal/plugins/router" {
     /**
       * observable that is called when the router is ready
       */
-    export var ready: KnockoutObservableBool;
+    export var ready: KnockoutObservable<bool>;
     /**
       * An observable array containing all route info objects.
       */
-    export var allRoutes: KnockoutObservableArray;
+    export var allRoutes: KnockoutObservableArray<any>;
     /**
       * An observable array containing route info objects configured with visible:true (or by calling the mapNav function).
       */
-    export var visibleRoutes: KnockoutObservableArray;
+    export var visibleRoutes: KnockoutObservableArray<any>;
     /**
       * An observable boolean which is true while navigation is in process; false otherwise.
       */
-    export var isNavigating: KnockoutObservableBool;
+    export var isNavigating: KnockoutObservable<bool>;
     /**
       * An observable whose value is the currently active item/module/page.
       */
@@ -409,7 +409,7 @@ declare module "durandal/plugins/router" {
     /**
       * An observable whose value is the currently active route.
       */
-    export var activeRoute: KnockoutObservableAny;
+    export var activeRoute: KnockoutObservable<any>;
     /**
       * called after an a new module is composed
       */
