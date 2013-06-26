@@ -6,7 +6,6 @@ export class documents {
 
     displayName = "documents";
     activate() {
-        
     }
     canDeactivate() {
         return true;

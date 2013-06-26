@@ -39,6 +39,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="App\common\raven.ts" />
+    <Content Include="App\common\raven.js">
+      <DependentUpon>raven.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\raven.min.js">
+      <DependentUpon>raven.ts</DependentUpon>
+    </Content>
+    <TypeScriptCompile Include="App\common\promise.ts" />
+    <Content Include="App\common\typings.js">
+      <DependentUpon>promise.ts</DependentUpon>
+    </Content>
     <Content Include="App\durandal\amd\almond-custom.js" />
     <Content Include="App\durandal\amd\optimizer.exe" />
     <Content Include="App\durandal\amd\r.js" />
@@ -76,6 +87,13 @@
     <TypeScriptCompile Include="App\viewmodels\tasks.ts" />
     <TypeScriptCompile Include="App\viewmodels\settings.ts" />
     <TypeScriptCompile Include="App\viewmodels\status.ts" />
+    <TypeScriptCompile Include="App\models\database.ts" />
+    <Content Include="App\models\database.js">
+      <DependentUpon>database.ts</DependentUpon>
+    </Content>
+    <Content Include="App\models\database.min.js">
+      <DependentUpon>database.ts</DependentUpon>
+    </Content>
     <Content Include="App\viewmodels\documents.js">
       <DependentUpon>documents.ts</DependentUpon>
     </Content>

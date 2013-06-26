@@ -269,9 +269,6 @@
                 system.acquire(settings.model).then(function (module) {
                     if (typeof (module) == 'function') {
                         settings.model = new module(element, settings);
-                    } else if (module.shell != null) {
-                        // TypeScript support for shell.js
-                        settings.model = new module.shell(element, settings);
                     }
                     else {
                         settings.model = module;

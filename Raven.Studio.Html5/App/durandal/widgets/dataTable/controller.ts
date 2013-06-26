@@ -20,7 +20,7 @@ class ctor {
     skip = 0;
     take = 100;
     totalRowsCount = 0;
-    isLoading = ko.observable(false); 
+    isLoading = ko.observable(false);
     allRowsChecked: KnockoutComputed<bool>;
     private selectionStack: row[] = [];
     isFirstRender = true;
@@ -37,7 +37,7 @@ class ctor {
         $(window).resize(() => this.sizeTable());
     }
 
-    sizeTable() {
+    sizeTable() { 
         var tableElement = $(this.element).find(".datatable");
         if (tableElement) {
             var footerTop = $("footer").position().top;
@@ -100,7 +100,7 @@ class ctor {
         }
     }
 
-    toggleChecked(row, e) {
+    private toggleChecked(row: row, e: any) {
         row.isChecked(!row.isChecked());
         var rowIndex = this.rows.indexOf(row);
         if (row.isChecked()) {

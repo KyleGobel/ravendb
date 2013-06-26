@@ -1,6 +1,7 @@
 define(["require", "exports"], function(require, exports) {
     
     
+
     var documents = (function () {
         function documents() {
             this.displayName = "documents";
@@ -12,5 +13,5 @@ define(["require", "exports"], function(require, exports) {
         };
         return documents;
     })();
-    exports.documents = documents;    
-})
+    exports.documents = documents;
+});
