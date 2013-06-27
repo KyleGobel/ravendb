@@ -20,6 +20,8 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -167,6 +169,18 @@
     <Content Include="Content\images\ios-startup-image-landscape.png" />
     <Content Include="Content\images\ios-startup-image-portrait.png" />
     <Content Include="Content\app.less" />
+    <Content Include="App\common\raven.js.map">
+      <DependentUpon>raven.ts</DependentUpon>
+    </Content>
+    <Content Include="App\viewmodels\shell.js.map">
+      <DependentUpon>shell.ts</DependentUpon>
+    </Content>
+    <Content Include="App\viewmodels\documents.js.map">
+      <DependentUpon>documents.ts</DependentUpon>
+    </Content>
+    <Content Include="App\models\database.js.map">
+      <DependentUpon>database.ts</DependentUpon>
+    </Content>
     <None Include="Scripts\jquery-1.9.1.intellisense.js" />
     <Content Include="Content\images\unchecked.png" />
     <Content Include="Index.html" />
@@ -185,9 +199,14 @@
       <DependentUpon>knockout-observableExtensions.ts</DependentUpon>
     </Content>
     <Content Include="Scripts\knockout-observableExtensions.ts" />
+    <Content Include="Scripts\knockout-postbox.js" />
+    <Content Include="Scripts\knockout-postbox.min.js" />
+    <Content Include="Scripts\knockout.debug.js" />
+    <Content Include="Scripts\knockout.js" />
     <Content Include="Scripts\sammy-0.7.4.js" />
     <Content Include="Scripts\sammy-0.7.4.min.js" />
     <Content Include="Scripts\typings\jquery\jquery.d.ts" />
+    <Content Include="Scripts\typings\knockout.postbox\knockout-postbox.d.ts" />
     <Content Include="Scripts\typings\knockout\knockout.amd.d.ts" />
     <Content Include="Scripts\typings\knockout\knockout.d.ts" />
     <Content Include="Scripts\jquery-1.9.1.min.map" />
@@ -239,6 +258,7 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.                                                                                      
        Other similar extension points exist, see Microsoft.Common.targets.                                                                                                                
   <Target Name="BeforeBuild">                                                                                                                                                             

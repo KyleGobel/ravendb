@@ -6,20 +6,14 @@ define(["require", "exports", "durandal/plugins/router", "durandal/app", "models
 
     var shell = (function () {
         function shell() {
-            var _this = this;
             this.router = router;
             this.databases = ko.observableArray();
-            this.activeDatabase = ko.observable();
+            this.activeDatabase = ko.observable().subscribeTo("ActivateDatabase");
             this.ravenDb = new raven();
-            this.ravenDb.databases().then(function (databases) {
-                return _this.databasesLoaded(databases);
-            });
         }
         shell.prototype.databasesLoaded = function (databases) {
             this.databases(databases);
-            if (databases.length > 0) {
-                this.activeDatabase(databases[0]);
-            }
+            this.databases()[0].activate();
         };
 
         shell.prototype.search = function () {
@@ -27,10 +21,17 @@ define(["require", "exports", "durandal/plugins/router", "durandal/app", "models
         };
 
         shell.prototype.activate = function () {
-            return router.activate('documents');
+            var _this = this;
+            return this.ravenDb.databases().then(function (results) {
+                return _this.databasesLoaded(results);
+            }).then(function () {
+                return router.activate('documents');
+            });
         };
         return shell;
     })();
+
     
     return shell;
 });
+//@ sourceMappingURL=shell.js.map

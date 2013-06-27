@@ -35,18 +35,13 @@
                     <a style="padding-right: 0; display: inline-block;" href="#">Databases &gt;</a>
                 </li>
                 <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" style="padding-left: 5px;">
-                        [current db] <b class="caret"></b>
+                    <a class="dropdown-toggle" data-bind="with: activeDatabase" data-toggle="dropdown" href="#" style="padding-left: 5px;">
+                        <span data-bind="text: name"></span> 
+						<b class="caret"></b>
                     </a>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu" data-bind="foreach: databases">
                         <li>
-                            <a href="#">nether</a>
-                        </li>
-                        <li>
-                            <a href="#">zanzibar</a>
-                        </li>
-                        <li>
-                            <a href="#">filet</a>
+                            <a href="#" data-bind="text: name, click: activate"></a>
                         </li>
                     </ul>
                 </li>
