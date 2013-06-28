@@ -12,4 +12,3 @@ define(["require", "exports"], function(require, exports) {
     
     return database;
 });
-//@ sourceMappingURL=database.js.map

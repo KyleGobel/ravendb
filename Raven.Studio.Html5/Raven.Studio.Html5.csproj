@@ -48,16 +48,9 @@
     <Content Include="App\models\collection.min.js">
       <DependentUpon>collection.ts</DependentUpon>
     </Content>
-    <Content Include="web.config" />
     <Content Include="App\models\collection.js.map">
       <DependentUpon>collection.ts</DependentUpon>
     </Content>
-    <None Include="web.Debug.config">
-      <DependentUpon>web.config</DependentUpon>
-    </None>
-    <None Include="web.Release.config">
-      <DependentUpon>web.config</DependentUpon>
-    </None>
     <TypeScriptCompile Include="App\common\raven.ts" />
     <Content Include="App\common\raven.js">
       <DependentUpon>raven.ts</DependentUpon>

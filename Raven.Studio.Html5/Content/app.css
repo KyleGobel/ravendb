@@ -52,10 +52,31 @@ body {
 .document-collections li:not(:first-child) {
   padding-left: 15px;
 }
-.documents-progress {
-  height: 5px;
+.document-collections .collection-style-0 {
+  background-color: #00c700;
 }
-.rainbow-gradient {
+.document-collections .collection-style-1 {
+  background-color: #c7009a;
+}
+.document-collections .collection-style-2 {
+  background-color: red;
+}
+.document-collections .collection-style-3 {
+  background-color: #0095ef;
+}
+.document-collections .collection-style-4 {
+  background-color: #a70068;
+}
+.document-collections .collection-style-5 {
+  background-color: #006464;
+}
+.document-collections .collection-style-6 {
+  background-color: #7832c7;
+}
+.document-collections .collection-style-7 {
+  background-color: #c72828;
+}
+.document-collections .all-documents-collection {
   background: #ff0202;
   /* Old browsers */
 
@@ -80,6 +101,9 @@ body {
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff0202', endColorstr='#f602ff', GradientType=0);
   /* IE6-9 */
 
+}
+.documents-progress {
+  height: 5px;
 }
 .documents-page .collection-color-strip {
   height: 20px;

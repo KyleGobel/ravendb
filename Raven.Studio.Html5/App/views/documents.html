@@ -3,16 +3,14 @@
 <div class="container-fluid documents-page">
     <div class="row-fluid">
         <div class="span2">
-            <ul class="nav nav-pills nav-stacked document-collections">
-                <li class="active">
-                    <a href="#">
-                        <div class="collection-color-strip rainbow-gradient"></div>
-                        <span>All Documents</span>
-                        <span>(5)</span>
+            <ul class="nav nav-pills nav-stacked document-collections" data-bind="foreach: collections">
+                <li>
+                    <a href="#" data-bind="css: { active: $data === $parent.selectedCollection() }">
+                        <div class="collection-color-strip" data-bind="css: colorClass"></div>
+                        <span data-bind="text: name"></span>
+                        <span class="muted" data-bind="text: '(' + documentCount() + ')'"></span>
                     </a>
                 </li>
-                <li><a href="#">Blahs (3)</a></li>
-                <li><a href="#">Songs (2)</a></li>
             </ul>
         </div>
         <div class="span10">

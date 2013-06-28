@@ -3,7 +3,7 @@
 /// <reference path="../../Scripts/typings/jquery/jquery.d.ts" /> 
 
 import database = module("models/database");
-import collection = module("models/database");
+import collection = module("models/collection");
 
 class raven {
 
@@ -13,15 +13,6 @@ class raven {
 	public static activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 
     public databases(): Promise<database[]> {
-		//var deferred = $.Deferred(); 
-		//this
-		//	.fetch("/databases", { pageSize: 1024 })
-		//    .done((databaseNames: string[]) => {
-		//        var databases = databaseNames.map(n => new database(n));
-		//        deferred.resolve(databases);
-		//    });
-		//return deferred;
-
 		var resultsSelector = (databaseNames: string[]) => databaseNames.map(n => new database(n));
 		return this.fetch("/databases", { pageSize: 1024 }, null, resultsSelector);		
     }

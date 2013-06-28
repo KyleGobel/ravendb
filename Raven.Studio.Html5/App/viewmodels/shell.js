@@ -34,4 +34,3 @@ define(["require", "exports", "durandal/plugins/router", "durandal/app", "models
     
     return shell;
 });
-//@ sourceMappingURL=shell.js.map

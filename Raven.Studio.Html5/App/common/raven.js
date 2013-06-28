@@ -1,4 +1,4 @@
-define(["require", "exports", "models/database", "models/database"], function(require, exports, __database__, __collection__) {
+define(["require", "exports", "models/database", "models/collection"], function(require, exports, __database__, __collection__) {
     var database = __database__;
     var collection = __collection__;
 
@@ -62,4 +62,3 @@ define(["require", "exports", "models/database", "models/database"], function(re
     
     return raven;
 });
-//@ sourceMappingURL=raven.js.map
