@@ -12,6 +12,7 @@ export class documents {
 	activeDatabase = null;
 	displayName = "documents";
 	ravenDb: raven;
+	collections: KnockoutObservableArray<string>;
 
 	constructor() {
 		this.ravenDb = new raven();

@@ -9,4 +9,4 @@ class database {
 	}
 }
 
-export = database;
+export = database; 
