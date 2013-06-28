@@ -1,6 +1,9 @@
-define(["require", "exports", "models/database", "models/collection"], function(require, exports, __database__, __collection__) {
+define(["require", "exports", "models/database", "models/collection", "models/collectionInfo", "models/document", "common/pagedResultSet"], function(require, exports, __database__, __collection__, __collectionInfo__, __document__, __pagedResultSet__) {
     var database = __database__;
     var collection = __collection__;
+    var collectionInfo = __collectionInfo__;
+    var document = __document__;
+    var pagedResultSet = __pagedResultSet__;
 
     var raven = (function () {
         function raven() {
@@ -31,6 +34,38 @@ define(["require", "exports", "models/database", "models/collection"], function(
             return this.fetch("/terms/Raven/DocumentsByEntityName", args, raven.activeDatabase(), resultsSelector);
         };
 
+        raven.prototype.collectionInfo = function (collectionName, documentsSkip, documentsTake) {
+            if (typeof documentsSkip === "undefined") { documentsSkip = 0; }
+            if (typeof documentsTake === "undefined") { documentsTake = 0; }
+            this.requireActiveDatabase();
+
+            var args = {
+                query: collectionName ? "Tag:" + collectionName : undefined,
+                start: documentsSkip,
+                pageSize: documentsTake
+            };
+
+            var resultsSelector = function (dto) {
+                return new collectionInfo(dto);
+            };
+            var url = "/indexes/Raven/DocumentsByEntityName";
+            return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
+        };
+
+        raven.prototype.documents = function (collectionName, skip, take) {
+            if (typeof skip === "undefined") { skip = 0; }
+            if (typeof take === "undefined") { take = 30; }
+            this.requireActiveDatabase();
+
+            var documentsTask = $.Deferred();
+            this.collectionInfo(collectionName, skip, take).then(function (collection) {
+                var items = collection.results;
+                var resultSet = new pagedResultSet(items, collection.totalResults);
+                documentsTask.resolve(resultSet);
+            });
+            return documentsTask;
+        };
+
         raven.prototype.requireActiveDatabase = function () {
             if (!raven.activeDatabase()) {
                 throw new Error("Must have an active database before calling this method.");
@@ -43,7 +78,7 @@ define(["require", "exports", "models/database", "models/collection"], function(
                 url: this.baseUrl + (database ? "/databases/" + database.name : "") + relativeUrl,
                 data: args
             });
-
+            var foo = null;
             if (resultsSelector) {
                 var task = $.Deferred();
                 ajax.done(function (results) {
@@ -62,3 +97,4 @@ define(["require", "exports", "models/database", "models/collection"], function(
     
     return raven;
 });
+//@ sourceMappingURL=raven.js.map

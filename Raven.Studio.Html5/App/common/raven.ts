@@ -1,9 +1,12 @@
-/// <reference path="../../Scripts/typings/knockout/knockout.d.ts" />
 /// <reference path="promise.ts" />
+/// <reference path="../../Scripts/typings/knockout/knockout.d.ts" />
 /// <reference path="../../Scripts/typings/jquery/jquery.d.ts" /> 
 
 import database = module("models/database");
 import collection = module("models/collection");
+import collectionInfo = module("models/collectionInfo");
+import document = module("models/document");
+import pagedResultSet = module("common/pagedResultSet");
 
 class raven {
 
@@ -12,12 +15,12 @@ class raven {
 	
 	public static activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 
-    public databases(): Promise<database[]> {
+    public databases(): promise<database[]> {
 		var resultsSelector = (databaseNames: string[]) => databaseNames.map(n => new database(n));
 		return this.fetch("/databases", { pageSize: 1024 }, null, resultsSelector);		
     }
 
-	public collections(): Promise<collection[]> {
+	public collections(): promise<collection[]> {
 		this.requireActiveDatabase();
 
         var args = {
@@ -27,6 +30,34 @@ class raven {
 		};
 		var resultsSelector = (collectionNames: string[]) => collectionNames.map(n => new collection(n));
         return this.fetch("/terms/Raven/DocumentsByEntityName", args, raven.activeDatabase(), resultsSelector);
+	}
+
+	public collectionInfo(collectionName?: string, documentsSkip = 0, documentsTake = 0): promise<collectionInfo> {
+		this.requireActiveDatabase();
+
+		var args = {
+			query: collectionName ? "Tag:" + collectionName : undefined,
+			start: documentsSkip,
+			pageSize: documentsTake
+		};
+
+		var resultsSelector = (dto: collectionInfoDto) => new collectionInfo(dto);
+		var url = "/indexes/Raven/DocumentsByEntityName";
+		return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
+	}
+
+	// should return promise<pagedResultSet>, but TS compiler doesn't like this.
+	public documents(collectionName: string, skip = 0, take = 30): promise<any> {
+		this.requireActiveDatabase();
+
+		var documentsTask = $.Deferred();
+		this.collectionInfo(collectionName, skip, take)
+			.then(collection => {
+				var items = collection.results; 
+				var resultSet = new pagedResultSet(items, collection.totalResults);
+				documentsTask.resolve(resultSet);
+			});
+		return documentsTask;
 	}
 
 	private requireActiveDatabase(): void {
@@ -41,7 +72,7 @@ class raven {
             url: this.baseUrl + (database ? "/databases/" + database.name : "") + relativeUrl,
             data: args
 		});
-
+		var foo: JQueryXHR = null;
 		if (resultsSelector) {
 			var task = $.Deferred();
 			ajax.done((results) => {
@@ -50,7 +81,7 @@ class raven {
 			});
 			return task;
 		} else {
-			return ajax;
+			return ajax; 
 		}
 	}
 }

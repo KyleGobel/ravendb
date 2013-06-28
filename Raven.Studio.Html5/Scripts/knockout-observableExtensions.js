@@ -29,7 +29,6 @@ subscribableFn.select = function (selector) {
 };
 
 observabelArrayFn.pushAll = function (items) {
-    var newItems = this().concat(items);
-    this(newItems);
-    return newItems.length;
+    this.push.apply(this, items);
 };
+//@ sourceMappingURL=knockout-observableExtensions.js.map

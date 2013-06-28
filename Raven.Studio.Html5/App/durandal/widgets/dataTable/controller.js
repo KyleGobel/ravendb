@@ -1,5 +1,8 @@
-define(["require", "exports"], function(require, exports) {
+define(["require", "exports", "common/pagedList", "models/document", "common/pagedResultSet"], function(require, exports, __pagedList__, __document__, __pagedResultSet__) {
     
+    var pagedList = __pagedList__;
+    var document = __document__;
+    var pagedResultSet = __pagedResultSet__;
 
     var ctor = (function () {
         function ctor(element, settings) {
@@ -8,12 +11,17 @@ define(["require", "exports"], function(require, exports) {
             this.settings = settings;
             this.rows = ko.observableArray();
             this.columns = ko.observableArray();
+            this.selectionStack = [];
+            this.isFirstRender = true;
             this.skip = 0;
             this.take = 100;
             this.totalRowsCount = 0;
-            this.isLoading = ko.observable(false);
-            this.selectionStack = [];
-            this.isFirstRender = true;
+            this.currentItemsCollection = ko.observable();
+            if (!settings.items || !ko.isObservable(settings.items)) {
+                throw new Error("datatable must be passed an items observable.");
+            }
+
+            this.currentItemsCollection = this.settings.items;
             this.fetchNextChunk();
 
             this.allRowsChecked = ko.computed({
@@ -28,6 +36,17 @@ define(["require", "exports"], function(require, exports) {
                     });
                 }
             });
+            this.isLoading = ko.computed(function () {
+                return _this.currentItemsCollection() && _this.currentItemsCollection().isFetching();
+            });
+
+            this.currentItemsCollection.subscribe(function () {
+                _this.rows.removeAll();
+                _this.fetchNextChunk();
+            });
+            if (this.currentItemsCollection()) {
+                this.fetchNextChunk();
+            }
 
             $(window).resize(function () {
                 return _this.sizeTable();
@@ -35,51 +54,51 @@ define(["require", "exports"], function(require, exports) {
         }
         ctor.prototype.sizeTable = function () {
             var tableElement = $(this.element).find(".datatable");
-            if (tableElement) {
-                var footerTop = $("footer").position().top;
-                var tableTop = tableElement.position().top;
-                var bottomPadding = 80;
-                tableElement.height(footerTop - tableTop - bottomPadding);
+            var footer = $("footer");
+            if (tableElement && footer) {
+                var tablePosition = tableElement.position();
+                var footerPosition = footer.position();
+                if (tablePosition && footerPosition) {
+                    var bottomPadding = 70;
+                    tableElement.height(footerPosition.top - tablePosition.top - bottomPadding);
+                }
             }
         };
 
         ctor.prototype.fetchNextChunk = function () {
             var _this = this;
-            if (this.isLoading()) {
-                return;
+            var collection = this.currentItemsCollection();
+            if (collection) {
+                var nextChunkPromiseOrNull = collection.loadNextChunk();
+                if (nextChunkPromiseOrNull) {
+                    nextChunkPromiseOrNull.done(function (results) {
+                        return _this.nextChunkFetched(results);
+                    });
+                }
             }
-
-            this.isLoading(true);
-            var results = this.createDummyResults();
-            setTimeout(function () {
-                return _this.nextChunkFetched({ Items: results, TotalItems: 342 });
-            }, Math.random() * 1000);
         };
 
         ctor.prototype.nextChunkFetched = function (results) {
             var _this = this;
-            this.totalRowsCount = results.TotalItems;
+            this.totalRowsCount = results.totalResultCount;
 
-            this.createCellsForColumns(this.rows(), this.getPropertyNames(results.Items));
+            this.createCellsForColumns(this.rows(), this.getPropertyNames(results.items));
 
-            var rows = results.Items.map(function (row) {
+            var rows = results.items.map(function (row) {
                 var cells = _this.columns().map(function (c) {
                     return _this.createCell(_this.getTemplateForCell(c, row), row[c]);
                 });
-                return _this.createRow(ko.observableArray(cells));
+                return _this.createRow(row, ko.observableArray(cells));
             });
 
-            this.streamInRows(rows, function () {
-                _this.skip += results.Items.length;
-                _this.isLoading(false);
-            });
+            this.rows.pushAll(rows);
         };
 
         ctor.prototype.getPropertyNames = function (objects) {
             var propertyNames = [];
             objects.forEach(function (f) {
                 for (var property in f) {
-                    if (propertyNames.indexOf(property) == -1) {
+                    if (f.hasOwnProperty(property) && property !== '__metadata' && propertyNames.indexOf(property) == -1) {
                         propertyNames.push(property);
                     }
                 }
@@ -163,20 +182,6 @@ define(["require", "exports"], function(require, exports) {
             }
         };
 
-        ctor.prototype.streamInRows = function (rowsToAdd, doneCallback) {
-            var _this = this;
-            var chunkSize = 5;
-            var removedRows = rowsToAdd.splice(0, chunkSize);
-            this.rows.pushAll(removedRows);
-            if (rowsToAdd.length > 0) {
-                setTimeout(function () {
-                    return _this.streamInRows(rowsToAdd, doneCallback);
-                }, 1);
-            } else {
-                doneCallback();
-            }
-        };
-
         ctor.prototype.createDummyResults = function () {
             var results = [];
             for (var i = 0; i < this.take; i++) {
@@ -241,8 +246,9 @@ define(["require", "exports"], function(require, exports) {
             }
         };
 
-        ctor.prototype.createRow = function (cells) {
+        ctor.prototype.createRow = function (rowData, cells) {
             return {
+                data: rowData,
                 cells: cells,
                 isChecked: ko.observable(false)
             };
@@ -260,3 +266,4 @@ define(["require", "exports"], function(require, exports) {
     
     return ctor;
 });
+//@ sourceMappingURL=controller.js.map

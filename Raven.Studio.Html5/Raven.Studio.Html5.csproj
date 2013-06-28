@@ -41,7 +41,37 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="App\common\pagedList.ts" />
+    <Content Include="App\common\pagedList.js">
+      <DependentUpon>pagedList.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\pagedList.min.js">
+      <DependentUpon>pagedList.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\promise.js">
+      <DependentUpon>promise.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\promise.min.js">
+      <DependentUpon>promise.ts</DependentUpon>
+    </Content>
+    <TypeScriptCompile Include="App\common\pagedResultSet.ts" />
+    <Content Include="App\common\pagedResultSet.js">
+      <DependentUpon>pagedResultSet.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\pagedResultSet.min.js">
+      <DependentUpon>pagedResultSet.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\knockout-observableExtensions.js.map">
+      <DependentUpon>knockout-observableExtensions.ts</DependentUpon>
+    </Content>
     <TypeScriptCompile Include="App\models\collection.ts" />
+    <TypeScriptCompile Include="App\common\dto.ts" />
+    <Content Include="App\common\dto.js">
+      <DependentUpon>dto.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\dto.min.js">
+      <DependentUpon>dto.ts</DependentUpon>
+    </Content>
     <Content Include="App\models\collection.js">
       <DependentUpon>collection.ts</DependentUpon>
     </Content>
@@ -59,9 +89,6 @@
       <DependentUpon>raven.ts</DependentUpon>
     </Content>
     <TypeScriptCompile Include="App\common\promise.ts" />
-    <Content Include="App\common\typings.js">
-      <DependentUpon>promise.ts</DependentUpon>
-    </Content>
     <Content Include="App\durandal\amd\almond-custom.js" />
     <Content Include="App\durandal\amd\optimizer.exe" />
     <Content Include="App\durandal\amd\r.js" />
@@ -100,11 +127,32 @@
     <TypeScriptCompile Include="App\viewmodels\settings.ts" />
     <TypeScriptCompile Include="App\viewmodels\status.ts" />
     <TypeScriptCompile Include="App\models\database.ts" />
+    <TypeScriptCompile Include="App\models\collectionInfo.ts" />
+    <Content Include="App\models\collectionInfo.js">
+      <DependentUpon>collectionInfo.ts</DependentUpon>
+    </Content>
+    <Content Include="App\models\collectionInfo.min.js">
+      <DependentUpon>collectionInfo.ts</DependentUpon>
+    </Content>
     <Content Include="App\models\database.js">
       <DependentUpon>database.ts</DependentUpon>
     </Content>
     <Content Include="App\models\database.min.js">
       <DependentUpon>database.ts</DependentUpon>
+    </Content>
+    <TypeScriptCompile Include="App\models\document.ts" />
+    <Content Include="App\models\document.js">
+      <DependentUpon>document.ts</DependentUpon>
+    </Content>
+    <Content Include="App\models\document.min.js">
+      <DependentUpon>document.ts</DependentUpon>
+    </Content>
+    <TypeScriptCompile Include="App\models\documentMetadata.ts" />
+    <Content Include="App\models\documentMetadata.js">
+      <DependentUpon>documentMetadata.ts</DependentUpon>
+    </Content>
+    <Content Include="App\models\documentMetadata.min.js">
+      <DependentUpon>documentMetadata.ts</DependentUpon>
     </Content>
     <Content Include="App\viewmodels\documents.js">
       <DependentUpon>documents.ts</DependentUpon>
@@ -190,6 +238,30 @@
     </Content>
     <Content Include="App\models\database.js.map">
       <DependentUpon>database.ts</DependentUpon>
+    </Content>
+    <Content Include="App\models\collectionInfo.js.map">
+      <DependentUpon>collectionInfo.ts</DependentUpon>
+    </Content>
+    <Content Include="App\models\document.js.map">
+      <DependentUpon>document.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\dto.js.map">
+      <DependentUpon>dto.ts</DependentUpon>
+    </Content>
+    <Content Include="App\models\documentMetadata.js.map">
+      <DependentUpon>documentMetadata.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\pagedResultSet.js.map">
+      <DependentUpon>pagedResultSet.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\promise.js.map">
+      <DependentUpon>promise.ts</DependentUpon>
+    </Content>
+    <Content Include="App\durandal\widgets\dataTable\controller.js.map">
+      <DependentUpon>controller.ts</DependentUpon>
+    </Content>
+    <Content Include="App\common\pagedList.js.map">
+      <DependentUpon>pagedList.ts</DependentUpon>
     </Content>
     <None Include="Scripts\jquery-1.9.1.intellisense.js" />
     <Content Include="Content\images\unchecked.png" />

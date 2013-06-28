@@ -2,6 +2,9 @@
 ///<reference path="../../../../Scripts/knockout-observableExtensions.ts"/>
 
 import widget = module("durandal/widget");
+import pagedList = module("common/pagedList");
+import document = module("models/document");
+import pagedResultSet = module("common/pagedResultSet");
 
 interface cell {
     templateName: string;
@@ -9,78 +12,103 @@ interface cell {
 }
 
 interface row {
-    isChecked: KnockoutObservable<bool>; 
-    cells: KnockoutObservableArray<cell>;
+	isChecked: KnockoutObservable<bool>;
+	cells: KnockoutObservableArray<cell>;
+	data: any;
 }
 
+// Durandal.js configuration requires that exported widgets be named ctor.
 class ctor {
 
     rows = ko.observableArray();
     columns = ko.observableArray();
-    skip = 0;
-    take = 100;
-    totalRowsCount = 0;
-    isLoading = ko.observable(false);
-    allRowsChecked: KnockoutComputed<bool>;
+	isLoading: KnockoutComputed<boolean>;
+    allRowsChecked: KnockoutComputed<boolean>;
     private selectionStack: row[] = [];
-    isFirstRender = true;
+	isFirstRender = true;
+	skip = 0;
+	take = 100;
+	totalRowsCount = 0;
+	private currentItemsCollection = ko.observable<pagedList>();
 
     constructor(private element: HTMLElement, private settings) {
-        this.fetchNextChunk();
-            
-        this.allRowsChecked = ko.computed({
+		
+		if (!settings.items || !ko.isObservable(settings.items)) {
+			throw new Error("datatable must be passed an items observable.");
+		}
+
+		this.currentItemsCollection = this.settings.items;
+		this.fetchNextChunk();
+		
+		// Computeds
+		this.allRowsChecked = ko.computed({
             read: () => this.rows().length > 0 && this.rows().every(r => r.isChecked()),
             write: (val) => this.rows().forEach(r => r.isChecked(val))
-        });
+		});
+		this.isLoading = ko.computed(() => this.currentItemsCollection() && this.currentItemsCollection().isFetching());
+		
+		// Subscriptions
+		this.currentItemsCollection.subscribe(() => {
+			this.rows.removeAll();
+			this.fetchNextChunk();
+		});
+		if (this.currentItemsCollection()) {
+			this.fetchNextChunk();
+		}
 
-        // Size the table to full height whenever the page height changes.
-        $(window).resize(() => this.sizeTable());
+		// Size the table to full height whenever the page height changes.
+		$(window).resize(() => this.sizeTable());
     }
 
     sizeTable() { 
-        var tableElement = $(this.element).find(".datatable");
-        if (tableElement) {
-            var footerTop = $("footer").position().top;
-            var tableTop = tableElement.position().top;
-            var bottomPadding = 80;
-            tableElement.height(footerTop - tableTop - bottomPadding);
+		var tableElement = $(this.element).find(".datatable");
+		var footer = $("footer");
+		if (tableElement && footer) {
+			var tablePosition = tableElement.position();
+			var footerPosition = footer.position();
+			if (tablePosition && footerPosition) {
+				var bottomPadding = 70;
+				tableElement.height(footerPosition.top - tablePosition.top - bottomPadding);
+			}
         }
     }
 
     fetchNextChunk() {
-        if (this.isLoading()) {
-            return;
-        }
-
-        this.isLoading(true);
-        var results = this.createDummyResults();
-        setTimeout(() => this.nextChunkFetched({ Items: results, TotalItems: 342 }), Math.random() * 1000);
+		var collection = this.currentItemsCollection();
+		if (collection) {
+			var nextChunkPromiseOrNull = collection.loadNextChunk();
+			if (nextChunkPromiseOrNull) {
+				nextChunkPromiseOrNull.done(results => this.nextChunkFetched(results));
+			}
+		}
     }
 
-    nextChunkFetched(results) {
-        this.totalRowsCount = results.TotalItems;
+    private nextChunkFetched(results: pagedResultSet) {
+        this.totalRowsCount = results.totalResultCount;
 
-        this.createCellsForColumns(this.rows(), this.getPropertyNames(results.Items));
+        this.createCellsForColumns(this.rows(), this.getPropertyNames(results.items));
 
-        var rows: row[] = results.Items
+        var rows: row[] = results.items
             .map(row => {
                 var cells = this
                     .columns()
                     .map(c => this.createCell(this.getTemplateForCell(c, row), row[c]));
-                return this.createRow(ko.observableArray(cells));
-            });
+                return this.createRow(row, ko.observableArray(cells));
+			});
+
+		this.rows.pushAll(rows);
             
-        this.streamInRows(rows, () => {
-            this.skip += results.Items.length;
-            this.isLoading(false);
-        });
+        //this.streamInRows(rows, () => {
+        //    this.skip += results.items.length;
+        //    this.isLoading(false);
+        //});
     }
 
     getPropertyNames(objects: any[]): string[] {
         var propertyNames: string[] = [];
         objects.forEach(f => {
             for (var property in f) {
-                if (propertyNames.indexOf(property) == -1) {
+                if (f.hasOwnProperty(property) && property !== '__metadata' && propertyNames.indexOf(property) == -1) {
                     propertyNames.push(property);
                 }
             }
@@ -145,9 +173,9 @@ class ctor {
         this.allRowsChecked(!this.allRowsChecked());
     }
 
-    loadMoreIfNeeded() {
+	loadMoreIfNeeded() {
         if (!this.isLoading() && this.rows().length < this.totalRowsCount) {
-            var table = $(this.element);
+			var table = $(this.element);
             var tableBottom = table.position().top + table.height();
             var lastRowPos = $(this.element).find(".document-row:last-child").position();
             var nearPadding = 400;
@@ -158,17 +186,17 @@ class ctor {
         }
     }
 
-    private streamInRows(rowsToAdd: row[], doneCallback: () => void ) {
-        var chunkSize = 5;
-        var removedRows = rowsToAdd.splice(0, chunkSize);
-        this.rows.pushAll(removedRows);
-        if (rowsToAdd.length > 0) {
-            setTimeout(() => this.streamInRows(rowsToAdd, doneCallback), 1);
-        }
-        else {
-            doneCallback();
-        }
-    }
+    //private streamInRows(rowsToAdd: row[], doneCallback: () => void ) {
+    //    var chunkSize = 5;
+    //    var removedRows = rowsToAdd.splice(0, chunkSize);
+    //    this.rows.pushAll(removedRows);
+    //    if (rowsToAdd.length > 0) {
+    //        setTimeout(() => this.streamInRows(rowsToAdd, doneCallback), 1);
+    //    }
+    //    else {
+    //        doneCallback();
+    //    }
+    //}
 
     createDummyResults() {
         // Temporary: create a bunch of objects. 
@@ -237,8 +265,9 @@ class ctor {
         }
     }
 
-    private createRow(cells: KnockoutObservableArray<cell>): row {
+    private createRow(rowData: any, cells: KnockoutObservableArray<cell>): row {
         return {
+			data: rowData,
             cells: cells,
             isChecked: ko.observable(false)
         }
@@ -253,5 +282,3 @@ class ctor {
 }
 
 export = ctor;
-
-

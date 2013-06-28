@@ -43,8 +43,6 @@ subscribableFn.select = function (selector: (any) => any) {
     return selectedResults;
 }
 
-observabelArrayFn.pushAll = function(items: any[]) {
-    var newItems = this().concat(items);
-    this(newItems);
-    return newItems.length;
+observabelArrayFn.pushAll = function (items: any[]) {
+	this.push.apply(this, items);
 }
