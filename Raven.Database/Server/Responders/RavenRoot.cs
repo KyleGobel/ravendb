@@ -9,10 +9,10 @@ namespace Raven.Database.Server.Responders
 {
 	public class RavenRoot : AbstractRequestResponder
 	{
-		public const string RootPath = "/raven/studio.html";
+        public const string RootPath = "/raven/studio.html";
 		public override string UrlPattern
 		{
-			get { return "^/(raven)?$"; }
+            get { return "^/(raven)?$"; }
 		}
 
 		public override string[] SupportedVerbs

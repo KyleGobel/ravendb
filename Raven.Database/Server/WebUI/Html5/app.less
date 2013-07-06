@@ -1,0 +1,199 @@
+﻿html, body
+{
+    height: 100%;
+}
+
+.splash {
+    text-align: center;
+    margin: 10% 0 0 0;
+
+    .message {
+        font-size: 5em;
+        line-height: 1.5em;
+        -webkit-text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 15px;
+        text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 15px;
+        text-transform: uppercase;
+    }
+
+    .icon-spinner {
+        text-align: center;
+        display: inline-block;
+        font-size: 5em;
+        margin-top: 50px;
+    }
+}
+
+.page-host {
+    position: relative;
+    top: 40px;
+}
+
+.navbar-fixed-top
+{
+    .navbar-inner
+    {
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+
+    .icon-home {
+        font-size: 18px
+    }
+}
+
+.loader {
+    margin: 6px 8px 4px 8px;
+    visibility: hidden;
+}
+
+.loader.active {
+    visibility: visible;
+}
+
+@media (max-width: 979px) {
+    .page-host {
+        top: 0;
+    }
+
+    .navbar-fixed-top {
+        margin-bottom: 0;
+    }
+}
+
+.page
+{
+    padding: 0 10px 20px 10px;
+    width: 98%;
+}
+
+.document-collections
+{
+    li:not(:first-child)
+    {
+        // All collections except the first one ("All Documents") are indented.
+        padding-left: 15px;
+    }
+
+    .collection-style-0 {
+        background-color: rgb(0, 199, 0);
+    }
+    .collection-style-1 {
+        background-color: rgb(199, 0, 154);
+    }
+    .collection-style-2 {
+        background-color: red;
+    }
+    .collection-style-3 {
+        background-color: rgb(0, 149, 239);
+    }
+    .collection-style-4 {
+        background-color: rgb(167, 0, 104);
+    }
+    .collection-style-5 {
+        background-color: rgb(0, 100, 100);
+    }
+    .collection-style-6 {
+        background-color: rgb(120, 50, 199);
+    }
+    .collection-style-7 {
+        background-color: rgb(199, 40, 40);
+    }
+
+    .all-documents-collection
+    {
+        background: rgb(255,2,2); /* Old browsers */
+        background: -moz-linear-gradient(top,  rgba(255,2,2,1) 0%, rgba(255,242,2,1) 27%, rgba(2,255,27,1) 54%, rgba(2,6,255,1) 79%, rgba(246,2,255,1) 100%); /* FF3.6+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,2,2,1)), color-stop(27%,rgba(255,242,2,1)), color-stop(54%,rgba(2,255,27,1)), color-stop(79%,rgba(2,6,255,1)), color-stop(100%,rgba(246,2,255,1))); /* Chrome,Safari4+ */
+        background: -webkit-linear-gradient(top,  rgba(255,2,2,1) 0%,rgba(255,242,2,1) 27%,rgba(2,255,27,1) 54%,rgba(2,6,255,1) 79%,rgba(246,2,255,1) 100%); /* Chrome10+,Safari5.1+ */
+        background: -o-linear-gradient(top,  rgba(255,2,2,1) 0%,rgba(255,242,2,1) 27%,rgba(2,255,27,1) 54%,rgba(2,6,255,1) 79%,rgba(246,2,255,1) 100%); /* Opera 11.10+ */
+        background: -ms-linear-gradient(top,  rgba(255,2,2,1) 0%,rgba(255,242,2,1) 27%,rgba(2,255,27,1) 54%,rgba(2,6,255,1) 79%,rgba(246,2,255,1) 100%); /* IE10+ */
+        background: linear-gradient(to bottom,  rgba(255,2,2,1) 0%,rgba(255,242,2,1) 27%,rgba(2,255,27,1) 54%,rgba(2,6,255,1) 79%,rgba(246,2,255,1) 100%); /* W3C */
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff0202', endColorstr='#f602ff',GradientType=0 ); /* IE6-9 */
+    }
+}
+
+.documents-progress
+{
+    height: 5px;
+}
+
+.documents-page
+{
+    .collection-color-strip
+    {
+        height: 20px;
+        width: 4px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .datatable
+    {
+        display: block;
+        width: 100%;
+        overflow: auto;
+
+        tbody
+        {
+            tr
+            {
+                &.checked
+                {
+                    td
+                    {
+                        background-color: #ffc;
+
+                        .row-check
+                        {
+                            visibility: visible;
+                        }
+                    }
+                }
+
+                td
+                {
+                    white-space: nowrap;
+                    max-width: 200px;
+                    -ms-text-overflow: ellipsis;
+                    -o-text-overflow: ellipsis;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                }
+
+                .row-check
+                {
+                    visibility: hidden;
+                }
+
+                &:hover
+                {
+                    .row-check
+                    {
+                        visibility: visible;
+                    }
+                }
+            }
+        }
+    }
+
+    .datatable-progress
+    {
+        position: fixed;
+        bottom: 50px;
+    }
+}
+
+footer
+{
+    position: fixed;
+    bottom: 0;
+    background-color: silver;
+    color: black;
+    border-top: 2px solid black;
+    width: 100%;
+
+    ul
+    {
+        display: inline-block;
+    }
+}

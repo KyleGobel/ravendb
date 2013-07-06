@@ -593,7 +593,7 @@ namespace Raven.Database.Extensions
 			context.Response.AddHeader("ETag", "\"" + etag + "\"");
 		}
 
-		private static string GetContentType(string docPath)
+		public static string GetContentType(string docPath)
 		{
 			switch (Path.GetExtension(docPath))
 			{
