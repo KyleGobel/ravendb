@@ -10,8 +10,9 @@ import pagedResultSet = module("common/pagedResultSet");
 
 class raven {
 
-	// For testing purposes, our base URL.
-	private baseUrl = "";
+    // For testing purposes, our base URL.
+    private baseUrl = "http://localhost:8080";
+	//private baseUrl = "";
 	
 	public static activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 
@@ -71,7 +72,13 @@ class raven {
             cache: false,
             url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
             data: args
-		});
+        });
+
+        ajax.fail((request, status, error) => {
+            var errorMessage = request.responseText ? request.responseText : "Error calling " + relativeUrl;
+            ko.postbox.publish("RavenError", errorMessage);
+        });
+
 		var foo: JQueryXHR = null;
 		if (resultsSelector) {
 			var task = $.Deferred();

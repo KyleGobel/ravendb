@@ -16,6 +16,8 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             this.collections = ko.observableArray();
             this.selectedCollection = ko.observable().subscribeTo("ActivateCollection");
             this.collectionColors = [];
+            this.collectionsLoadedTask = $.Deferred();
+            this.collectionDocumentsLoaded = 0;
             this.currentCollectionPagedItems = ko.observable();
             this.ravenDb = new raven();
             this.ravenDb.collections().then(function (results) {
@@ -55,8 +57,13 @@ define(["require", "exports", "models/database", "models/collection", "models/do
         };
 
         documents.prototype.fetchTotalDocuments = function (collection) {
+            var _this = this;
             this.ravenDb.collectionInfo(collection.name).then(function (info) {
-                return collection.documentCount(info.totalResults);
+                collection.documentCount(info.totalResults);
+                _this.collectionDocumentsLoaded++;
+                if (_this.collectionDocumentsLoaded === _this.collections().length - 1) {
+                    _this.collectionsLoadedTask.resolve();
+                }
             });
         };
 
@@ -72,8 +79,14 @@ define(["require", "exports", "models/database", "models/collection", "models/do
                 this.currentCollectionPagedItems(documentsList);
             }
         };
+
+        documents.prototype.activate = function () {
+            return this.collectionsLoadedTask;
+        };
         return documents;
     })();
-    exports.documents = documents;
+
+    
+    return documents;
 });
 //@ sourceMappingURL=documents.js.map

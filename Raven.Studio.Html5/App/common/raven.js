@@ -7,7 +7,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
 
     var raven = (function () {
         function raven() {
-            this.baseUrl = "";
+            this.baseUrl = "http://localhost:8080";
         }
         raven.prototype.databases = function () {
             var resultsSelector = function (databaseNames) {
@@ -78,6 +78,12 @@ define(["require", "exports", "models/database", "models/collection", "models/co
                 url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
                 data: args
             });
+
+            ajax.fail(function (request, status, error) {
+                var errorMessage = request.responseText ? request.responseText : "Error calling " + relativeUrl;
+                ko.postbox.publish("RavenError", errorMessage);
+            });
+
             var foo = null;
             if (resultsSelector) {
                 var task = $.Deferred();

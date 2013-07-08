@@ -42,6 +42,7 @@ define(["require", "exports", "common/pagedList", "models/document", "common/pag
 
             this.currentItemsCollection.subscribe(function () {
                 _this.rows.removeAll();
+                _this.columns.removeAll();
                 _this.fetchNextChunk();
             });
             if (this.currentItemsCollection()) {
@@ -86,8 +87,9 @@ define(["require", "exports", "common/pagedList", "models/document", "common/pag
 
             var rows = results.items.map(function (row) {
                 var cells = _this.columns().map(function (c) {
-                    return _this.createCell(_this.getTemplateForCell(c, row), row[c]);
+                    return _this.createCell(_this.getTemplateForCell(c, row), c, row, row[c]);
                 });
+
                 return _this.createRow(row, ko.observableArray(cells));
             });
 
@@ -108,20 +110,34 @@ define(["require", "exports", "common/pagedList", "models/document", "common/pag
 
         ctor.prototype.createCellsForColumns = function (rows, columns) {
             var _this = this;
-            var columnCount = this.columns().length;
             var newColumns = columns.filter(function (c) {
-                return _this.columns().indexOf(c) === -1;
+                return _this.columns().indexOf(c) === -1 && c !== "Id";
+            }).sort(function (a, b) {
+                if (a === "Name")
+                    return -1;
+                if (b === "Name")
+                    return 1;
+                if (a)
+                    return a.localeCompare(b);
+                if (b)
+                    return b.localeCompare(a);
+                return 0;
             });
 
+            if (this.columns().length === 0) {
+                newColumns.unshift("Id");
+            }
+
             if (newColumns.length > 0) {
-                var createCells = function () {
+                var createNewCells = function (row) {
                     return newColumns.map(function (c) {
-                        return _this.createCell("default-cell-template", "");
+                        return _this.createCell("default-cell-template", c, row, "");
                     });
                 };
                 this.columns.pushAll(newColumns);
+
                 rows.forEach(function (r) {
-                    return r.cells.pushAll(createCells());
+                    return r.cells.pushAll(createNewCells(r));
                 });
             }
         };
@@ -174,62 +190,12 @@ define(["require", "exports", "common/pagedList", "models/document", "common/pag
                 var table = $(this.element);
                 var tableBottom = table.position().top + table.height();
                 var lastRowPos = $(this.element).find(".document-row:last-child").position();
-                var nearPadding = 400;
+                var nearPadding = 200;
                 var lastRowIsVisible = lastRowPos && (lastRowPos.top - nearPadding) < tableBottom;
                 if (lastRowIsVisible) {
                     this.fetchNextChunk();
                 }
             }
-        };
-
-        ctor.prototype.createDummyResults = function () {
-            var results = [];
-            for (var i = 0; i < this.take; i++) {
-                var random = Math.random();
-                var item = null;
-                if (random < .2) {
-                    item = {
-                        Id: "likes/" + (i + 1),
-                        LikeStatus: random < .1 ? "Like" : "Dislike",
-                        Date: "2013-01-22T23:29:03.1445000",
-                        SongId: "songs/" + (i + 5),
-                        UserId: "users/" + (i + 42)
-                    };
-                } else if (random < .4) {
-                    item = {
-                        Id: "songs/" + (i + 1),
-                        FileName: "aasdfasdf dwe",
-                        Name: "Habedesharie",
-                        Album: "Some Rand Album",
-                        AlbumArtUri: null,
-                        Artist: "The Beatles",
-                        CommunityRank: Math.floor(100 * random)
-                    };
-                } else if (random < .6) {
-                    item = {
-                        Id: "visits/" + (i + 1),
-                        DateTime: "2013-01-22T23:29:03.1445000",
-                        TotalPlays: Math.floor(random * 100),
-                        UserId: "users/" + (i + 1)
-                    };
-                } else if (random < .8) {
-                    item = {
-                        Id: "users/" + (i + 1),
-                        ClientIdentifier: i + "2013-01-22T23:29:03.1445000",
-                        Preferences: "fasdf asdf asdfeqwerasdf eqwefasdfasdf",
-                        TotalPlays: Math.floor(random * 1000)
-                    };
-                } else {
-                    item = {
-                        Id: "logs/" + i,
-                        Message: i + "qehqwet q asdfeqweerasdf eqwefasdfasdf",
-                        TimeStamp: "2013-01-22T23:29:03.1445000"
-                    };
-                }
-                results.push(item);
-            }
-
-            return results;
         };
 
         ctor.prototype.afterRenderColumn = function () {
@@ -254,7 +220,15 @@ define(["require", "exports", "common/pagedList", "models/document", "common/pag
             };
         };
 
-        ctor.prototype.createCell = function (templateName, value) {
+        ctor.prototype.createCell = function (templateName, columnName, rowData, value) {
+            if (columnName === "Id" && !value && rowData && !rowData["Id"] && rowData.__metadata) {
+                value = rowData.__metadata.id;
+            }
+
+            if (value && typeof (value) == "object") {
+                value = ko.toJSON(value);
+            }
+
             return {
                 templateName: templateName,
                 value: value

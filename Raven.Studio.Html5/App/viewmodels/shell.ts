@@ -14,7 +14,9 @@ class shell {
 	ravenDb: raven;
 
 	constructor() {
-		this.ravenDb = new raven();
+        this.ravenDb = new raven();
+
+        ko.postbox.subscribe("RavenError", errorMessage => this.onRavenError(errorMessage));
     }
 
     databasesLoaded(databases: database[]) {
@@ -22,10 +24,6 @@ class shell {
         systemDatabase.isSystem = true;
 		this.databases(databases.concat([systemDatabase]));
 		this.databases()[0].activate();
-    }
-
-    search() {
-        app.showMessage('Search not yet implemented...');
     }
 
 	activate() {
@@ -36,6 +34,10 @@ class shell {
 			.databases()
 			.then(results => this.databasesLoaded(results))
 			.then(() => router.activate('documents'));
+    }
+
+    onRavenError(errorMessage: string) {
+        app.showMessage(errorMessage, "RavenDb error");
     }
 }
 

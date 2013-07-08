@@ -12,17 +12,19 @@ import document = module("models/document");
 import raven = module("common/raven");
 import pagedList = module("common/pagedList"); 
 
-export class documents { 
+class documents { 
 
 	displayName = "documents";
 	ravenDb: raven;
     collections = ko.observableArray<collection>();
 	selectedCollection = ko.observable<collection>().subscribeTo("ActivateCollection");
 	allDocumentsCollection: collection;
-	collectionColors = []
+    collectionColors = []
+    collectionsLoadedTask = $.Deferred();
+    collectionDocumentsLoaded = 0;
 	private currentCollectionPagedItems = ko.observable<pagedList>();
 
-	constructor() {
+    constructor() {
 		this.ravenDb = new raven();
 		this.ravenDb
 			.collections() 
@@ -30,7 +32,7 @@ export class documents {
 
 		this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
 	}
-	
+    
     collectionsLoaded(collections: collection[]) {
         // Set the color class for each of the collections.
         // These styles are found in app.less.
@@ -40,10 +42,11 @@ export class documents {
         // Create the "All Documents" pseudo collection.
         this.allDocumentsCollection = new collection("All Documents");
 		this.allDocumentsCollection.colorClass = "all-documents-collection";
-		<any>this.allDocumentsCollection.documentCount = ko.computed(() => this.collections()
+        <any>this.allDocumentsCollection.documentCount = ko.computed(() =>
+            this.collections()
 			.filter(c => c !== this.allDocumentsCollection) // Don't include self, the all documents collection.
             .map(c => c.documentCount()) // Grab the document count of each.
-            .reduce((first, second) => { return first + second }, 0)); // And sum them up.
+            .reduce((first, second) => first + second, 0)); // And sum them up.
 
         // All systems a-go. Load them into the UI and select the first one.
         var allCollections = [this.allDocumentsCollection].concat(collections);
@@ -56,9 +59,15 @@ export class documents {
 	}
 
 	fetchTotalDocuments(collection: collection) {
-		this.ravenDb
-			.collectionInfo(collection.name)
-			.then(info => collection.documentCount(info.totalResults));
+        this.ravenDb
+            .collectionInfo(collection.name)
+            .then(info => {
+                collection.documentCount(info.totalResults);
+                this.collectionDocumentsLoaded++;
+                if (this.collectionDocumentsLoaded === this.collections().length - 1) {
+                    this.collectionsLoadedTask.resolve();
+                }
+            });
 	}
 
 	onSelectedCollectionChanged(selected: collection) {
@@ -71,5 +80,11 @@ export class documents {
 			var documentsList = new pagedList(fetcher, 30)
 			this.currentCollectionPagedItems(documentsList);
 		}
-	}
+    }
+
+    activate() {
+        return this.collectionsLoadedTask;
+    }
 }
+
+export = documents;

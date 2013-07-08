@@ -6,20 +6,21 @@ define(["require", "exports", "durandal/plugins/router", "durandal/app", "models
 
     var shell = (function () {
         function shell() {
+            var _this = this;
             this.router = router;
             this.databases = ko.observableArray();
             this.activeDatabase = ko.observable().subscribeTo("ActivateDatabase");
             this.ravenDb = new raven();
+
+            ko.postbox.subscribe("RavenError", function (errorMessage) {
+                return _this.onRavenError(errorMessage);
+            });
         }
         shell.prototype.databasesLoaded = function (databases) {
             var systemDatabase = new database("<system>");
             systemDatabase.isSystem = true;
             this.databases(databases.concat([systemDatabase]));
             this.databases()[0].activate();
-        };
-
-        shell.prototype.search = function () {
-            app.showMessage('Search not yet implemented...');
         };
 
         shell.prototype.activate = function () {
@@ -29,6 +30,10 @@ define(["require", "exports", "durandal/plugins/router", "durandal/app", "models
             }).then(function () {
                 return router.activate('documents');
             });
+        };
+
+        shell.prototype.onRavenError = function (errorMessage) {
+            app.showMessage(errorMessage, "RavenDb error");
         };
         return shell;
     })();

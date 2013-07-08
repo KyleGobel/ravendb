@@ -1,5 +1,5 @@
-define(["require", "exports", "common/raven", "common/pagedList"], function(require, exports, __raven__, __pagedList__) {
-    var raven = __raven__;
+define(["require", "exports", "common/pagedList"], function(require, exports, __pagedList__) {
+    
     var pagedList = __pagedList__;
 
     var collection = (function () {

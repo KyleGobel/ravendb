@@ -49,6 +49,9 @@ body {
   padding: 0 10px 20px 10px;
   width: 98%;
 }
+.document-collections li {
+  outline: none;
+}
 .document-collections li:not(:first-child) {
   padding-left: 15px;
 }
@@ -114,7 +117,11 @@ body {
 .documents-page .datatable {
   display: block;
   width: 100%;
+  height: 200px;
   overflow: auto;
+}
+.documents-page .datatable thead th:last-child {
+  width: 99%;
 }
 .documents-page .datatable tbody tr.checked td {
   background-color: #ffc;
@@ -138,6 +145,7 @@ body {
 }
 .documents-page .datatable-progress {
   position: fixed;
+  height: 10px;
   bottom: 50px;
 }
 footer {

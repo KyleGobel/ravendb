@@ -49,7 +49,8 @@ class ctor {
 		
 		// Subscriptions
 		this.currentItemsCollection.subscribe(() => {
-			this.rows.removeAll();
+            this.rows.removeAll();
+            this.columns.removeAll();
 			this.fetchNextChunk();
 		});
 		if (this.currentItemsCollection()) {
@@ -92,7 +93,8 @@ class ctor {
             .map(row => {
                 var cells = this
                     .columns()
-                    .map(c => this.createCell(this.getTemplateForCell(c, row), row[c]));
+                    .map(c => this.createCell(this.getTemplateForCell(c, row), c, row, row[c]));
+
                 return this.createRow(row, ko.observableArray(cells));
 			});
 
@@ -118,13 +120,26 @@ class ctor {
 
     private createCellsForColumns(rows: row[], columns: string[]) {
 
-        var columnCount = this.columns().length;
-        var newColumns = columns.filter(c => this.columns().indexOf(c) === -1);
+        var newColumns = columns
+            .filter(c => this.columns().indexOf(c) === -1 && c !== "Id") // Ignore the Id column, since we pull that from the metadata.
+            .sort((a, b) => { 
+                // Prefer 'Name' before others.
+                if (a === "Name") return -1;
+                if (b === "Name") return 1;
+                if (a) return a.localeCompare(b);
+                if (b) return b.localeCompare(a);
+                return 0;
+            }); 
+
+        if (this.columns().length === 0) {
+            newColumns.unshift("Id");
+        }
 
         if (newColumns.length > 0) {
-            var createCells = () => newColumns.map(c => this.createCell("default-cell-template", ""));
+            var createNewCells = row => newColumns.map(c => this.createCell("default-cell-template", c, row, ""));
             this.columns.pushAll(newColumns);
-            rows.forEach(r => r.cells.pushAll(createCells()));
+
+            rows.forEach(r => r.cells.pushAll(createNewCells(r)));
         }
     }
 
@@ -178,80 +193,12 @@ class ctor {
 			var table = $(this.element);
             var tableBottom = table.position().top + table.height();
             var lastRowPos = $(this.element).find(".document-row:last-child").position();
-            var nearPadding = 400;
+            var nearPadding = 200;
             var lastRowIsVisible = lastRowPos && (lastRowPos.top - nearPadding) < tableBottom;
             if (lastRowIsVisible) {
                 this.fetchNextChunk();
             }
         }
-    }
-
-    //private streamInRows(rowsToAdd: row[], doneCallback: () => void ) {
-    //    var chunkSize = 5;
-    //    var removedRows = rowsToAdd.splice(0, chunkSize);
-    //    this.rows.pushAll(removedRows);
-    //    if (rowsToAdd.length > 0) {
-    //        setTimeout(() => this.streamInRows(rowsToAdd, doneCallback), 1);
-    //    }
-    //    else {
-    //        doneCallback();
-    //    }
-    //}
-
-    createDummyResults() {
-        // Temporary: create a bunch of objects. 
-        // Pretend we get them back from the server.
-        var results = [];
-        for (var i = 0; i < this.take; i++) {
-            var random = Math.random();
-            var item = null;
-            if (random < .2) {
-                item = {
-                    Id: "likes/" + (i + 1),
-                    LikeStatus: random < .1 ? "Like" : "Dislike",
-                    Date: "2013-01-22T23:29:03.1445000",
-                    SongId: "songs/" + (i + 5),
-                    UserId: "users/" + (i + 42)
-                }
-        }
-            else if (random < .4) {
-                item = {
-                    Id: "songs/" + (i + 1),
-                    FileName: "aasdfasdf dwe",
-                    Name: "Habedesharie",
-                    Album: "Some Rand Album",
-                    AlbumArtUri: null,
-                    Artist: "The Beatles",
-                    CommunityRank: Math.floor(100 * random)
-                }
-        }
-            else if (random < .6) {
-                item = {
-                    Id: "visits/" + (i + 1),
-                    DateTime: "2013-01-22T23:29:03.1445000",
-                    TotalPlays: Math.floor(random * 100),
-                    UserId: "users/" + (i + 1)
-                }
-        }
-            else if (random < .8) {
-                item = {
-                    Id: "users/" + (i + 1),
-                    ClientIdentifier: i + "2013-01-22T23:29:03.1445000",
-                    Preferences: "fasdf asdf asdfeqwerasdf eqwefasdfasdf",
-                    TotalPlays: Math.floor(random * 1000)
-                }
-        }
-            else {
-                item = {
-                    Id: "logs/" + i,
-                    Message: i + "qehqwet q asdfeqweerasdf eqwefasdfasdf",
-                    TimeStamp: "2013-01-22T23:29:03.1445000",
-                }
-        }
-            results.push(item);
-        }
-
-        return results;
     }
 
     afterRenderColumn() {
@@ -273,7 +220,19 @@ class ctor {
         }
     }
 
-    private createCell(templateName: string, value: any): cell {
+    private createCell(templateName: string, columnName: string, rowData: any, value: any): cell {
+        
+        // If it's the ID column, and we don't have a value, pull the ID
+        // from the document metadata.
+        if (columnName === "Id" && !value && rowData && !rowData["Id"] && rowData.__metadata) {
+            value = rowData.__metadata.id;
+        }
+
+        // If it's an object, give us the JSON string.
+        if (value && typeof (value) == "object") {
+            value = ko.toJSON(value);
+        }
+        
         return {
             templateName: templateName,
             value: value
