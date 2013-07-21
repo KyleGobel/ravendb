@@ -229,10 +229,22 @@ define(["require", "exports", "common/pagedList", "models/document", "common/pag
                 value = ko.toJSON(value);
             }
 
-            return {
+            var cell = {
+                colorClass: "",
                 templateName: templateName,
                 value: value
             };
+
+            if (columnName === "Id") {
+                var args = {
+                    colorClass: "",
+                    item: rowData
+                };
+                ko.postbox.publish("RequestCollectionMembershipColorClass", args);
+                cell.colorClass = args.colorClass;
+            }
+
+            return cell;
         };
         return ctor;
     })();

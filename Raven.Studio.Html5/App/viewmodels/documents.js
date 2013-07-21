@@ -80,6 +80,10 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             }
         };
 
+        documents.prototype.fetchCollectionColorClass = function (args) {
+            args.colorClass = this.getCollectionColorClassForItem(args.item);
+        };
+
         documents.prototype.activate = function () {
             return this.collectionsLoadedTask;
         };

@@ -11,8 +11,8 @@ import pagedResultSet = module("common/pagedResultSet");
 class raven {
 
     // For testing purposes, our base URL.
-    private baseUrl = "http://localhost:8080";
-	//private baseUrl = "";
+    //private baseUrl = "http://localhost:8080";
+	private baseUrl = "";
 	
 	public static activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 

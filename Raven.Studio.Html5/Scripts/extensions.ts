@@ -14,6 +14,10 @@ interface KnockoutObservableArray<T> {
     pushAll: (items: T[]) => number;
 }
 
+interface Function {
+    memoize(): Function;
+}
+
 var subscribableFn: any = ko.subscribable.fn;
 var observabelArrayFn: any = ko.observableArray.fn;
 
@@ -43,6 +47,23 @@ subscribableFn.select = function (selector: (any) => any) {
     return selectedResults;
 }
 
+// observable.pushAll
 observabelArrayFn.pushAll = function (items: any[]) {
 	this.push.apply(this, items);
+}
+
+// Function.memoize
+var functionPrototype: any = Function.prototype;
+console.log("setting up memoize");
+functionPrototype.memoize = function (thisVal) {
+    var self = this, cache = {};
+    return function (arg) {
+        if (arg in cache) {
+            console.log('Cache hit for ' + arg);
+            return cache[arg];
+        } else {
+            console.log('Cache miss for ' + arg);
+            return cache[arg] = self.call(thisVal, arg);
+        }
+    }
 }

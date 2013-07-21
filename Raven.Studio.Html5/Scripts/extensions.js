@@ -31,4 +31,19 @@ subscribableFn.select = function (selector) {
 observabelArrayFn.pushAll = function (items) {
     this.push.apply(this, items);
 };
-//@ sourceMappingURL=knockout-observableExtensions.js.map
+
+var functionPrototype = Function.prototype;
+console.log("setting up memoize");
+functionPrototype.memoize = function (thisVal) {
+    var self = this, cache = {};
+    return function (arg) {
+        if (arg in cache) {
+            console.log('Cache hit for ' + arg);
+            return cache[arg];
+        } else {
+            console.log('Cache miss for ' + arg);
+            return cache[arg] = self.call(thisVal, arg);
+        }
+    };
+};
+//@ sourceMappingURL=extensions.js.map

@@ -30,8 +30,8 @@ class documents {
 			.collections() 
 			.then(results => this.collectionsLoaded(results));
 
-		this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
-	}
+        this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
+    }
     
     collectionsLoaded(collections: collection[]) {
         // Set the color class for each of the collections.
@@ -80,6 +80,10 @@ class documents {
 			var documentsList = new pagedList(fetcher, 30)
 			this.currentCollectionPagedItems(documentsList);
 		}
+    }
+
+    fetchCollectionColorClass(args: any) {
+        args.colorClass = this.getCollectionColorClassForItem(args.item);
     }
 
     activate() {

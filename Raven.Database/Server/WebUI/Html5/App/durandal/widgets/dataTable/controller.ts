@@ -1,5 +1,6 @@
 ///<reference path="../../typings/durandal.d.ts"/>
-///<reference path="../../../../Scripts/knockout-observableExtensions.ts"/>
+///<reference path="../../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
+///<reference path="../../../../Scripts/extensions.ts"/>
 
 import widget = module("durandal/widget");
 import pagedList = module("common/pagedList");
@@ -233,10 +234,22 @@ class ctor {
             value = ko.toJSON(value);
         }
         
-        return {
+        var cell = {
+            colorClass: "",
             templateName: templateName,
             value: value
         }
+        
+        if (columnName === "Id") {
+            var args = {
+                colorClass: "",
+                item: rowData
+            };
+            ko.postbox.publish("RequestCollectionMembershipColorClass", args);
+            cell.colorClass = args.colorClass;
+        }
+
+        return cell;
     }
 }
 

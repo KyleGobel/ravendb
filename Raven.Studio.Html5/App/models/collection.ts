@@ -1,4 +1,4 @@
-/// <reference path="../../Scripts/knockout-observableExtensions.ts" />
+/// <reference path="../../Scripts/extensions.ts" />
 
 import raven = module("common/raven");
 import pagedList = module("common/pagedList");

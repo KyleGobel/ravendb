@@ -27,6 +27,9 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             this.selectedCollection.subscribe(function (c) {
                 return _this.onSelectedCollectionChanged(c);
             });
+            ko.postbox.subscribe("RequestCollectionMembershipColorClass", function (e) {
+                return _this.fetchCollectionColorClass(e);
+            });
         }
         documents.prototype.collectionsLoaded = function (collections) {
             var _this = this;
@@ -78,6 +81,11 @@ define(["require", "exports", "models/database", "models/collection", "models/do
                 var documentsList = new pagedList(fetcher, 30);
                 this.currentCollectionPagedItems(documentsList);
             }
+        };
+
+        documents.prototype.fetchCollectionColorClass = function (args) {
+            console.log("fetching color for: ", args.item);
+            args.colorClass = "all-documents-collection";
         };
 
         documents.prototype.activate = function () {

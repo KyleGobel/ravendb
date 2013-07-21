@@ -30,7 +30,8 @@ class documents {
 			.collections() 
 			.then(results => this.collectionsLoaded(results));
 
-		this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
+        this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
+        ko.postbox.subscribe("RequestCollectionMembershipColorClass", e => this.fetchCollectionColorClass(e));
 	}
     
     collectionsLoaded(collections: collection[]) {
@@ -80,6 +81,11 @@ class documents {
 			var documentsList = new pagedList(fetcher, 30)
 			this.currentCollectionPagedItems(documentsList);
 		}
+    }
+
+    fetchCollectionColorClass(args: any) {
+        console.log("fetching color for: ", args.item);
+        args.colorClass = "all-documents-collection";
     }
 
     activate() {

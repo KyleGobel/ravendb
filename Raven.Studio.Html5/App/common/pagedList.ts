@@ -1,7 +1,7 @@
 /// <reference path="../../Scripts/typings/jquery/jquery.d.ts" />
 /// <reference path="promise.ts" />
 /// <reference path="../../Scripts/typings/knockout/knockout.d.ts" />
-/// <reference path="../../Scripts/knockout-observableExtensions.ts" />
+/// <reference path="../../Scripts/extensions.ts" />
 
 import pagedResultSet = module("common/pagedResultSet");
 

@@ -31,4 +31,4 @@ subscribableFn.select = function (selector) {
 observabelArrayFn.pushAll = function (items) {
     this.push.apply(this, items);
 };
-//@ sourceMappingURL=knockout-observableExtensions.js.map
+//@ sourceMappingURL=extensions.js.map

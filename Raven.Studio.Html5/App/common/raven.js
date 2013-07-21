@@ -7,7 +7,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
 
     var raven = (function () {
         function raven() {
-            this.baseUrl = "http://localhost:8080";
+            this.baseUrl = "";
         }
         raven.prototype.databases = function () {
             var resultsSelector = function (databaseNames) {

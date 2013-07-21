@@ -1074,6 +1074,9 @@
     <None Include="Server\WebUI\Html5\Content\font\FontAwesome.otf" />
     <None Include="Server\WebUI\Html5\Scripts\jquery-1.9.1.min.map" />
     <None Include="Server\WebUI\Html5\Scripts\knockout-observableExtensions.js.map" />
+    <None Include="Server\WebUI\Html5\Scripts\knockout-observableExtensions.min.js.map">
+      <DependentUpon>knockout-observableExtensions.js</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Raven.Abstractions\Raven.Abstractions.csproj">
