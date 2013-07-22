@@ -1,7 +1,8 @@
-define(["require", "exports", "common/pagedList", "models/document", "common/pagedResultSet"], function(require, exports, __pagedList__, __document__, __pagedResultSet__) {
+define(["require", "exports", "common/pagedList", "models/document", "models/collection", "common/pagedResultSet"], function(require, exports, __pagedList__, __document__, __collection__, __pagedResultSet__) {
     
     var pagedList = __pagedList__;
     var document = __document__;
+    var collection = __collection__;
     var pagedResultSet = __pagedResultSet__;
 
     var ctor = (function () {
@@ -11,17 +12,18 @@ define(["require", "exports", "common/pagedList", "models/document", "common/pag
             this.settings = settings;
             this.rows = ko.observableArray();
             this.columns = ko.observableArray();
-            this.selectionStack = [];
             this.isFirstRender = true;
             this.skip = 0;
             this.take = 100;
             this.totalRowsCount = 0;
-            this.currentItemsCollection = ko.observable();
             if (!settings.items || !ko.isObservable(settings.items)) {
                 throw new Error("datatable must be passed an items observable.");
             }
 
             this.currentItemsCollection = this.settings.items;
+            this.collections = this.settings.collections;
+            this.selectionStack = this.settings.selectedItems;
+            this.memoizedColorClassForEntityName = this.getColorClassFromEntityName.memoize(this);
             this.fetchNextChunk();
 
             this.allRowsChecked = ko.computed({
@@ -236,15 +238,18 @@ define(["require", "exports", "common/pagedList", "models/document", "common/pag
             };
 
             if (columnName === "Id") {
-                var args = {
-                    colorClass: "",
-                    item: rowData
-                };
-                ko.postbox.publish("RequestCollectionMembershipColorClass", args);
-                cell.colorClass = args.colorClass;
+                cell.colorClass = this.memoizedColorClassForEntityName(rowData.__metadata.ravenEntityName);
             }
 
             return cell;
+        };
+
+        ctor.prototype.getColorClassFromEntityName = function (entityName) {
+            for (var i = 1; i < this.collections().length; i++) {
+                if (this.collections()[i].name === entityName) {
+                    return this.collections()[i].colorClass;
+                }
+            }
         };
         return ctor;
     })();

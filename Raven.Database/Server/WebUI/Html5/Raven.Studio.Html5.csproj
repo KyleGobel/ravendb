@@ -49,9 +49,6 @@
     <Content Include="App\viewmodels\documents.min.js">
       <DependentUpon>documents.ts</DependentUpon>
     </Content>
-    <Content Include="Scripts\knockout-observableExtensions.js.map">
-      <DependentUpon>knockout-observableExtensions.ts</DependentUpon>
-    </Content>
     <TypeScriptCompile Include="App\models\collection.ts" />
     <TypeScriptCompile Include="App\common\dto.ts" />
     <TypeScriptCompile Include="App\common\raven.ts" />
@@ -135,13 +132,7 @@
     <Content Include="Scripts\knockout-2.2.1.js" />
     <Content Include="Scripts\knockout-delegatedEvents.js" />
     <Content Include="Scripts\knockout-delegatedEvents.min.js" />
-    <Content Include="Scripts\knockout-observableExtensions.js">
-      <DependentUpon>knockout-observableExtensions.ts</DependentUpon>
-    </Content>
-    <Content Include="Scripts\knockout-observableExtensions.min.js">
-      <DependentUpon>knockout-observableExtensions.ts</DependentUpon>
-    </Content>
-    <Content Include="Scripts\knockout-observableExtensions.ts" />
+    <Content Include="Scripts\extensions.ts" />
     <Content Include="Scripts\knockout-postbox.js" />
     <Content Include="Scripts\knockout-postbox.min.js" />
     <Content Include="Scripts\knockout.debug.js" />

@@ -12,7 +12,6 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             this.settings = settings;
             this.rows = ko.observableArray();
             this.columns = ko.observableArray();
-            this.selectionStack = [];
             this.isFirstRender = true;
             this.skip = 0;
             this.take = 100;
@@ -23,6 +22,7 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
 
             this.currentItemsCollection = this.settings.items;
             this.collections = this.settings.collections;
+            this.selectionStack = this.settings.selectedItems;
             this.memoizedColorClassForEntityName = this.getColorClassFromEntityName.memoize(this);
             this.fetchNextChunk();
 

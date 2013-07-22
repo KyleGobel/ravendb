@@ -5,6 +5,7 @@
 import widget = module("durandal/widget");
 import pagedList = module("common/pagedList");
 import document = module("models/document");
+import collection = module("models/collection");
 import pagedResultSet = module("common/pagedResultSet"); 
 
 interface cell {
@@ -25,12 +26,14 @@ class ctor {
     columns = ko.observableArray();
 	isLoading: KnockoutComputed<boolean>;
     allRowsChecked: KnockoutComputed<boolean>;
-    private selectionStack: row[] = [];
+    private selectionStack: row[];
 	isFirstRender = true;
 	skip = 0;
 	take = 100;
 	totalRowsCount = 0;
-	private currentItemsCollection = ko.observable<pagedList>();
+    private currentItemsCollection: KnockoutObservable<pagedList>;
+    private collections: KnockoutObservableArray<collection>;
+    private memoizedColorClassForEntityName: Function;
 
     constructor(private element: HTMLElement, private settings) {
 		
@@ -38,7 +41,10 @@ class ctor {
 			throw new Error("datatable must be passed an items observable.");
 		}
 
-		this.currentItemsCollection = this.settings.items;
+        this.currentItemsCollection = this.settings.items;
+        this.collections = this.settings.collections;
+        this.selectionStack = this.settings.selectedItems;
+        this.memoizedColorClassForEntityName = this.getColorClassFromEntityName.memoize(this);
 		this.fetchNextChunk();
 		
 		// Computeds
@@ -100,11 +106,6 @@ class ctor {
 			});
 
 		this.rows.pushAll(rows);
-            
-        //this.streamInRows(rows, () => {
-        //    this.skip += results.items.length;
-        //    this.isLoading(false);
-        //});
     }
 
     getPropertyNames(objects: any[]): string[] {
@@ -241,15 +242,18 @@ class ctor {
         }
         
         if (columnName === "Id") {
-            var args = {
-                colorClass: "",
-                item: rowData
-            };
-            ko.postbox.publish("RequestCollectionMembershipColorClass", args);
-            cell.colorClass = args.colorClass;
+            cell.colorClass = this.memoizedColorClassForEntityName(rowData.__metadata.ravenEntityName);
         }
 
         return cell;
+    }
+
+    getColorClassFromEntityName(entityName: string) {
+        for (var i = 1; i < this.collections().length; i++) {
+            if (this.collections()[i].name === entityName) {
+                return this.collections()[i].colorClass;
+            }
+        }
     }
 }
 

@@ -16,8 +16,8 @@
                 </li>
             </ul>
         </div>
-        <div class="span10">
-            <div data-bind="widget: { kind: 'dataTable', items: currentCollectionPagedItems }" style="overflow: auto;"></div>
+        <div class="span10" tabindex="0" data-bind="event: { keydown: onKeyDown }" style="outline: 0">
+            <div data-bind="widget: { kind: 'dataTable', items: currentCollectionPagedItems, collections: collections, selectedItems: selectedItems }" style="overflow: auto;"></div>
         </div>
     </div>
 </div>

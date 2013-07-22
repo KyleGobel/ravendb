@@ -59,7 +59,24 @@ class raven {
 				documentsTask.resolve(resultSet);
 			});
 		return documentsTask;
-	}
+    }
+
+    public deleteDocuments(ids: string[]): promise {
+        this.requireActiveDatabase();
+
+        var deleteDocs = ids.map(id => this.createDeleteDocument(id));
+        //var deleteHeaders = headers: { 'x-my-custom-header': 'some value' }
+        return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
+    }
+
+    private createDeleteDocument(id: string) {
+        return {
+            Key: id,
+            Method: "DELETE",
+            Etag: null,
+            AdditionalData: null
+        }
+    }    
 
 	private requireActiveDatabase(): void {
 		if (!raven.activeDatabase()) {
@@ -68,16 +85,7 @@ class raven {
 	}
 
     private fetch(relativeUrl: string, args: any, database?: database, resultsSelector?: (results: any) => any): JQueryPromise {
-        var ajax = $.ajax({
-            cache: false,
-            url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
-            data: args
-        });
-
-        ajax.fail((request, status, error) => {
-            var errorMessage = request.responseText ? request.responseText : "Error calling " + relativeUrl;
-            ko.postbox.publish("RavenError", errorMessage);
-        });
+        var ajax = this.ajax(relativeUrl, args, "GET", database);
 
 		var foo: JQueryXHR = null;
 		if (resultsSelector) {
@@ -90,7 +98,35 @@ class raven {
 		} else {
 			return ajax; 
 		}
-	}
+    }
+
+    private post(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise {
+        return this.ajax(relativeUrl, args, "POST", database, customHeaders);
+    }
+
+    private ajax(relativeUrl: string, args: any, method: string, database?: database, customHeaders?: any): JQueryPromise {
+        
+        var options = {
+            cache: false,
+            url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
+            data: args,
+            type: method
+        };
+
+        if (customHeaders) {
+            for (var prop in customHeaders) {
+                options[prop] = customHeaders[prop];
+            }
+        }
+        
+        var ajax = $.ajax(options);
+        ajax.fail((request, status, error) => {
+            var errorMessage = request.responseText ? request.responseText : "Error calling " + relativeUrl;
+            ko.postbox.publish("RavenError", errorMessage);
+        });
+
+        return ajax;
+    }
 }
 
 export = raven;

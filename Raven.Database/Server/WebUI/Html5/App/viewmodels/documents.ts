@@ -23,6 +23,7 @@ class documents {
     collectionsLoadedTask = $.Deferred();
     collectionDocumentsLoaded = 0;
 	private currentCollectionPagedItems = ko.observable<pagedList>();
+    private selectedItems = [];
 
     constructor() {
 		this.ravenDb = new raven();
@@ -31,8 +32,7 @@ class documents {
 			.then(results => this.collectionsLoaded(results));
 
         this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
-        ko.postbox.subscribe("RequestCollectionMembershipColorClass", e => this.fetchCollectionColorClass(e));
-	}
+    }
     
     collectionsLoaded(collections: collection[]) {
         // Set the color class for each of the collections.
@@ -83,9 +83,14 @@ class documents {
 		}
     }
 
-    fetchCollectionColorClass(args: any) {
-        console.log("fetching color for: ", args.item);
-        args.colorClass = "all-documents-collection";
+    onKeyDown(sender, e: KeyboardEvent) {
+        var deleteKey = 46;
+        if (e.which === deleteKey && this.selectedItems.length > 0) {
+            e.stopPropagation();
+            var selectedIds = this.selectedItems.map(i => i.data.__metadata.id);
+            var deleteTask = this.ravenDb.deleteDocuments(selectedIds);
+            deleteTask.done(() => console.log("done!"));
+        }
     }
 
     activate() {

@@ -19,6 +19,7 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             this.collectionsLoadedTask = $.Deferred();
             this.collectionDocumentsLoaded = 0;
             this.currentCollectionPagedItems = ko.observable();
+            this.selectedItems = [];
             this.ravenDb = new raven();
             this.ravenDb.collections().then(function (results) {
                 return _this.collectionsLoaded(results);
@@ -26,9 +27,6 @@ define(["require", "exports", "models/database", "models/collection", "models/do
 
             this.selectedCollection.subscribe(function (c) {
                 return _this.onSelectedCollectionChanged(c);
-            });
-            ko.postbox.subscribe("RequestCollectionMembershipColorClass", function (e) {
-                return _this.fetchCollectionColorClass(e);
             });
         }
         documents.prototype.collectionsLoaded = function (collections) {
@@ -83,9 +81,18 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             }
         };
 
-        documents.prototype.fetchCollectionColorClass = function (args) {
-            console.log("fetching color for: ", args.item);
-            args.colorClass = "all-documents-collection";
+        documents.prototype.onKeyDown = function (sender, e) {
+            var deleteKey = 46;
+            if (e.which === deleteKey && this.selectedItems.length > 0) {
+                e.stopPropagation();
+                var selectedIds = this.selectedItems.map(function (i) {
+                    return i.data.__metadata.id;
+                });
+                var deleteTask = this.ravenDb.deleteDocuments(selectedIds);
+                deleteTask.done(function () {
+                    return console.log("done!");
+                });
+            }
         };
 
         documents.prototype.activate = function () {

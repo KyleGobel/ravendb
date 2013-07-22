@@ -66,6 +66,26 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return documentsTask;
         };
 
+        raven.prototype.deleteDocuments = function (ids) {
+            var _this = this;
+            this.requireActiveDatabase();
+
+            var deleteDocs = ids.map(function (id) {
+                return _this.createDeleteDocument(id);
+            });
+
+            return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
+        };
+
+        raven.prototype.createDeleteDocument = function (id) {
+            return {
+                Key: id,
+                Method: "DELETE",
+                Etag: null,
+                AdditionalData: null
+            };
+        };
+
         raven.prototype.requireActiveDatabase = function () {
             if (!raven.activeDatabase()) {
                 throw new Error("Must have an active database before calling this method.");
@@ -73,16 +93,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
         };
 
         raven.prototype.fetch = function (relativeUrl, args, database, resultsSelector) {
-            var ajax = $.ajax({
-                cache: false,
-                url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
-                data: args
-            });
-
-            ajax.fail(function (request, status, error) {
-                var errorMessage = request.responseText ? request.responseText : "Error calling " + relativeUrl;
-                ko.postbox.publish("RavenError", errorMessage);
-            });
+            var ajax = this.ajax(relativeUrl, args, "GET", database);
 
             var foo = null;
             if (resultsSelector) {
@@ -95,6 +106,33 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             } else {
                 return ajax;
             }
+        };
+
+        raven.prototype.post = function (relativeUrl, args, database, customHeaders) {
+            return this.ajax(relativeUrl, args, "POST", database, customHeaders);
+        };
+
+        raven.prototype.ajax = function (relativeUrl, args, method, database, customHeaders) {
+            var options = {
+                cache: false,
+                url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
+                data: args,
+                type: method
+            };
+
+            if (customHeaders) {
+                for (var prop in customHeaders) {
+                    options[prop] = customHeaders[prop];
+                }
+            }
+
+            var ajax = $.ajax(options);
+            ajax.fail(function (request, status, error) {
+                var errorMessage = request.responseText ? request.responseText : "Error calling " + relativeUrl;
+                ko.postbox.publish("RavenError", errorMessage);
+            });
+
+            return ajax;
         };
         raven.activeDatabase = ko.observable().subscribeTo("ActivateDatabase");
         return raven;

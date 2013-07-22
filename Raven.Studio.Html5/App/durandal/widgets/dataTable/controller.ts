@@ -26,7 +26,7 @@ class ctor {
     columns = ko.observableArray();
 	isLoading: KnockoutComputed<boolean>;
     allRowsChecked: KnockoutComputed<boolean>;
-    private selectionStack: row[] = [];
+    private selectionStack: row[];
 	isFirstRender = true;
 	skip = 0;
 	take = 100;
@@ -43,6 +43,7 @@ class ctor {
 
         this.currentItemsCollection = this.settings.items;
         this.collections = this.settings.collections;
+        this.selectionStack = this.settings.selectedItems;
         this.memoizedColorClassForEntityName = this.getColorClassFromEntityName.memoize(this);
 		this.fetchNextChunk();
 		
@@ -105,11 +106,6 @@ class ctor {
 			});
 
 		this.rows.pushAll(rows);
-            
-        //this.streamInRows(rows, () => {
-        //    this.skip += results.items.length;
-        //    this.isLoading(false);
-        //});
     }
 
     getPropertyNames(objects: any[]): string[] {

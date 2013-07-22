@@ -17,6 +17,7 @@
 			<!-- ko foreach: cells -->
 			<td>
 				<!-- ko if: templateName == 'colored-id-cell-template' -->
+                <div class="collection-color-strip" data-bind="css: colorClass"></div>
 				<a href="#" data-bind="attr: { href: '/document/?id=' + value }, text: value"></a>
 				<!-- /ko -->
 				<!-- ko if: templateName == 'id-cell-template' -->

@@ -55,31 +55,31 @@ body {
 .document-collections li:not(:first-child) {
   padding-left: 15px;
 }
-.document-collections .collection-style-0 {
+.collection-style-0 {
   background-color: #00c700;
 }
-.document-collections .collection-style-1 {
+.collection-style-1 {
   background-color: #c7009a;
 }
-.document-collections .collection-style-2 {
+.collection-style-2 {
   background-color: red;
 }
-.document-collections .collection-style-3 {
+.collection-style-3 {
   background-color: #0095ef;
 }
-.document-collections .collection-style-4 {
+.collection-style-4 {
   background-color: #a70068;
 }
-.document-collections .collection-style-5 {
+.collection-style-5 {
   background-color: #006464;
 }
-.document-collections .collection-style-6 {
+.collection-style-6 {
   background-color: #7832c7;
 }
-.document-collections .collection-style-7 {
+.collection-style-7 {
   background-color: #c72828;
 }
-.document-collections .all-documents-collection {
+.all-documents-collection {
   background: #ff0202;
   /* Old browsers */
 
