@@ -1,6 +1,7 @@
-define(["require", "exports", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __database__, __collection__, __document__, __raven__, __pagedList__) {
+define(["require", "exports", "durandal/app", "durandal/system", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __app__, __sys__, __database__, __collection__, __document__, __raven__, __pagedList__) {
     
-    
+    var app = __app__;
+    var sys = __sys__;
 
     var database = __database__;
     var collection = __collection__;
@@ -19,7 +20,7 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             this.collectionsLoadedTask = $.Deferred();
             this.collectionDocumentsLoaded = 0;
             this.currentCollectionPagedItems = ko.observable();
-            this.selectedItems = [];
+            this.deleteConfirmationText = ko.observable("");
             this.ravenDb = new raven();
             this.ravenDb.collections().then(function (results) {
                 return _this.collectionsLoaded(results);
@@ -55,6 +56,10 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             collections.forEach(function (c) {
                 return _this.fetchTotalDocuments(c);
             });
+
+            ko.postbox.subscribe("DeleteItems", function (items) {
+                return _this.showDeletePrompt(items);
+            });
         };
 
         documents.prototype.fetchTotalDocuments = function (collection) {
@@ -81,22 +86,40 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             }
         };
 
-        documents.prototype.onKeyDown = function (sender, e) {
-            var deleteKey = 46;
-            if (e.which === deleteKey && this.selectedItems.length > 0) {
-                e.stopPropagation();
-                var selectedIds = this.selectedItems.map(function (i) {
-                    return i.data.__metadata.id;
+        documents.prototype.activate = function () {
+            return this.collectionsLoadedTask;
+        };
+
+        documents.prototype.showDeletePrompt = function (args) {
+            this.deleteCallback = args.callback;
+            this.itemsToDelete = args.items;
+            this.deleteConfirmationText(args.items.length === 1 ? "You're deleting " + args.items[0].__metadata.id : "You're deleting " + args.items.length + " documents.");
+            $("#ConfirmationDiv").slideDown('fast');
+        };
+
+        documents.prototype.confirmDelete = function () {
+            var _this = this;
+            if (this.deleteCallback && this.itemsToDelete) {
+                var deletedItemIds = this.itemsToDelete.map(function (i) {
+                    return i.__metadata.id;
                 });
-                var deleteTask = this.ravenDb.deleteDocuments(selectedIds);
+                var deleteTask = this.ravenDb.deleteDocuments(deletedItemIds);
                 deleteTask.done(function () {
-                    return console.log("done!");
+                    _this.deleteCallback();
+                });
+                deleteTask.fail(function (response) {
+                    sys.log("Failed to delete items", response);
+                    app.showMessage("An error occurred deleting the item(s). The error has been logged.", ":-(");
+                });
+                deleteTask.always(function () {
+                    _this.dismissDeleteConfirmation();
                 });
             }
         };
 
-        documents.prototype.activate = function () {
-            return this.collectionsLoadedTask;
+        documents.prototype.dismissDeleteConfirmation = function () {
+            $("#ConfirmationDiv").hide();
+            $(".datatable").click();
         };
         return documents;
     })();

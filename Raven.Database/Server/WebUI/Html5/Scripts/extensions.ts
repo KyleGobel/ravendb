@@ -64,3 +64,34 @@ functionPrototype.memoize = function (thisVal) {
         }
     }
 }
+
+// Array extensions
+
+interface Array<T> {
+    remove<T>(item: T): number;
+    removeAll<T>(items: T[]): void;
+}
+
+// Array.remove
+var arrayPrototype: any = Array.prototype;
+arrayPrototype.remove = function (item) {
+    var self: any[] = this;
+    var index = self.indexOf(item);
+    if (index >= 0) {
+        self.splice(index, 1);
+    }
+    return index;
+}
+
+// Array.removeAll
+arrayPrototype.removeAll = function (items: any[]) {
+    var i = 0;
+    var self: any[] = this;
+    for (var i = self.length - 1; i >= 0 && items.length > 0; i--) {
+        var itemsIndex = items.indexOf(self[i]);
+        if (itemsIndex >= 0) {
+            self.splice(i, 1);
+            items.splice(itemsIndex);
+        }
+    }
+}

@@ -43,4 +43,26 @@ functionPrototype.memoize = function (thisVal) {
         }
     };
 };
+
+var arrayPrototype = Array.prototype;
+arrayPrototype.remove = function (item) {
+    var self = this;
+    var index = self.indexOf(item);
+    if (index >= 0) {
+        self.splice(index, 1);
+    }
+    return index;
+};
+
+arrayPrototype.removeAll = function (items) {
+    var i = 0;
+    var self = this;
+    for (var i = self.length - 1; i >= 0 && items.length > 0; i--) {
+        var itemsIndex = items.indexOf(self[i]);
+        if (itemsIndex >= 0) {
+            self.splice(i, 1);
+            items.splice(itemsIndex);
+        }
+    }
+};
 //@ sourceMappingURL=extensions.js.map

@@ -34,6 +34,9 @@ class ctor {
     private currentItemsCollection: KnockoutObservable<pagedList>;
     private collections: KnockoutObservableArray<collection>;
     private memoizedColorClassForEntityName: Function;
+    isContextMenuVisible = ko.observable(false);
+    contextMenuX = ko.observable(0);
+    contextMenuY = ko.observable(0);
 
     constructor(private element: HTMLElement, private settings) {
 		
@@ -43,7 +46,7 @@ class ctor {
 
         this.currentItemsCollection = this.settings.items;
         this.collections = this.settings.collections;
-        this.selectionStack = this.settings.selectedItems;
+        this.selectionStack = [];
         this.memoizedColorClassForEntityName = this.getColorClassFromEntityName.memoize(this);
 		this.fetchNextChunk();
 		
@@ -58,14 +61,20 @@ class ctor {
 		this.currentItemsCollection.subscribe(() => {
             this.rows.removeAll();
             this.columns.removeAll();
-			this.fetchNextChunk();
+            this.fetchNextChunk();
+            this.selectionStack.length = 0;
 		});
-		if (this.currentItemsCollection()) {
-			this.fetchNextChunk();
-		}
 
-		// Size the table to full height whenever the page height changes.
-		$(window).resize(() => this.sizeTable());
+        $(window).resize(() => this.sizeTable());
+
+        // Initialization
+        if (this.currentItemsCollection()) {
+            this.fetchNextChunk();
+        }
+
+        // Initialize the context menu (using Bootstrap-ContextMenu library).
+        // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
+        (<any>$('.datatable tbody')).contextmenu({ 'target': '#context-menu' });
     }
 
     sizeTable() { 
@@ -145,6 +154,17 @@ class ctor {
         }
     }
 
+    private selectOnRightClick(row: row, e: MouseEvent) {
+        // Like Gmail, we select on right click.
+        var rightMouseButton = 2;
+        if (e.button === rightMouseButton) {
+            if (!row.isChecked()) {
+                row.isChecked(true);
+                this.selectionStack.push(row);
+            }
+        }
+    }
+
     private toggleChecked(row: row, e: any) {
         row.isChecked(!row.isChecked());
         var rowIndex = this.rows.indexOf(row);
@@ -164,9 +184,18 @@ class ctor {
             var previousSelectionIndex = this.rows.indexOf(newSelectionState ? this.selectionStack[1] : this.selectionStack[0]);
             var validIndices = rowIndex >= 0 && previousSelectionIndex >= 0 && rowIndex != previousSelectionIndex;
             if (validIndices) {
-                this.rows
-                    .slice(Math.min(rowIndex, previousSelectionIndex), Math.max(rowIndex, previousSelectionIndex))
-                    .forEach((r: row) => r.isChecked(newSelectionState));
+                var rowsToChange = this.rows.slice(Math.min(rowIndex, previousSelectionIndex), Math.max(rowIndex, previousSelectionIndex));
+                rowsToChange.forEach((r: row) => r.isChecked(newSelectionState));
+                
+                if (newSelectionState === true) {
+                    rowsToChange
+                        .filter(r => this.selectionStack.indexOf(r) === -1)
+                        .forEach(r => this.selectionStack.push(r));
+                } else {
+                    rowsToChange
+                        .filter(r => this.selectionStack.indexOf(r) !== -1)
+                        .forEach(r => this.selectionStack.splice(this.selectionStack.indexOf(r), 1));
+                }
             }
         }
     }
@@ -254,6 +283,35 @@ class ctor {
                 return this.collections()[i].colorClass;
             }
         }
+    }
+
+    onKeyDown(sender, e: KeyboardEvent) {
+        var deleteKey = 46;
+        if (e.which === deleteKey && this.selectionStack.length > 0) {
+            e.stopPropagation();
+            this.deleteSelection();
+        }
+    }
+
+    deleteSelection() {
+        if (this.selectionStack.length > 0) {
+            var selectedItems = this.selectionStack.map(s => s.data);
+            var deletionArgs = {
+                items: selectedItems,
+                callback: () => this.onItemsDeleted(selectedItems)
+            };
+            ko.postbox.publish("DeleteItems", deletionArgs);
+        }
+    }
+
+    editSelection() {
+
+    }
+
+    onItemsDeleted(items: any[]) {
+        var deletedRows = this.rows().filter(r => items.indexOf(r.data) >= 0);
+        this.rows.removeAll(deletedRows);
+        this.selectionStack.removeAll(deletedRows);
     }
 }
 

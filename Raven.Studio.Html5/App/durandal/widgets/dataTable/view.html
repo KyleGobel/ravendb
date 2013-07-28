@@ -1,4 +1,4 @@
-﻿<table class="table table-striped table-hover datatable">
+﻿<table class="table table-striped table-hover datatable" tabindex="0" data-bind="event: { keydown: onKeyDown }"
 	<thead>
 		<tr data-bind="visible: columns().length > 0">
 			<th>
@@ -9,8 +9,8 @@
 			<!-- /ko -->
 		</tr>
 	</thead>
-	<tbody data-bind="foreach: rows, delegatedHandler: 'click'">
-		<tr class="document-row" data-bind="css: { checked: isChecked }">
+	<tbody data-bind="foreach: rows, delegatedHandler: ['click', 'mouseup']" data-toggle="context" data-target="#context-menu">
+		<tr class="document-row" data-mouseup="selectOnRightClick" data-bind="css: { checked: isChecked }">
 			<td>
 				<img class="row-check" data-click="toggleChecked" data-bind="attr: { src: isChecked() ? 'content/images/checked.png' : 'content/images/unchecked.png' }" />
 			</td>
@@ -33,4 +33,14 @@
 </table>
 <div data-bind="style: { visibility: isLoading() ? 'visible' : 'hidden' }" class="progress progress-striped active documents-progress">
     <div class="bar" style="width: 100%;"></div>
+</div>
+
+<div id="context-menu">
+    <ul class="dropdown-menu" role="menu">
+        <li><a tabindex="-1" href="#">Copy</a></li>
+        <li><a tabindex="-1" href="#">Copy Id(s)</a></li>
+        <li class="divider"></li>
+        <li><a tabindex="-1" href="#" data-bind="click: editSelection">Edit</a></li>
+        <li><a tabindex="-1" href="#" data-bind="click: deleteSelection">Delete</a></li>
+    </ul>
 </div>

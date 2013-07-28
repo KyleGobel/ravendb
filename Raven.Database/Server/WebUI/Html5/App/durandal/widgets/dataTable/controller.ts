@@ -34,6 +34,9 @@ class ctor {
     private currentItemsCollection: KnockoutObservable<pagedList>;
     private collections: KnockoutObservableArray<collection>;
     private memoizedColorClassForEntityName: Function;
+    isContextMenuVisible = ko.observable(false);
+    contextMenuX = ko.observable(0);
+    contextMenuY = ko.observable(0);
 
     constructor(private element: HTMLElement, private settings) {
 		
@@ -43,7 +46,7 @@ class ctor {
 
         this.currentItemsCollection = this.settings.items;
         this.collections = this.settings.collections;
-        this.selectionStack = this.settings.selectedItems;
+        this.selectionStack = [];
         this.memoizedColorClassForEntityName = this.getColorClassFromEntityName.memoize(this);
 		this.fetchNextChunk();
 		
@@ -58,14 +61,20 @@ class ctor {
 		this.currentItemsCollection.subscribe(() => {
             this.rows.removeAll();
             this.columns.removeAll();
-			this.fetchNextChunk();
+            this.fetchNextChunk();
+            this.selectionStack.length = 0;
 		});
-		if (this.currentItemsCollection()) {
-			this.fetchNextChunk();
-		}
 
-		// Size the table to full height whenever the page height changes.
-		$(window).resize(() => this.sizeTable());
+        $(window).resize(() => this.sizeTable());
+
+        // Initialization
+        if (this.currentItemsCollection()) {
+            this.fetchNextChunk();
+        }
+
+        // Initialize the context menu (using Bootstrap-ContextMenu library).
+        // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
+        (<any>$('.datatable')).contextmenu({ 'target': '#context-menu' });
     }
 
     sizeTable() { 
@@ -254,6 +263,31 @@ class ctor {
                 return this.collections()[i].colorClass;
             }
         }
+    }
+
+    onKeyDown(sender, e: KeyboardEvent) {
+        var deleteKey = 46;
+        if (e.which === deleteKey && this.selectionStack.length > 0) {
+            e.stopPropagation();
+            this.deleteSelection();
+        }
+    }
+
+    deleteSelection() {
+        if (this.selectionStack.length > 0) {
+            var selectedItems = this.selectionStack.map(s => s.data);
+            var deletionArgs = {
+                items: selectedItems,
+                callback: () => this.onItemsDeleted(selectedItems)
+            };
+            ko.postbox.publish("DeleteItems", deletionArgs);
+        }
+    }
+
+    onItemsDeleted(items: any[]) {
+        var deletedRows = this.rows().filter(r => items.indexOf(r.data) >= 0);
+        this.rows.removeAll(deletedRows);
+        this.selectionStack.removeAll(deletedRows);
     }
 }
 

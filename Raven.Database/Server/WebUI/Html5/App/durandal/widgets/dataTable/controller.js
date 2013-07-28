@@ -16,13 +16,16 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             this.skip = 0;
             this.take = 100;
             this.totalRowsCount = 0;
+            this.isContextMenuVisible = ko.observable(false);
+            this.contextMenuX = ko.observable(0);
+            this.contextMenuY = ko.observable(0);
             if (!settings.items || !ko.isObservable(settings.items)) {
                 throw new Error("datatable must be passed an items observable.");
             }
 
             this.currentItemsCollection = this.settings.items;
             this.collections = this.settings.collections;
-            this.selectionStack = this.settings.selectedItems;
+            this.selectionStack = [];
             this.memoizedColorClassForEntityName = this.getColorClassFromEntityName.memoize(this);
             this.fetchNextChunk();
 
@@ -46,14 +49,18 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
                 _this.rows.removeAll();
                 _this.columns.removeAll();
                 _this.fetchNextChunk();
+                _this.selectionStack.length = 0;
             });
-            if (this.currentItemsCollection()) {
-                this.fetchNextChunk();
-            }
 
             $(window).resize(function () {
                 return _this.sizeTable();
             });
+
+            if (this.currentItemsCollection()) {
+                this.fetchNextChunk();
+            }
+
+            ($('.datatable')).contextmenu({ 'target': '#context-menu' });
         }
         ctor.prototype.sizeTable = function () {
             var tableElement = $(this.element).find(".datatable");
@@ -250,6 +257,38 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
                     return this.collections()[i].colorClass;
                 }
             }
+        };
+
+        ctor.prototype.onKeyDown = function (sender, e) {
+            var deleteKey = 46;
+            if (e.which === deleteKey && this.selectionStack.length > 0) {
+                e.stopPropagation();
+                this.deleteSelection();
+            }
+        };
+
+        ctor.prototype.deleteSelection = function () {
+            var _this = this;
+            if (this.selectionStack.length > 0) {
+                var selectedItems = this.selectionStack.map(function (s) {
+                    return s.data;
+                });
+                var deletionArgs = {
+                    items: selectedItems,
+                    callback: function () {
+                        return _this.onItemsDeleted(selectedItems);
+                    }
+                };
+                ko.postbox.publish("DeleteItems", deletionArgs);
+            }
+        };
+
+        ctor.prototype.onItemsDeleted = function (items) {
+            var deletedRows = this.rows().filter(function (r) {
+                return items.indexOf(r.data) >= 0;
+            });
+            this.rows.removeAll(deletedRows);
+            this.selectionStack.removeAll(deletedRows);
         };
         return ctor;
     })();

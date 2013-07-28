@@ -16,8 +16,20 @@
                 </li>
             </ul>
         </div>
-        <div class="span10" tabindex="0" data-bind="event: { keydown: onKeyDown }" style="outline: 0">
-            <div data-bind="widget: { kind: 'dataTable', items: currentCollectionPagedItems, collections: collections, selectedItems: selectedItems }" style="overflow: auto;"></div>
+        <div class="span10">
+            <div id="ConfirmationDiv" class="confirmation-drop-down" style="display: none;">
+                <div style="margin-top: 5px; display:inline-block;">
+                    <strong data-bind="text: deleteConfirmationText"></strong>
+                </div>
+                <div class="pull-right">
+                    <button class="btn" data-bind="click: confirmDelete">Yep, delete</button>
+                    <button class="btn" data-bind="click: dismissDeleteConfirmation">Nevermind</button>
+                    <i class="icon-remove muted" data-bind="click: dismissDeleteConfirmation" style="margin-left: 10px;"></i>
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+
+            <div data-bind="widget: { kind: 'dataTable', items: currentCollectionPagedItems, collections: collections }"></div>
         </div>
     </div>
 </div>
