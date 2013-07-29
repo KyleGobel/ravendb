@@ -16,15 +16,18 @@ define(['durandal/app', 'durandal/viewLocator', 'durandal/system', 'durandal/plu
             //Replace 'viewmodels' in the moduleId with 'views' to locate the view.
             //Look for partial views in a 'views' folder in the root.
             viewLocator.useConvention();
-
-            //configure routing
             router.useConvention();
+
+            // Visible routes            
             router.mapNav('documents');
             router.mapNav('indexes');
             router.mapNav('query');
             router.mapNav('tasks');
             router.mapNav('settings');
             router.mapNav('status');
+
+            // Non-visible routes.
+            router.mapRoute('editDocument', null, null, false); // Edit a document. Expects route like /edit?id=Orders/123
 
             app.adaptToDevice();
 

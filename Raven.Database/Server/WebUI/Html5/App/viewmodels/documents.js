@@ -1,7 +1,8 @@
-define(["require", "exports", "durandal/app", "durandal/system", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __app__, __sys__, __database__, __collection__, __document__, __raven__, __pagedList__) {
+define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugins/router", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __app__, __sys__, __router__, __database__, __collection__, __document__, __raven__, __pagedList__) {
     
     var app = __app__;
     var sys = __sys__;
+    var router = __router__;
 
     var database = __database__;
     var collection = __collection__;
@@ -20,7 +21,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/databas
             this.collectionsLoadedTask = $.Deferred();
             this.collectionDocumentsLoaded = 0;
             this.currentCollectionPagedItems = ko.observable();
-            this.deleteConfirmationText = ko.observable("");
+            this.itemsToDelete = ko.observableArray();
             this.ravenDb = new raven();
             this.ravenDb.collections().then(function (results) {
                 return _this.collectionsLoaded(results);
@@ -28,6 +29,9 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/databas
 
             this.selectedCollection.subscribe(function (c) {
                 return _this.onSelectedCollectionChanged(c);
+            });
+            ko.postbox.subscribe("EditItem", function (args) {
+                return router.navigateTo("#editDocument?id=" + encodeURIComponent(args.item.getId()));
             });
         }
         documents.prototype.collectionsLoaded = function (collections) {
@@ -51,7 +55,11 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/databas
 
             var allCollections = [this.allDocumentsCollection].concat(collections);
             this.collections(allCollections);
-            this.allDocumentsCollection.activate();
+
+            var collectionToSelect = collections.filter(function (c) {
+                return c.name === _this.collectionToSelectName;
+            })[0] || this.allDocumentsCollection;
+            collectionToSelect.activate();
 
             collections.forEach(function (c) {
                 return _this.fetchTotalDocuments(c);
@@ -86,21 +94,24 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/databas
             }
         };
 
-        documents.prototype.activate = function () {
+        documents.prototype.activate = function (args) {
+            this.collectionToSelectName = args.collection;
             return this.collectionsLoadedTask;
         };
 
         documents.prototype.showDeletePrompt = function (args) {
             this.deleteCallback = args.callback;
-            this.itemsToDelete = args.items;
-            this.deleteConfirmationText(args.items.length === 1 ? "You're deleting " + args.items[0].__metadata.id : "You're deleting " + args.items.length + " documents.");
-            $("#ConfirmationDiv").slideDown('fast');
+            this.itemsToDelete(args.items);
+            $('#DeleteDocumentsConfirmation').modal({
+                backdrop: true,
+                show: true
+            });
         };
 
         documents.prototype.confirmDelete = function () {
             var _this = this;
-            if (this.deleteCallback && this.itemsToDelete) {
-                var deletedItemIds = this.itemsToDelete.map(function (i) {
+            if (this.deleteCallback && this.itemsToDelete().length > 0) {
+                var deletedItemIds = this.itemsToDelete().map(function (i) {
                     return i.__metadata.id;
                 });
                 var deleteTask = this.ravenDb.deleteDocuments(deletedItemIds);
@@ -109,17 +120,9 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/databas
                 });
                 deleteTask.fail(function (response) {
                     sys.log("Failed to delete items", response);
-                    app.showMessage("An error occurred deleting the item(s). The error has been logged.", ":-(");
-                });
-                deleteTask.always(function () {
-                    _this.dismissDeleteConfirmation();
+                    app.showMessage("An error occurred deleting the item(s). Details in the browser console.", ":-(");
                 });
             }
-        };
-
-        documents.prototype.dismissDeleteConfirmation = function () {
-            $("#ConfirmationDiv").hide();
-            $(".datatable").click();
         };
         return documents;
     })();

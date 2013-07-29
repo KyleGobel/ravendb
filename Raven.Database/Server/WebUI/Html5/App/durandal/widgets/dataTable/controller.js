@@ -52,29 +52,12 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
                 _this.selectionStack.length = 0;
             });
 
-            $(window).resize(function () {
-                return _this.sizeTable();
-            });
-
             if (this.currentItemsCollection()) {
                 this.fetchNextChunk();
             }
 
-            ($('.datatable')).contextmenu({ 'target': '#context-menu' });
+            ($('.datatable tbody')).contextmenu({ 'target': '#context-menu' });
         }
-        ctor.prototype.sizeTable = function () {
-            var tableElement = $(this.element).find(".datatable");
-            var footer = $("footer");
-            if (tableElement && footer) {
-                var tablePosition = tableElement.position();
-                var footerPosition = footer.position();
-                if (tablePosition && footerPosition) {
-                    var bottomPadding = 70;
-                    tableElement.height(footerPosition.top - tablePosition.top - bottomPadding);
-                }
-            }
-        };
-
         ctor.prototype.fetchNextChunk = function () {
             var _this = this;
             var collection = this.currentItemsCollection();
@@ -151,7 +134,18 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             }
         };
 
+        ctor.prototype.selectOnRightClick = function (row, e) {
+            var rightMouseButton = 2;
+            if (e.button === rightMouseButton) {
+                if (!row.isChecked()) {
+                    row.isChecked(true);
+                    this.selectionStack.push(row);
+                }
+            }
+        };
+
         ctor.prototype.toggleChecked = function (row, e) {
+            var _this = this;
             row.isChecked(!row.isChecked());
             var rowIndex = this.rows.indexOf(row);
             if (row.isChecked()) {
@@ -168,9 +162,24 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
                 var previousSelectionIndex = this.rows.indexOf(newSelectionState ? this.selectionStack[1] : this.selectionStack[0]);
                 var validIndices = rowIndex >= 0 && previousSelectionIndex >= 0 && rowIndex != previousSelectionIndex;
                 if (validIndices) {
-                    this.rows.slice(Math.min(rowIndex, previousSelectionIndex), Math.max(rowIndex, previousSelectionIndex)).forEach(function (r) {
+                    var rowsToChange = this.rows.slice(Math.min(rowIndex, previousSelectionIndex), Math.max(rowIndex, previousSelectionIndex));
+                    rowsToChange.forEach(function (r) {
                         return r.isChecked(newSelectionState);
                     });
+
+                    if (newSelectionState === true) {
+                        rowsToChange.filter(function (r) {
+                            return _this.selectionStack.indexOf(r) === -1;
+                        }).forEach(function (r) {
+                            return _this.selectionStack.push(r);
+                        });
+                    } else {
+                        rowsToChange.filter(function (r) {
+                            return _this.selectionStack.indexOf(r) !== -1;
+                        }).forEach(function (r) {
+                            return _this.selectionStack.splice(_this.selectionStack.indexOf(r), 1);
+                        });
+                    }
                 }
             }
         };
@@ -194,30 +203,22 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             this.allRowsChecked(!this.allRowsChecked());
         };
 
-        ctor.prototype.loadMoreIfNeeded = function () {
-            if (!this.isLoading() && this.rows().length < this.totalRowsCount) {
-                var table = $(this.element);
-                var tableBottom = table.position().top + table.height();
-                var lastRowPos = $(this.element).find(".document-row:last-child").position();
-                var nearPadding = 200;
-                var lastRowIsVisible = lastRowPos && (lastRowPos.top - nearPadding) < tableBottom;
-                if (lastRowIsVisible) {
-                    this.fetchNextChunk();
-                }
+        ctor.prototype.onLastRowVisible = function () {
+            var needsMoreRows = this.rows().length < this.totalRowsCount;
+            if (needsMoreRows && !this.isLoading()) {
+                this.fetchNextChunk();
             }
         };
 
         ctor.prototype.afterRenderColumn = function () {
             var _this = this;
             if (this.isFirstRender) {
-                var dataTable = $(this.element).find(".datatable");
-                if (dataTable != null) {
-                    this.isFirstRender = false;
-                    this.sizeTable();
-                    dataTable.scroll(function () {
-                        return _this.loadMoreIfNeeded();
-                    });
-                }
+                this.isFirstRender = false;
+
+                ($('.document-row:last-child')).appear();
+                $(window.document.body).on('appear', '.document-row:last-child', function () {
+                    return _this.onLastRowVisible();
+                });
             }
         };
 
@@ -280,6 +281,14 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
                     }
                 };
                 ko.postbox.publish("DeleteItems", deletionArgs);
+            }
+        };
+
+        ctor.prototype.editSelection = function () {
+            var lastSelected = this.selectionStack.last();
+            if (lastSelected) {
+                var args = { item: lastSelected.data };
+                ko.postbox.publish("EditItem", args);
             }
         };
 

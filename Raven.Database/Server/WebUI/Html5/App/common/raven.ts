@@ -2,6 +2,7 @@
 /// <reference path="../../Scripts/typings/knockout/knockout.d.ts" />
 /// <reference path="../../Scripts/typings/jquery/jquery.d.ts" /> 
 
+
 import database = module("models/database");
 import collection = module("models/collection"); 
 import collectionInfo = module("models/collectionInfo");
@@ -10,9 +11,8 @@ import pagedResultSet = module("common/pagedResultSet");
 
 class raven {
 
-    // For testing purposes, our base URL.
-    private baseUrl = "http://localhost:8080";
-	//private baseUrl = "";
+    private baseUrl = "http://localhost:8080"; // For debugging purposes, uncomment this line to point Raven at an already-running Raven server. Requires the Raven server to have it's config set to <add key="Raven/AccessControlAllowOrigin" value="*" />
+	//private baseUrl = ""; // This should be used when serving HTML5 Studio from the server app.
 	
 	public static activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 
@@ -61,6 +61,23 @@ class raven {
 		return documentsTask;
     }
 
+    public document(id: string): promise<document> {
+        var resultsSelector = (dto: documentDto) => new document(dto);
+        var url = "/docs/" + encodeURIComponent(id);
+        return this.fetch(url, null, raven.activeDatabase(), resultsSelector);
+    }
+
+    public documentWithMetadata(id: string): promise<document> {
+        var resultsSelector = (dtoResults: documentDto[]) => new document(dtoResults[0]);
+        var url = "/docs/";
+        var args = {
+            startsWith: id,
+            start: 0, 
+            pageSize: 1
+        };
+        return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
+    }
+
     public deleteDocuments(ids: string[]): promise {
         this.requireActiveDatabase();
 
@@ -93,7 +110,8 @@ class raven {
 			ajax.done((results) => {
 				var transformedResults = resultsSelector(results);
 				task.resolve(transformedResults);
-			});
+            });
+            ajax.fail((request, status, error) => task.reject(request, status, error));
 			return task;
 		} else {
 			return ajax; 
@@ -119,13 +137,7 @@ class raven {
             }
         }
         
-        var ajax = $.ajax(options);
-        ajax.fail((request, status, error) => {
-            var errorMessage = request.responseText ? request.responseText : "Error calling " + relativeUrl;
-            ko.postbox.publish("RavenError", errorMessage);
-        });
-
-        return ajax;
+        return $.ajax(options);
     }
 }
 

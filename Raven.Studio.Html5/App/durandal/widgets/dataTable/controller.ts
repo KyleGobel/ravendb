@@ -65,8 +65,6 @@ class ctor {
             this.selectionStack.length = 0;
 		});
 
-        $(window).resize(() => this.sizeTable());
-
         // Initialization
         if (this.currentItemsCollection()) {
             this.fetchNextChunk();
@@ -76,20 +74,7 @@ class ctor {
         // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
         (<any>$('.datatable tbody')).contextmenu({ 'target': '#context-menu' });
     }
-
-    sizeTable() { 
-		var tableElement = $(this.element).find(".datatable");
-		var footer = $("footer");
-		if (tableElement && footer) {
-			var tablePosition = tableElement.position();
-			var footerPosition = footer.position();
-			if (tablePosition && footerPosition) {
-				var bottomPadding = 70;
-				tableElement.height(footerPosition.top - tablePosition.top - bottomPadding);
-			}
-        }
-    }
-
+    
     fetchNextChunk() {
 		var collection = this.currentItemsCollection();
 		if (collection) {
@@ -218,28 +203,22 @@ class ctor {
     toggleAllRowsChecked() {
         this.allRowsChecked(!this.allRowsChecked());
     }
-
-	loadMoreIfNeeded() {
-        if (!this.isLoading() && this.rows().length < this.totalRowsCount) {
-			var table = $(this.element);
-            var tableBottom = table.position().top + table.height();
-            var lastRowPos = $(this.element).find(".document-row:last-child").position();
-            var nearPadding = 200;
-            var lastRowIsVisible = lastRowPos && (lastRowPos.top - nearPadding) < tableBottom;
-            if (lastRowIsVisible) {
-                this.fetchNextChunk();
-            }
+    
+    onLastRowVisible() {
+        var needsMoreRows = this.rows().length < this.totalRowsCount;
+        if (needsMoreRows && !this.isLoading()) {
+            this.fetchNextChunk();
         }
     }
 
     afterRenderColumn() {
         if (this.isFirstRender) {
-            var dataTable = $(this.element).find(".datatable");
-            if (dataTable != null) {
-                this.isFirstRender = false;
-                this.sizeTable();
-                dataTable.scroll(() => this.loadMoreIfNeeded());
-            }
+            this.isFirstRender = false;
+            
+            // Setup infinite scrolling via jQuery appear plugin. 
+            // Used for determining whether the last row is visible or near visible.
+            (<any>$('.document-row:last-child')).appear();
+            $(window.document.body).on('appear', '.document-row:last-child', () => this.onLastRowVisible());
         }
     }
 
@@ -305,7 +284,11 @@ class ctor {
     }
 
     editSelection() {
-
+        var lastSelected = this.selectionStack.last();
+        if (lastSelected) {
+            var args = { item: lastSelected.data };
+            ko.postbox.publish("EditItem", args);
+        }
     }
 
     onItemsDeleted(items: any[]) {

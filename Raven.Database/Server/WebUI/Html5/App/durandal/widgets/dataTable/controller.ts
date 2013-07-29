@@ -65,8 +65,6 @@ class ctor {
             this.selectionStack.length = 0;
 		});
 
-        $(window).resize(() => this.sizeTable());
-
         // Initialization
         if (this.currentItemsCollection()) {
             this.fetchNextChunk();
@@ -74,22 +72,9 @@ class ctor {
 
         // Initialize the context menu (using Bootstrap-ContextMenu library).
         // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
-        (<any>$('.datatable')).contextmenu({ 'target': '#context-menu' });
+        (<any>$('.datatable tbody')).contextmenu({ 'target': '#context-menu' });
     }
-
-    sizeTable() { 
-		var tableElement = $(this.element).find(".datatable");
-		var footer = $("footer");
-		if (tableElement && footer) {
-			var tablePosition = tableElement.position();
-			var footerPosition = footer.position();
-			if (tablePosition && footerPosition) {
-				var bottomPadding = 70;
-				tableElement.height(footerPosition.top - tablePosition.top - bottomPadding);
-			}
-        }
-    }
-
+    
     fetchNextChunk() {
 		var collection = this.currentItemsCollection();
 		if (collection) {
@@ -154,6 +139,17 @@ class ctor {
         }
     }
 
+    private selectOnRightClick(row: row, e: MouseEvent) {
+        // Like Gmail, we select on right click.
+        var rightMouseButton = 2;
+        if (e.button === rightMouseButton) {
+            if (!row.isChecked()) {
+                row.isChecked(true);
+                this.selectionStack.push(row);
+            }
+        }
+    }
+
     private toggleChecked(row: row, e: any) {
         row.isChecked(!row.isChecked());
         var rowIndex = this.rows.indexOf(row);
@@ -173,9 +169,18 @@ class ctor {
             var previousSelectionIndex = this.rows.indexOf(newSelectionState ? this.selectionStack[1] : this.selectionStack[0]);
             var validIndices = rowIndex >= 0 && previousSelectionIndex >= 0 && rowIndex != previousSelectionIndex;
             if (validIndices) {
-                this.rows
-                    .slice(Math.min(rowIndex, previousSelectionIndex), Math.max(rowIndex, previousSelectionIndex))
-                    .forEach((r: row) => r.isChecked(newSelectionState));
+                var rowsToChange = this.rows.slice(Math.min(rowIndex, previousSelectionIndex), Math.max(rowIndex, previousSelectionIndex));
+                rowsToChange.forEach((r: row) => r.isChecked(newSelectionState));
+                
+                if (newSelectionState === true) {
+                    rowsToChange
+                        .filter(r => this.selectionStack.indexOf(r) === -1)
+                        .forEach(r => this.selectionStack.push(r));
+                } else {
+                    rowsToChange
+                        .filter(r => this.selectionStack.indexOf(r) !== -1)
+                        .forEach(r => this.selectionStack.splice(this.selectionStack.indexOf(r), 1));
+                }
             }
         }
     }
@@ -198,28 +203,22 @@ class ctor {
     toggleAllRowsChecked() {
         this.allRowsChecked(!this.allRowsChecked());
     }
-
-	loadMoreIfNeeded() {
-        if (!this.isLoading() && this.rows().length < this.totalRowsCount) {
-			var table = $(this.element);
-            var tableBottom = table.position().top + table.height();
-            var lastRowPos = $(this.element).find(".document-row:last-child").position();
-            var nearPadding = 200;
-            var lastRowIsVisible = lastRowPos && (lastRowPos.top - nearPadding) < tableBottom;
-            if (lastRowIsVisible) {
-                this.fetchNextChunk();
-            }
+    
+    onLastRowVisible() {
+        var needsMoreRows = this.rows().length < this.totalRowsCount;
+        if (needsMoreRows && !this.isLoading()) {
+            this.fetchNextChunk();
         }
     }
 
     afterRenderColumn() {
         if (this.isFirstRender) {
-            var dataTable = $(this.element).find(".datatable");
-            if (dataTable != null) {
-                this.isFirstRender = false;
-                this.sizeTable();
-                dataTable.scroll(() => this.loadMoreIfNeeded());
-            }
+            this.isFirstRender = false;
+            
+            // Setup infinite scrolling via jQuery appear plugin. 
+            // Used for determining whether the last row is visible or near visible.
+            (<any>$('.document-row:last-child')).appear();
+            $(window.document.body).on('appear', '.document-row:last-child', () => this.onLastRowVisible());
         }
     }
 
@@ -281,6 +280,14 @@ class ctor {
                 callback: () => this.onItemsDeleted(selectedItems)
             };
             ko.postbox.publish("DeleteItems", deletionArgs);
+        }
+    }
+
+    editSelection() {
+        var lastSelected = this.selectionStack.last();
+        if (lastSelected) {
+            var args = { item: lastSelected.data };
+            ko.postbox.publish("EditItem", args);
         }
     }
 

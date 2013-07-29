@@ -52,29 +52,12 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
                 _this.selectionStack.length = 0;
             });
 
-            $(window).resize(function () {
-                return _this.sizeTable();
-            });
-
             if (this.currentItemsCollection()) {
                 this.fetchNextChunk();
             }
 
             ($('.datatable tbody')).contextmenu({ 'target': '#context-menu' });
         }
-        ctor.prototype.sizeTable = function () {
-            var tableElement = $(this.element).find(".datatable");
-            var footer = $("footer");
-            if (tableElement && footer) {
-                var tablePosition = tableElement.position();
-                var footerPosition = footer.position();
-                if (tablePosition && footerPosition) {
-                    var bottomPadding = 70;
-                    tableElement.height(footerPosition.top - tablePosition.top - bottomPadding);
-                }
-            }
-        };
-
         ctor.prototype.fetchNextChunk = function () {
             var _this = this;
             var collection = this.currentItemsCollection();
@@ -220,30 +203,22 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             this.allRowsChecked(!this.allRowsChecked());
         };
 
-        ctor.prototype.loadMoreIfNeeded = function () {
-            if (!this.isLoading() && this.rows().length < this.totalRowsCount) {
-                var table = $(this.element);
-                var tableBottom = table.position().top + table.height();
-                var lastRowPos = $(this.element).find(".document-row:last-child").position();
-                var nearPadding = 200;
-                var lastRowIsVisible = lastRowPos && (lastRowPos.top - nearPadding) < tableBottom;
-                if (lastRowIsVisible) {
-                    this.fetchNextChunk();
-                }
+        ctor.prototype.onLastRowVisible = function () {
+            var needsMoreRows = this.rows().length < this.totalRowsCount;
+            if (needsMoreRows && !this.isLoading()) {
+                this.fetchNextChunk();
             }
         };
 
         ctor.prototype.afterRenderColumn = function () {
             var _this = this;
             if (this.isFirstRender) {
-                var dataTable = $(this.element).find(".datatable");
-                if (dataTable != null) {
-                    this.isFirstRender = false;
-                    this.sizeTable();
-                    dataTable.scroll(function () {
-                        return _this.loadMoreIfNeeded();
-                    });
-                }
+                this.isFirstRender = false;
+
+                ($('.document-row:last-child')).appear();
+                $(window.document.body).on('appear', '.document-row:last-child', function () {
+                    return _this.onLastRowVisible();
+                });
             }
         };
 
@@ -310,6 +285,11 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
         };
 
         ctor.prototype.editSelection = function () {
+            var lastSelected = this.selectionStack.last();
+            if (lastSelected) {
+                var args = { item: lastSelected.data };
+                ko.postbox.publish("EditItem", args);
+            }
         };
 
         ctor.prototype.onItemsDeleted = function (items) {

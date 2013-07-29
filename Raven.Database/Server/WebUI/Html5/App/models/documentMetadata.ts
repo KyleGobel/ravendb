@@ -10,15 +10,17 @@ class documentMetadata {
 	ravenLastModified: Date;
 	etag: string;
 
-	constructor(dto: documentMetadataDto) {
-		this.ravenEntityName = dto['Raven-Entity-Name'];
-		this.ravenClrType = dto['Raven-Clr-Type'];
-		this.nonAuthoritativeInfo = dto['Non-Authoritative-Information'];
-		this.id = dto['@id'];
-		this.tempIndexScore = dto['Temp-Index-Score'];
-		this.lastModified = new Date(dto['Last-Modified']);
-		this.ravenLastModified = new Date(dto['Raven-Last-Modified']);
-		this.etag = dto['@etag'];
+    constructor(dto?: documentMetadataDto) {
+        if (dto) {
+            this.ravenEntityName = dto['Raven-Entity-Name'];
+            this.ravenClrType = dto['Raven-Clr-Type'];
+            this.nonAuthoritativeInfo = dto['Non-Authoritative-Information'];
+            this.id = dto['@id'];
+            this.tempIndexScore = dto['Temp-Index-Score'];
+            this.lastModified = new Date(dto['Last-Modified']);
+            this.ravenLastModified = new Date(dto['Raven-Last-Modified']);
+            this.etag = dto['@etag'];
+        }
 	}
 }
 

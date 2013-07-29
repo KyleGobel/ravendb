@@ -65,4 +65,13 @@ arrayPrototype.removeAll = function (items) {
         }
     }
 };
+
+arrayPrototype.last = function () {
+    var self = this;
+    if (self.length > 0) {
+        return self[self.length - 1];
+    }
+
+    return null;
+};
 //@ sourceMappingURL=extensions.js.map

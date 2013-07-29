@@ -43,12 +43,6 @@
   <ItemGroup>
     <TypeScriptCompile Include="App\common\pagedList.ts" />
     <TypeScriptCompile Include="App\common\pagedResultSet.ts" />
-    <Content Include="App\viewmodels\documents.js">
-      <DependentUpon>documents.ts</DependentUpon>
-    </Content>
-    <Content Include="App\viewmodels\documents.min.js">
-      <DependentUpon>documents.ts</DependentUpon>
-    </Content>
     <TypeScriptCompile Include="App\models\collection.ts" />
     <TypeScriptCompile Include="App\common\dto.ts" />
     <TypeScriptCompile Include="App\common\raven.ts" />
@@ -88,6 +82,11 @@
     <TypeScriptCompile Include="App\models\document.ts" />
     <TypeScriptCompile Include="App\models\documentMetadata.ts" />
     <TypeScriptCompile Include="App\viewmodels\shell.ts" />
+    <TypeScriptCompile Include="App\viewmodels\editDocument.ts" />
+    <Content Include="App\viewmodels\editDocument.js">
+      <DependentUpon>editDocument.ts</DependentUpon>
+    </Content>
+    <Content Include="App\views\editDocument.html" />
     <Content Include="App\views\indexes.html" />
     <Content Include="App\views\query.html" />
     <Content Include="App\views\settings.html" />
@@ -101,8 +100,6 @@
     <Content Include="Content\app.min.css">
       <DependentUpon>app.less</DependentUpon>
     </Content>
-    <Content Include="Content\bootstrap-responsive.css" />
-    <Content Include="Content\bootstrap-responsive.min.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\durandal.css" />
@@ -115,20 +112,18 @@
     <Content Include="Content\images\glyphicons-halflings-white.png" />
     <Content Include="Content\images\glyphicons-halflings.png" />
     <Content Include="Content\images\icon.png" />
-    <Content Include="Content\images\ios-startup-image-landscape.png" />
-    <Content Include="Content\images\ios-startup-image-portrait.png" />
     <Content Include="Content\app.less" />
-    <Content Include="App\viewmodels\documents.js.map">
-      <DependentUpon>documents.ts</DependentUpon>
-    </Content>
     <None Include="Scripts\jquery-1.9.1.intellisense.js" />
+    <Content Include="Content\images\logo.png" />
     <Content Include="Content\images\unchecked.png" />
     <Content Include="Index.html" />
+    <None Include="ReadMe.txt" />
+    <Content Include="Scripts\bootstrap-contextmenu-2.1.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="Scripts\bootstrap-contextmenu-2.1.js" />
     <Content Include="Scripts\jquery-1.9.1.js" />
     <Content Include="Scripts\jquery-1.9.1.min.js" />
+    <Content Include="Scripts\jquery.appear-0.3.3.js" />
     <Content Include="Scripts\knockout-2.2.1.debug.js" />
     <Content Include="Scripts\knockout-2.2.1.js" />
     <Content Include="Scripts\knockout-delegatedEvents.js" />

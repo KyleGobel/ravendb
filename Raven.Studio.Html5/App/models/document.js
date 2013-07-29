@@ -11,6 +11,9 @@ define(["require", "exports", "models/documentMetadata"], function(require, expo
                 }
             }
         }
+        document.prototype.getId = function () {
+            return this.__metadata.id;
+        };
         return document;
     })();
 

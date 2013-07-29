@@ -70,6 +70,7 @@ functionPrototype.memoize = function (thisVal) {
 interface Array<T> {
     remove<T>(item: T): number;
     removeAll<T>(items: T[]): void;
+    last<T>(): T;
 }
 
 // Array.remove
@@ -94,4 +95,14 @@ arrayPrototype.removeAll = function (items: any[]) {
             items.splice(itemsIndex);
         }
     }
+}
+
+// Array.last
+arrayPrototype.last = function () {
+    var self: any[] = this;
+    if (self.length > 0) {
+        return self[self.length - 1];
+    }
+
+    return null;
 }

@@ -6,6 +6,7 @@
 import http = module("durandal/http");
 import app = module("durandal/app");
 import sys = module("durandal/system");
+import router = module("durandal/plugins/router");
 
 import database = module("models/database");
 import collection = module("models/collection");
@@ -24,10 +25,10 @@ class documents {
     collectionColors = []
     collectionsLoadedTask = $.Deferred();
     collectionDocumentsLoaded = 0;
+    collectionToSelectName: string;
     private currentCollectionPagedItems = ko.observable<pagedList>();
+    itemsToDelete = ko.observableArray<document>();
     deleteCallback: Function;
-    itemsToDelete: document[];
-    deleteConfirmationText = ko.observable("");
 
     constructor() {
         this.ravenDb = new raven();
@@ -36,6 +37,7 @@ class documents {
             .then(results => this.collectionsLoaded(results));
 
         this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
+        ko.postbox.subscribe("EditItem", args => router.navigateTo("#editDocument?id=" + encodeURIComponent(args.item.getId())));
     }
 
     collectionsLoaded(collections: collection[]) {
@@ -56,13 +58,15 @@ class documents {
         // All systems a-go. Load them into the UI and select the first one.
         var allCollections = [this.allDocumentsCollection].concat(collections);
         this.collections(allCollections);
-        this.allDocumentsCollection.activate();
+
+        var collectionToSelect = collections.filter(c => c.name === this.collectionToSelectName)[0] || this.allDocumentsCollection;
+        collectionToSelect.activate();
 
         // Fetch the collection info for each collection.
         // The collection info contains information such as total number of documents.
         collections.forEach(c => this.fetchTotalDocuments(c));
 
-        // Listen for when the grid deletes the item
+        // Listen for when the grid deletes the item 
         ko.postbox.subscribe("DeleteItems", items => this.showDeletePrompt(items));
     }
 
@@ -90,37 +94,33 @@ class documents {
         }
     }
 
-    activate() {
+    activate(args) {
+        // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
+        this.collectionToSelectName = args.collection;
         return this.collectionsLoadedTask;
     }
 
     showDeletePrompt(args: { items: document[]; callback: () => void }) {
         this.deleteCallback = args.callback;
-        this.itemsToDelete = args.items;
-        this.deleteConfirmationText(args.items.length === 1 ? "You're deleting " + args.items[0].__metadata.id : "You're deleting " + args.items.length + " documents.")
-        $("#ConfirmationDiv").show();
+        this.itemsToDelete(args.items);
+        $('#DeleteDocumentsConfirmation').modal({
+            backdrop: true,
+            show: true
+        });
     }
 
     confirmDelete() {
-        if (this.deleteCallback && this.itemsToDelete) {
-            var deletedItemIds = this.itemsToDelete.map(i => i.__metadata.id);
+        if (this.deleteCallback && this.itemsToDelete().length > 0) {
+            var deletedItemIds = this.itemsToDelete().map(i => i.__metadata.id);
             var deleteTask = this.ravenDb.deleteDocuments(deletedItemIds);
             deleteTask.done(() => {
                 this.deleteCallback();
             });
             deleteTask.fail((response) => {
                 sys.log("Failed to delete items", response);
-                app.showMessage("An error occurred deleting the item(s). The error has been logged.", ":-(");
-            });
-            deleteTask.always(() => {
-                this.dismissDeleteConfirmation();
+                app.showMessage("An error occurred deleting the item(s). Details in the browser console.", ":-(");
             });
         }
-    }
-
-    dismissDeleteConfirmation() {
-        $("#ConfirmationDiv").hide();
-        $(".datatable").click();
     }
 }
 

@@ -3,6 +3,8 @@
 
 import router = module("durandal/plugins/router");
 import app = module("durandal/app");
+import sys = module("durandal/system");
+
 import database = module("models/database");
 import raven = module("common/raven");
 
@@ -15,8 +17,6 @@ class shell {
 
 	constructor() {
         this.ravenDb = new raven();
-
-        ko.postbox.subscribe("RavenError", errorMessage => this.onRavenError(errorMessage));
     }
 
     databasesLoaded(databases: database[]) {
@@ -28,16 +28,17 @@ class shell {
 
 	activate() {
 
-		// Activate the first page only after we've connected to Raven
-		// and selected the first database.
-		return this.ravenDb
-			.databases()
-			.then(results => this.databasesLoaded(results))
-			.then(() => router.activate('documents'));
-    }
-
-    onRavenError(errorMessage: string) {
-        app.showMessage(errorMessage, "RavenDb error");
+        // Activate the first page only after we've connected to Raven
+        // and selected the first database.
+        return this.ravenDb
+            .databases()
+            .fail(result => {
+                sys.log("Unable to connect to Raven.", result);
+                app.showMessage("Couldn't connect to Raven. Details in the browser console.", ":-(", ['Dismiss']);
+                $('.splash').hide();
+            })
+            .then(results => this.databasesLoaded(results))
+            .then(() => router.activate('documents'));
     }
 }
 

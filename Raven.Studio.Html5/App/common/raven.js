@@ -66,6 +66,27 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return documentsTask;
         };
 
+        raven.prototype.document = function (id) {
+            var resultsSelector = function (dto) {
+                return new document(dto);
+            };
+            var url = "/docs/" + encodeURIComponent(id);
+            return this.fetch(url, null, raven.activeDatabase(), resultsSelector);
+        };
+
+        raven.prototype.documentWithMetadata = function (id) {
+            var resultsSelector = function (dtoResults) {
+                return new document(dtoResults[0]);
+            };
+            var url = "/docs/";
+            var args = {
+                startsWith: id,
+                start: 0,
+                pageSize: 1
+            };
+            return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
+        };
+
         raven.prototype.deleteDocuments = function (ids) {
             var _this = this;
             this.requireActiveDatabase();
@@ -102,6 +123,9 @@ define(["require", "exports", "models/database", "models/collection", "models/co
                     var transformedResults = resultsSelector(results);
                     task.resolve(transformedResults);
                 });
+                ajax.fail(function (request, status, error) {
+                    return task.reject(request, status, error);
+                });
                 return task;
             } else {
                 return ajax;
@@ -126,13 +150,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
                 }
             }
 
-            var ajax = $.ajax(options);
-            ajax.fail(function (request, status, error) {
-                var errorMessage = request.responseText ? request.responseText : "Error calling " + relativeUrl;
-                ko.postbox.publish("RavenError", errorMessage);
-            });
-
-            return ajax;
+            return $.ajax(options);
         };
         raven.activeDatabase = ko.observable().subscribeTo("ActivateDatabase");
         return raven;

@@ -1,12 +1,8 @@
-﻿<h2>
-    <i class="icon-file-alt"></i>
-    <span data-bind="html: displayName"></span>
-</h2>
-
-<div class="container-fluid documents-page">
-    <div class="row-fluid">
-        <div class="span2">
-            <ul class="nav nav-pills nav-stacked document-collections" data-bind="foreach: collections">
+﻿<div class="documents-page">
+    <div class="row">
+        <div class="col-lg-2">
+            <br />
+            <ul class="nav nav-pills nav-stacked document-collections affix" data-bind="foreach: collections">
                 <li data-bind="click: activate, css: { active: $data === $parent.selectedCollection() }">
                     <a href="#">
                         <div class="collection-color-strip" data-bind="css: colorClass"></div>
@@ -16,20 +12,41 @@
                 </li>
             </ul>
         </div>
-        <div class="span10">
-            <div id="ConfirmationDiv" class="confirmation-drop-down" style="display: none;">
-                <div style="margin-top: 5px; display:inline-block;">
-                    <strong data-bind="text: deleteConfirmationText"></strong>
-                </div>
-                <div class="pull-right">
-                    <button class="btn" data-bind="click: confirmDelete">Yep, delete</button>
-                    <button class="btn" data-bind="click: dismissDeleteConfirmation">Nevermind</button>
-                    <i class="icon-remove muted" data-bind="click: dismissDeleteConfirmation" style="margin-left: 10px;"></i>
-                </div>
-                <div style="clear: both;"></div>
-            </div>
-
+        <div class="col-lg-10">
+            <br />
             <div data-bind="widget: { kind: 'dataTable', items: currentCollectionPagedItems, collections: collections }"></div>
+        </div>
+    </div>
+</div>
+
+<div id="DeleteDocumentsConfirmation" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Sure?</h4>
+            </div>
+            <div class="modal-body">
+                <p data-bind="visible: itemsToDelete().length === 1">
+                    <span>You're deleting</span>
+                    <strong data-bind="with: itemsToDelete()[0]">
+                        <span data-bind="text: __metadata.id"></span>
+                    </strong>
+                </p>
+                <div data-bind="visible: itemsToDelete().length > 1">
+                    <span>You're deleting</span>
+                    <strong data-bind="text: itemsToDelete().length"></strong>
+                    <span>docs:</span>
+                    <br />
+                    <ul data-bind="foreach: itemsToDelete" style="max-height: 100px; overflow-y: auto;">
+                        <li data-bind="text: __metadata.id"></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Nevermind</button>
+                <button type="button" class="btn btn-primary" data-bind="click: confirmDelete">Yep, delete</button>
+            </div>
         </div>
     </div>
 </div>
