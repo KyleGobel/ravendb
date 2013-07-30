@@ -6,8 +6,8 @@ class documentMetadata {
 	nonAuthoritativeInfo: boolean;
 	id: string;
 	tempIndexScore: number;
-	lastModified: Date; 
-	ravenLastModified: Date;
+	lastModified: string; 
+	ravenLastModified: string;
 	etag: string;
 
     constructor(dto?: documentMetadataDto) {
@@ -17,10 +17,23 @@ class documentMetadata {
             this.nonAuthoritativeInfo = dto['Non-Authoritative-Information'];
             this.id = dto['@id'];
             this.tempIndexScore = dto['Temp-Index-Score'];
-            this.lastModified = new Date(dto['Last-Modified']);
-            this.ravenLastModified = new Date(dto['Raven-Last-Modified']);
+            this.lastModified = dto['Last-Modified'];
+            this.ravenLastModified = dto['Raven-Last-Modified'];
             this.etag = dto['@etag'];
         }
+	}
+
+	toDto(): documentMetadataDto {
+		return {
+			'Raven-Entity-Name': this.ravenEntityName,
+			'Raven-Clr-Type': this.ravenClrType,
+			'Non-Authoritative-Information': this.nonAuthoritativeInfo,
+			'@id': this.id,
+			'Temp-Index-Score': this.tempIndexScore,
+			'Last-Modified': this.lastModified,
+			'Raven-Last-Modified': this.ravenLastModified,
+			'@etag': this.etag
+		};
 	}
 }
 

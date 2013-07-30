@@ -14,6 +14,24 @@ define(["require", "exports", "models/documentMetadata"], function(require, expo
         document.prototype.getId = function () {
             return this.__metadata.id;
         };
+
+        document.prototype.toDto = function (includeMeta) {
+            if (typeof includeMeta === "undefined") { includeMeta = false; }
+            var dto = { '@metadata': undefined };
+            for (var property in this) {
+                var isMeta = property === '__metadata' || property === '__moduleId__';
+                var isFunction = typeof this[property] === 'function';
+                if (!isMeta && !isFunction) {
+                    dto[property] = this[property];
+                }
+            }
+
+            if (includeMeta && this.__metadata) {
+                dto['@metadata'] = this.__metadata.toDto();
+            }
+
+            return dto;
+        };
         return document;
     })();
 

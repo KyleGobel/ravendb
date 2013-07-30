@@ -7,17 +7,17 @@
             </a>
         </h3>
     </li>
-    <li data-bind="with: document">
-        <a href="#" data-bind="text: __metadata.ravenEntityName, attr: { href: '#documents?collection=' + __metadata.ravenEntityName }"></a>
+    <li data-bind="with: metadata">
+        <a href="#" data-bind="text: ravenEntityName, attr: { href: '#documents?collection=' + ravenEntityName }"></a>
     </li>
-    <li class="active" data-bind="with: document">
-        <span data-bind="text: __metadata.id"></span>
+    <li class="active" data-bind="with: metadata">
+        <span data-bind="text: id"></span>
     </li>
 </ul>
 
 <div class="btn-toolbar">
     <div class="btn-group">
-        <button type="button" class="btn btn-default"><i class="icon-save"></i> Save</button>
+        <button type="button" class="btn btn-default" data-bind="click: saveDocument"><i class="icon-save"></i> Save</button>
         <button type="button" class="btn btn-default"><i class="icon-refresh"></i> Refresh</button>
         <button type="button" class="btn btn-default"><i class="icon-remove"></i> Delete</button>
         <button type="button" class="btn btn-default"><i class="icon-list-alt"></i> Reformat</button>
@@ -34,9 +34,9 @@
 <br />
 <div class="row">
     <div class="col-lg-8">
-        <div class="row" data-bind="with: document">
+        <div class="row" data-bind="with: metadata">
             <div class="col-lg-12">
-                <input type="text" class="form-control" placeholder="document id" data-bind="value: __metadata.id" />
+                <input type="text" class="form-control" placeholder="document id" data-bind="value: id" />
             </div>
         </div>
         <br />
@@ -50,10 +50,10 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-4" data-bind="with: document">
+    <div class="col-lg-4" data-bind="with: metadata">
         <h4>Metadata</h4>
         <hr />
-        <div class="row" data-bind="with: __metadata">
+        <div class="row">
             <div class="col-lg-5">
                 <label>Raven-Clr-Type</label>
             </div>
@@ -61,7 +61,7 @@
                 <span data-bind="text: ravenClrType"></span>
             </div>
         </div>
-        <div class="row" data-bind="with: __metadata">
+        <div class="row">
             <div class="col-lg-5">
                 <label>Raven-Entity-Name</label>
             </div>
@@ -69,7 +69,7 @@
                 <span data-bind="text: ravenEntityName"></span>
             </div>
         </div>
-        <div class="row" data-bind="with: __metadata">
+        <div class="row">
             <div class="col-lg-5">
                 <label>Etag</label>
             </div>
@@ -77,7 +77,7 @@
                 <span data-bind="text: etag"></span>
             </div>
         </div>
-        <div class="row" data-bind="with: __metadata">
+        <div class="row">
             <div class="col-lg-5">
                 <label>Last-Modified</label>
             </div>
