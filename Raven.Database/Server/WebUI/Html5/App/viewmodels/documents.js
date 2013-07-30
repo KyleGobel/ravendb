@@ -31,7 +31,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugi
                 return _this.onSelectedCollectionChanged(c);
             });
             ko.postbox.subscribe("EditItem", function (args) {
-                return router.navigateTo("#editDocument?id=" + encodeURIComponent(args.item.getId()));
+                return router.navigateTo("#edit?id=" + encodeURIComponent(args.item.getId()));
             });
         }
         documents.prototype.collectionsLoaded = function (collections) {

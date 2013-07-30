@@ -1061,6 +1061,9 @@
     <None Include="Server\WebUI\Html5\App\models\document.js.map" />
     <None Include="Server\WebUI\Html5\App\models\documentMetadata.js.map" />
     <None Include="Server\WebUI\Html5\App\viewmodels\documents.js.map" />
+    <None Include="Server\WebUI\Html5\App\viewmodels\documents.min.js.map">
+      <DependentUpon>documents.js</DependentUpon>
+    </None>
     <None Include="Server\WebUI\Html5\App\viewmodels\indexes.js.map" />
     <None Include="Server\WebUI\Html5\App\viewmodels\query.js.map" />
     <None Include="Server\WebUI\Html5\App\viewmodels\settings.js.map" />

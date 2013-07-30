@@ -19,15 +19,25 @@ define(['durandal/app', 'durandal/viewLocator', 'durandal/system', 'durandal/plu
             router.useConvention();
 
             // Visible routes            
-            router.mapNav('documents');
-            router.mapNav('indexes');
-            router.mapNav('query');
-            router.mapNav('tasks');
-            router.mapNav('settings');
-            router.mapNav('status');
+            //router.mapNav('documents');
+            //router.mapNav('indexes');
+            //router.mapNav('query');
+            //router.mapNav('tasks');
+            //router.mapNav('settings');
+            //router.mapNav('status');
+
+            router.map([
+				{ url: 'documents', moduleId: 'viewmodels/documents', name: 'Documents', visible: true },
+				{ url: 'indexes', moduleId: 'viewmodels/indexes', name: 'Indexes', visible: true },
+				{ url: 'query', moduleId: 'viewmodels/query', name: 'Query', visible: true },
+				{ url: 'tasks', moduleId: 'viewmodels/tasks', name: 'Tasks', visible: true },
+				{ url: 'settings', moduleId: 'viewmodels/settings', name: 'Settings', visible: true },
+				{ url: 'status', moduleId: 'viewmodels/status', name: 'Status', visible: true },
+				{ url: 'edit', moduleId: 'viewmodels/editDocument', name: 'Edit Document', visible: false },
+            ]);
 
             // Non-visible routes.
-            router.mapRoute('editDocument', null, null, false); // Edit a document. Expects route like /edit?id=Orders/123
+            //router.mapRoute('editDocument', null, null, false); // Edit a document. Expects route like /edit?id=Orders/123
 
             app.adaptToDevice();
 
