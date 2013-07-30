@@ -83,15 +83,6 @@
     <TypeScriptCompile Include="App\models\documentMetadata.ts" />
     <TypeScriptCompile Include="App\viewmodels\shell.ts" />
     <TypeScriptCompile Include="App\viewmodels\editDocument.ts" />
-    <Content Include="App\viewmodels\documents.js">
-      <DependentUpon>documents.ts</DependentUpon>
-    </Content>
-    <Content Include="App\viewmodels\documents.min.js">
-      <DependentUpon>documents.ts</DependentUpon>
-    </Content>
-    <Content Include="App\viewmodels\editDocument.js">
-      <DependentUpon>editDocument.ts</DependentUpon>
-    </Content>
     <Content Include="App\views\editDocument.html" />
     <Content Include="App\views\indexes.html" />
     <Content Include="App\views\query.html" />
@@ -119,9 +110,6 @@
     <Content Include="Content\images\glyphicons-halflings.png" />
     <Content Include="Content\images\icon.png" />
     <Content Include="Content\app.less" />
-    <Content Include="App\viewmodels\documents.js.map">
-      <DependentUpon>documents.ts</DependentUpon>
-    </Content>
     <None Include="Scripts\jquery-1.9.1.intellisense.js" />
     <Content Include="Content\images\logo.png" />
     <Content Include="Content\images\unchecked.png" />
