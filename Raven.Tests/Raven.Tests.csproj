@@ -524,6 +524,8 @@
     <Compile Include="Bugs\Smuggler.cs" />
     <Compile Include="Bugs\TimeSpanIndexing.cs" />
     <Compile Include="Bugs\WhereInShouldBeBoostedCorrectly.cs" />
+    <Compile Include="Bundles\IndexedProperties\Alexander.cs" />
+    <Compile Include="Bundles\IndexedProperties\IndexedProperties.cs" />
     <Compile Include="Bundles\MoreLikeThis\MoreLikeThisMultiTenant.cs" />
     <Compile Include="Bundles\PeriodicBackups\PeriodicBackupTests.cs" />
     <Compile Include="Bundles\Replication\Bugs\AddingAndDeletingRemote.cs" />
