@@ -287,8 +287,8 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
         ctor.prototype.editSelection = function () {
             var lastSelected = this.selectionStack.last();
             if (lastSelected) {
-                var args = { item: lastSelected.data };
-                ko.postbox.publish("EditItem", args);
+                var args = { doc: lastSelected.data };
+                ko.postbox.publish("EditDocument", args);
             }
         };
 

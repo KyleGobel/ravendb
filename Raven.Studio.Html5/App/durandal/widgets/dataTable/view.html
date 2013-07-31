@@ -18,10 +18,10 @@
 			<td>
 				<!-- ko if: templateName == 'colored-id-cell-template' -->
                 <div class="collection-color-strip" data-bind="css: colorClass"></div>
-				<a href="#" data-bind="attr: { href: '/document/?id=' + value }, text: value"></a>
+				<a href="#" data-bind="attr: { href: '#edit?id=' + value }, text: value"></a>
 				<!-- /ko -->
 				<!-- ko if: templateName == 'id-cell-template' -->
-				<a href="#" data-bind="attr: { href: '/document/?id=' + value }, text: value"></a>
+				<a href="#" data-bind="attr: { href: '#edit?id=' + value }, text: value"></a>
 				<!-- /ko -->
 				<!-- ko if: templateName == 'default-cell-template' -->
 				<span data-bind="text: value"></span>

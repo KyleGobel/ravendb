@@ -30,7 +30,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugi
             this.selectedCollection.subscribe(function (c) {
                 return _this.onSelectedCollectionChanged(c);
             });
-            ko.postbox.subscribe("EditItem", function (args) {
+            ko.postbox.subscribe("EditDocument", function (args) {
                 return router.navigateTo("#edit?id=" + encodeURIComponent(args.item.getId()));
             });
         }

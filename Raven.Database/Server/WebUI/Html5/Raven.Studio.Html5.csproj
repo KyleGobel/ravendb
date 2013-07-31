@@ -83,9 +83,6 @@
     <TypeScriptCompile Include="App\models\documentMetadata.ts" />
     <TypeScriptCompile Include="App\viewmodels\shell.ts" />
     <TypeScriptCompile Include="App\viewmodels\editDocument.ts" />
-    <Content Include="App\viewmodels\editDocument.js">
-      <DependentUpon>editDocument.ts</DependentUpon>
-    </Content>
     <Content Include="App\views\editDocument.html" />
     <Content Include="App\views\indexes.html" />
     <Content Include="App\views\query.html" />

@@ -1,8 +1,8 @@
-define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugins/router", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __app__, __sys__, __router__, __database__, __collection__, __document__, __raven__, __pagedList__) {
+define(["require", "exports", "durandal/app", "durandal/system", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __app__, __sys__, __database__, __collection__, __document__, __raven__, __pagedList__) {
     
     var app = __app__;
     var sys = __sys__;
-    var router = __router__;
+    
 
     var database = __database__;
     var collection = __collection__;
@@ -29,9 +29,6 @@ define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugi
 
             this.selectedCollection.subscribe(function (c) {
                 return _this.onSelectedCollectionChanged(c);
-            });
-            ko.postbox.subscribe("EditItem", function (args) {
-                return router.navigateTo("#edit?id=" + encodeURIComponent(args.item.getId()));
             });
         }
         documents.prototype.collectionsLoaded = function (collections) {

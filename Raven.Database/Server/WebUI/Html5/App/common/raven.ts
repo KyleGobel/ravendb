@@ -79,12 +79,22 @@ class raven {
     }
 
     public deleteDocuments(ids: string[]): promise {
-        this.requireActiveDatabase();
-
         var deleteDocs = ids.map(id => this.createDeleteDocument(id));
         //var deleteHeaders = headers: { 'x-my-custom-header': 'some value' }
         return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
-    }
+	}
+
+	public saveDocument(doc: document): promise {
+		var customHeaders = {
+			'Raven-Client-Version': '2.5.0.0',
+			'Raven-Entity-Name': doc.__metadata.ravenEntityName,
+			'Raven-Clr-Type': doc.__metadata.ravenClrType,
+			'If-None-Match': doc.__metadata.etag
+		};
+		var args = JSON.stringify(doc.toDto());
+		var url = "/docs/" + doc.__metadata.id;
+		return this.put(url, args, raven.activeDatabase(), customHeaders);
+	}
 
     private createDeleteDocument(id: string) {
         return {
@@ -120,7 +130,11 @@ class raven {
 
     private post(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise {
         return this.ajax(relativeUrl, args, "POST", database, customHeaders);
-    }
+	}
+
+	private put(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise {
+		return this.ajax(relativeUrl, args, "PUT", database, customHeaders);
+	}
 
     private ajax(relativeUrl: string, args: any, method: string, database?: database, customHeaders?: any): JQueryPromise {
         
@@ -128,13 +142,17 @@ class raven {
             cache: false,
             url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
             data: args,
-            type: method
+			type: method,
+			beforeSend: undefined
         };
 
         if (customHeaders) {
-            for (var prop in customHeaders) {
-                options[prop] = customHeaders[prop];
-            }
+			options.beforeSend = function (jqXHR, settings) {
+				for (var prop in customHeaders) {
+					options[prop] = customHeaders[prop];
+					jqXHR.setRequestHeader(prop, options[prop]);
+				}
+			}
         }
         
         return $.ajax(options);

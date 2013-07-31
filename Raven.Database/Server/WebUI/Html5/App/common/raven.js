@@ -89,13 +89,23 @@ define(["require", "exports", "models/database", "models/collection", "models/co
 
         raven.prototype.deleteDocuments = function (ids) {
             var _this = this;
-            this.requireActiveDatabase();
-
             var deleteDocs = ids.map(function (id) {
                 return _this.createDeleteDocument(id);
             });
 
             return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
+        };
+
+        raven.prototype.saveDocument = function (doc) {
+            var customHeaders = {
+                'Raven-Client-Version': '2.5.0.0',
+                'Raven-Entity-Name': doc.__metadata.ravenEntityName,
+                'Raven-Clr-Type': doc.__metadata.ravenClrType,
+                'If-None-Match': doc.__metadata.etag
+            };
+            var args = JSON.stringify(doc.toDto());
+            var url = "/docs/" + doc.__metadata.id;
+            return this.put(url, args, raven.activeDatabase(), customHeaders);
         };
 
         raven.prototype.createDeleteDocument = function (id) {
@@ -136,18 +146,26 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return this.ajax(relativeUrl, args, "POST", database, customHeaders);
         };
 
+        raven.prototype.put = function (relativeUrl, args, database, customHeaders) {
+            return this.ajax(relativeUrl, args, "PUT", database, customHeaders);
+        };
+
         raven.prototype.ajax = function (relativeUrl, args, method, database, customHeaders) {
             var options = {
                 cache: false,
                 url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
                 data: args,
-                type: method
+                type: method,
+                beforeSend: undefined
             };
 
             if (customHeaders) {
-                for (var prop in customHeaders) {
-                    options[prop] = customHeaders[prop];
-                }
+                options.beforeSend = function (jqXHR, settings) {
+                    for (var prop in customHeaders) {
+                        options[prop] = customHeaders[prop];
+                        jqXHR.setRequestHeader(prop, options[prop]);
+                    }
+                };
             }
 
             return $.ajax(options);

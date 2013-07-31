@@ -16,7 +16,9 @@ class shell {
 	ravenDb: raven;
 
 	constructor() {
-        this.ravenDb = new raven();
+		this.ravenDb = new raven();
+
+		ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
     }
 
     databasesLoaded(databases: database[]) {
@@ -39,7 +41,11 @@ class shell {
             })
             .then(results => this.databasesLoaded(results))
             .then(() => router.activate('documents'));
-    }
+	}
+
+	launchDocEditor(docId: string) {
+		router.navigateTo("#edit?id=" + encodeURIComponent(docId))
+	}
 }
 
 export = shell; 
