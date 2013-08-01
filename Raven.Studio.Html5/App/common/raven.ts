@@ -69,18 +69,16 @@ class raven {
 
     public documentWithMetadata(id: string): promise<document> {
         var resultsSelector = (dtoResults: documentDto[]) => new document(dtoResults[0]);
-        var url = "/docs/";
-        var args = {
-            startsWith: id,
-            start: 0, 
-            pageSize: 1
-        };
-        return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
-    }
+		return this.docsById<document>(id, 0, 1, false, resultsSelector);
+	}
+
+	public searchIds(searchTerm: string, start: number, pageSize: number, metadataOnly: boolean) {
+		var resultsSelector = (dtoResults: documentDto[]) => dtoResults.map(dto => new document(dto));
+		return this.docsById<document[]>(searchTerm, start, pageSize, metadataOnly, resultsSelector);
+	}
 
     public deleteDocuments(ids: string[]): promise {
         var deleteDocs = ids.map(id => this.createDeleteDocument(id));
-        //var deleteHeaders = headers: { 'x-my-custom-header': 'some value' }
         return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
 	}
 
@@ -94,6 +92,30 @@ class raven {
 		var args = JSON.stringify(doc.toDto());
 		var url = "/docs/" + doc.__metadata.id;
 		return this.put(url, args, raven.activeDatabase(), customHeaders);
+	}
+
+	public getBaseUrl() {
+		return this.baseUrl;
+	}
+
+	public getDatabaseUrl() {
+		var database = raven.activeDatabase();
+		if (database) {
+			return this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "");
+		}
+
+		return this.baseUrl;
+	}
+
+	private docsById<T>(idOrPartialId: string, start: number, pageSize: number, metadataOnly: boolean, resultsSelector): promise<T> {
+
+		var url = "/docs/";
+		var args = {
+			startsWith: idOrPartialId,
+			start: start,
+			pageSize: pageSize
+		};
+		return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
 	}
 
     private createDeleteDocument(id: string) {
@@ -140,7 +162,7 @@ class raven {
         
         var options = {
             cache: false,
-            url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
+            url: this.getDatabaseUrl() + relativeUrl,
             data: args,
 			type: method,
 			beforeSend: undefined

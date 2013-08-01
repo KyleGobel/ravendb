@@ -148,7 +148,7 @@ class ctor {
                 this.selectionStack.push(row);
             }
         }
-    }
+	}
 
     private toggleChecked(row: row, e: any) {
         row.isChecked(!row.isChecked());
@@ -286,8 +286,8 @@ class ctor {
     editSelection() {
         var lastSelected = this.selectionStack.last();
         if (lastSelected) {
-            var args = { item: lastSelected.data };
-            ko.postbox.publish("EditItem", args);
+            var args = { doc: lastSelected.data };
+            ko.postbox.publish("EditDocument", args);
         }
     }
 

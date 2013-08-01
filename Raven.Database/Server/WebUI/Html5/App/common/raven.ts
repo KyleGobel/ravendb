@@ -69,14 +69,24 @@ class raven {
 
     public documentWithMetadata(id: string): promise<document> {
         var resultsSelector = (dtoResults: documentDto[]) => new document(dtoResults[0]);
-        var url = "/docs/";
-        var args = {
-            startsWith: id,
-            start: 0, 
-            pageSize: 1
-        };
-        return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
-    }
+		return this.docsById<document>(id, 0, 1, false, resultsSelector);
+	}
+
+	public searchIds(searchTerm: string, start: number, pageSize: number, metadataOnly: boolean) {
+		var resultsSelector = (dtoResults: documentDto[]) => dtoResults.map(dto => new document(dto));
+		return this.docsById<document[]>(searchTerm, start, pageSize, metadataOnly, resultsSelector);
+	}
+
+	private docsById<T>(idOrPartialId: string, start: number, pageSize: number, metadataOnly: boolean, resultsSelector): promise<T> {
+		
+		var url = "/docs/";
+		var args = {
+			startsWith: idOrPartialId,
+			start: start,
+			pageSize: pageSize
+		};
+		return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
+	}
 
     public deleteDocuments(ids: string[]): promise {
         var deleteDocs = ids.map(id => this.createDeleteDocument(id));

@@ -37,6 +37,7 @@ class documents {
             .then(results => this.collectionsLoaded(results));
 
         this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
+        ko.postbox.subscribe("EditDocument", args => router.navigateTo("#edit?id=" + encodeURIComponent(args.item.getId())));
     }
 
     collectionsLoaded(collections: collection[]) {
