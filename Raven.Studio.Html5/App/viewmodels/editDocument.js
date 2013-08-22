@@ -1,7 +1,6 @@
-define(["require", "exports", "durandal/app", "durandal/system", "models/document", "models/documentMetadata", "common/raven"], function(require, exports, __app__, __sys__, __document__, __documentMetadata__, __raven__) {
-    
+define(["require", "exports", "durandal/app", "models/document", "models/documentMetadata", "common/raven"], function(require, exports, __app__, __document__, __documentMetadata__, __raven__) {
     var app = __app__;
-    var sys = __sys__;
+    
 
     var document = __document__;
     var documentMetadata = __documentMetadata__;
@@ -59,4 +58,4 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
     })();
     exports.editDocument = editDocument;
 });
-//@ sourceMappingURL=editDocument.js.map
+//# sourceMappingURL=editDocument.js.map

@@ -1,4 +1,4 @@
-// Type definitions for Knockout 2.2
+// Type definitions for Knockout 2.3
 // Project: http://knockoutjs.com
 // Definitions by: Boris Yankov <https://github.com/borisyankov/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
@@ -15,6 +15,7 @@ interface KnockoutSubscribableFunctions {
 
 interface KnockoutComputedFunctions extends KnockoutSubscribableFunctions {
     getDependenciesCount(): number;
+    getSubscriptionsCount(): number;
     hasWriteFunction(): boolean;
 }
 
@@ -27,9 +28,9 @@ interface KnockoutObservableArrayFunctions<T> extends KnockoutObservableFunction
     slice(start: number, end?: number): T[];
     splice(start: number): T[];
     splice(start: number, deleteCount: number, ...items: T[]): T[];
-    pop();
+    pop(): T;
     push(...items: T[]): void;
-    shift();
+    shift(): T;
     unshift(...items: T[]): number;
     reverse(): T[];
     sort(): void;
@@ -54,7 +55,7 @@ interface KnockoutSubscribableStatic {
 }
 
 interface KnockoutSubscription extends KnockoutSubscribableFunctions {
-    subscribe(callback: (newValue: any) => void , target?: any, topic?: string): KnockoutSubscription;
+    subscribe(callback: (newValue: any) => void, target?:any, topic?: string): KnockoutSubscription;
     notifySubscribers(valueToWrite, topic?: string);
 }
 
@@ -71,7 +72,7 @@ interface KnockoutComputed<T> extends KnockoutComputedFunctions {
     (): T;
     (value: T): void;
 
-    subscribe(callback: (newValue: T) => void , target?: any, topic?: string): KnockoutSubscription;
+    subscribe(callback: (newValue: T) => void, target?:any, topic?: string): KnockoutSubscription;
     notifySubscribers(valueToWrite: T, topic?: string);
 }
 
@@ -86,7 +87,7 @@ interface KnockoutObservableArray<T> extends KnockoutObservableArrayFunctions<T>
     (): T[];
     (value: T[]): void;
 
-    subscribe(callback: (newValue: T[]) => void , target?: any, topic?: string): KnockoutSubscription;
+    subscribe(callback: (newValue: T[]) => void, target?:any, topic?: string): KnockoutSubscription;
     notifySubscribers(valueToWrite: T[], topic?: string);
 }
 
@@ -105,7 +106,7 @@ interface KnockoutObservable<T> extends KnockoutObservableBase {
     (): T;
     (value: T): void;
 
-    subscribe(callback: (newValue: T) => void , target?: any, topic?: string): KnockoutSubscription;
+    subscribe(callback: (newValue: T) => void, target?:any, topic?: string): KnockoutSubscription;
     notifySubscribers(valueToWrite: T, topic?: string);
 }
 
@@ -127,12 +128,14 @@ interface KnockoutBindingContext {
 }
 
 interface KnockoutBindingHandler {
-    init? (element: any, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any, bindingContext: KnockoutBindingContext): void;
-    update? (element: any, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any, bindingContext: KnockoutBindingContext): void;
+    init?(element: any, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any, bindingContext: KnockoutBindingContext): void;
+    update?(element: any, valueAccessor: () => any, allBindingsAccessor: () => any, viewModel: any, bindingContext: KnockoutBindingContext): void;
     options?: any;
 }
 
 interface KnockoutBindingHandlers {
+    [bindingHandler: string]: KnockoutBindingHandler;
+
     // Controlling text and appearance
     visible: KnockoutBindingHandler;
     text: KnockoutBindingHandler;
@@ -171,17 +174,17 @@ interface KnockoutMemoization {
     parseMemoText(memoText);
 }
 
-interface KnockoutVirtualElement { }
+interface KnockoutVirtualElement {}
 
 interface KnockoutVirtualElements {
-    allowedBindings: { [bindingName: string]: boolean; };
-    emptyNode(e: KnockoutVirtualElement);
-    firstChild(e: KnockoutVirtualElement);
-    insertAfter(container: KnockoutVirtualElement, nodeToInsert: HTMLElement, insertAfter: HTMLElement);
-    nextSibling(e: KnockoutVirtualElement);
-    prepend(e: KnockoutVirtualElement, toInsert: HTMLElement);
-    setDomNodeChildren(e: KnockoutVirtualElement, newChildren: { length: number;[index: number]: HTMLElement; });
-    childNodes(e: KnockoutVirtualElement): HTMLElement[];
+	allowedBindings: { [bindingName: string]: boolean; };
+	emptyNode( e: KnockoutVirtualElement );
+	firstChild( e: KnockoutVirtualElement );
+	insertAfter( container: KnockoutVirtualElement, nodeToInsert: HTMLElement, insertAfter: HTMLElement );
+	nextSibling( e: KnockoutVirtualElement );
+	prepend( e: KnockoutVirtualElement, toInsert: HTMLElement );
+	setDomNodeChildren( e: KnockoutVirtualElement, newChildren: { length: number;[index: number]: HTMLElement; } );
+	childNodes( e: KnockoutVirtualElement ): HTMLElement[];
 }
 
 interface KnockoutExtenders {
@@ -210,9 +213,9 @@ interface KnockoutUtils {
     //////////////////////////////////
 
     domData: {
-        get(node: Element, key: string);
+        get (node: Element, key: string);
 
-        set(node: Element, key: string, value: any);
+        set (node: Element, key: string, value: any);
 
         getAll(node: Element, createIfNotFound: boolean);
 
@@ -254,6 +257,8 @@ interface KnockoutUtils {
     arrayFilter(array: any[], predicate: (item) => boolean): any[];
 
     arrayPushAll(array: any[], valuesToPush: any[]): any[];
+    
+    arrayPushAll(array: KnockoutObservableArray<any>, valuesToPush: any[]): any[];
 
     extend(target, source);
 
@@ -285,15 +290,13 @@ interface KnockoutUtils {
 
     triggerEvent(element: any, eventType: any): void;
 
-    unwrapObservable(value: any): any;
+    unwrapObservable<T>(value: KnockoutObservable<T>): T;
 
     toggleDomNodeCssClass(node: any, className: string, shouldHaveClass: boolean): void;
 
     //setTextContent(element: any, textContent: string): void; // NOT PART OF THE MINIFIED API SURFACE (ONLY IN knockout-{version}.debug.js) https://github.com/SteveSanderson/knockout/issues/670
 
     setElementName(element: any, name: string): void;
-
-    ensureSelectElementIsRenderedCorrectly(selectElement);
 
     forceRefresh(node: any): void;
 
@@ -391,12 +394,14 @@ interface KnockoutStatic {
     toJSON(viewModel: any, replacer?: Function, space?: any): string;
     toJS(viewModel: any): any;
     isObservable(instance: any): boolean;
+    isWriteableObservable(instance: any): boolean;
     isComputed(instance: any): boolean;
     dataFor(node: any): any;
     removeNode(node: Element);
     cleanNode(node: Element);
     renderTemplate(template: Function, viewModel: any, options?: any, target?: any, renderMode?: any);
     renderTemplate(template: string, viewModel: any, options?: any, target?: any, renderMode?: any);
+    unwrap(value: any): any;
 
     //////////////////////////////////
     // templateSources.js
@@ -473,6 +478,21 @@ interface KnockoutStatic {
     /////////////////////////////////
 
     bindingProvider: any;
+
+    /////////////////////////////////
+    // selectExtensions.js
+    /////////////////////////////////
+
+    selectExtensions: {
+
+        readValue(element: any);
+
+        writeValue(element: any, value: any);
+    };
+}
+
+declare module "knockout" {
+	export = ko;
 }
 
 declare var ko: KnockoutStatic;

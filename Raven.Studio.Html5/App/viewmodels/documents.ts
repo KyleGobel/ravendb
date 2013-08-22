@@ -1,19 +1,20 @@
+/// <reference path="../../Scripts/typings/durandal/durandal.d.ts" />
 /// <reference path="shell.ts" />
 /// <reference path="../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-/// <reference path="../durandal/typings/durandal.d.ts"/>
 
-import http = module("durandal/http");
-import app = module("durandal/app");
-import sys = module("durandal/system");
-import router = module("durandal/plugins/router");
 
-import database = module("models/database");
-import collection = module("models/collection");
-import document = module("models/document");
+import http = require("plugins/http");
+import app = require("durandal/app");
+import sys = require("durandal/system");
+import router = require("plugins/router");
 
-import raven = module("common/raven");
-import pagedList = module("common/pagedList");
+import database = require("models/database");
+import collection = require("models/collection");
+import document = require("models/document");
+
+import raven = require("common/raven");
+import pagedList = require("common/pagedList");
 
 class documents {
 
@@ -37,10 +38,10 @@ class documents {
             .then(results => this.collectionsLoaded(results));
 
         this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
-        ko.postbox.subscribe("EditDocument", args => router.navigateTo("#edit?id=" + encodeURIComponent(args.item.getId())));
+        ko.postbox.subscribe("EditDocument", args =>  router.navigate("#edit?id=" + encodeURIComponent(args.item.getId())));
     }
 
-    collectionsLoaded(collections: collection[]) {
+    collectionsLoaded(collections: Array<collection>) {
         // Set the color class for each of the collections.
         // These styles are found in app.less.
         var collectionStyleCount = 7;
@@ -96,11 +97,11 @@ class documents {
 
     activate(args) {
         // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
-        this.collectionToSelectName = args.collection;
+        this.collectionToSelectName = args ? args.collection : null;
         return this.collectionsLoadedTask;
     }
 
-    showDeletePrompt(args: { items: document[]; callback: () => void }) {
+    showDeletePrompt(args: { items: Array<document>; callback: () => void }) {
         this.deleteCallback = args.callback;
         this.itemsToDelete(args.items);
         $('#DeleteDocumentsConfirmation').modal({

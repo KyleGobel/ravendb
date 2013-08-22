@@ -1,11 +1,11 @@
 ///<reference path="../durandal/typings/durandal.d.ts"/>
-import http = module("durandal/http");
-import app = module("durandal/app");
-import sys = module("durandal/system");
+import http = require("durandal/http");
+import app = require("durandal/app");
+import sys = require("durandal/system");
 
-import document = module("models/document");
-import documentMetadata = module("models/documentMetadata");
-import raven = module("common/raven");
+import document = require("models/document");
+import documentMetadata = require("models/documentMetadata");
+import raven = require("common/raven");
 
 export class editDocument {
 

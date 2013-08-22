@@ -1,32 +1,34 @@
 ﻿requirejs.config({
     paths: {
-        'text': 'durandal/amd/text'
+        'text': '../Scripts/text',
+        'durandal': '../Scripts/durandal',
+        'plugins': '../Scripts/durandal/plugins',
+        'transitions': '../Scripts/durandal/transitions'
     }
 });
 
-define(['durandal/app', 'durandal/viewLocator', 'durandal/system', 'durandal/plugins/router'],
-    function(app, viewLocator, system, router) {
+define('jquery', function() { return jQuery; });
+define('knockout', ko);
 
-        //>>excludeStart("build", true);
-        system.debug(true);
-        //>>excludeEnd("build");
+define(['durandal/system', 'durandal/app', 'durandal/viewLocator'],  function (system, app, viewLocator) {
+    //>>excludeStart("build", true);
+    system.debug(true);
+    //>>excludeEnd("build");
 
-        app.title = 'Raven Studio';
-        app.start().then(function() {
-            viewLocator.useConvention();
-            router.useConvention();
+    app.title = 'Durandal Starter Kit';
 
-            router.map([
-				{ url: 'documents', moduleId: 'viewmodels/documents', name: 'Documents', visible: true },
-				{ url: 'indexes', moduleId: 'viewmodels/indexes', name: 'Indexes', visible: true },
-				{ url: 'query', moduleId: 'viewmodels/query', name: 'Query', visible: true },
-				{ url: 'tasks', moduleId: 'viewmodels/tasks', name: 'Tasks', visible: true },
-				{ url: 'settings', moduleId: 'viewmodels/settings', name: 'Settings', visible: true },
-				{ url: 'status', moduleId: 'viewmodels/status', name: 'Status', visible: true },
-				{ url: 'edit', moduleId: 'viewmodels/editDocument', name: 'Edit Document', visible: false },
-            ]);
-			
-            app.adaptToDevice();
-            app.setRoot('viewmodels/shell', 'entrance');
-        });
+    app.configurePlugins({
+        router: true,
+        dialog: true,
+        widget: true
     });
+
+    app.start().then(function() {
+        //Replace 'viewmodels' in the moduleId with 'views' to locate the view.
+        //Look for partial views in a 'views' folder in the root.
+        viewLocator.useConvention();
+
+        //Show the app by setting the root view model for our application with a transition.
+        app.setRoot('viewmodels/shell', 'entrance');
+    });
+});

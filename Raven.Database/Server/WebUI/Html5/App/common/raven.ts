@@ -3,11 +3,11 @@
 /// <reference path="../../Scripts/typings/jquery/jquery.d.ts" /> 
 
 
-import database = module("models/database");
-import collection = module("models/collection"); 
-import collectionInfo = module("models/collectionInfo");
-import document = module("models/document");
-import pagedResultSet = module("common/pagedResultSet");
+import database = require("models/database");
+import collection = require("models/collection"); 
+import collectionInfo = require("models/collectionInfo");
+import document = require("models/document");
+import pagedResultSet = require("common/pagedResultSet");
 
 class raven {
 
@@ -16,12 +16,12 @@ class raven {
 	
 	public static activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 
-    public databases(): promise<database[]> {
+    public databases(): JQueryPromise { // : promise<database[]>
 		var resultsSelector = (databaseNames: string[]) => databaseNames.map(n => new database(n));
 		return this.fetch("/databases", { pageSize: 1024 }, null, resultsSelector);		
     }
 
-	public collections(): promise<collection[]> {
+    public collections(): JQueryPromise { // : promise<database[]>
 		this.requireActiveDatabase();
 
         var args = {
@@ -74,23 +74,11 @@ class raven {
 
 	public searchIds(searchTerm: string, start: number, pageSize: number, metadataOnly: boolean) {
 		var resultsSelector = (dtoResults: documentDto[]) => dtoResults.map(dto => new document(dto));
-		return this.docsById<document[]>(searchTerm, start, pageSize, metadataOnly, resultsSelector);
-	}
-
-	private docsById<T>(idOrPartialId: string, start: number, pageSize: number, metadataOnly: boolean, resultsSelector): promise<T> {
-		
-		var url = "/docs/";
-		var args = {
-			startsWith: idOrPartialId,
-			start: start,
-			pageSize: pageSize
-		};
-		return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
+		return this.docsById<Array<document>>(searchTerm, start, pageSize, metadataOnly, resultsSelector);
 	}
 
     public deleteDocuments(ids: string[]): promise {
         var deleteDocs = ids.map(id => this.createDeleteDocument(id));
-        //var deleteHeaders = headers: { 'x-my-custom-header': 'some value' }
         return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
 	}
 
@@ -104,6 +92,30 @@ class raven {
 		var args = JSON.stringify(doc.toDto());
 		var url = "/docs/" + doc.__metadata.id;
 		return this.put(url, args, raven.activeDatabase(), customHeaders);
+	}
+
+	public getBaseUrl() {
+		return this.baseUrl;
+	}
+
+	public getDatabaseUrl() {
+		var database = raven.activeDatabase();
+		if (database) {
+			return this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "");
+		}
+
+		return this.baseUrl;
+	}
+
+	private docsById<T>(idOrPartialId: string, start: number, pageSize: number, metadataOnly: boolean, resultsSelector): promise<T> {
+
+		var url = "/docs/";
+		var args = {
+			startsWith: idOrPartialId,
+			start: start,
+			pageSize: pageSize
+		};
+		return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
 	}
 
     private createDeleteDocument(id: string) {
@@ -150,7 +162,7 @@ class raven {
         
         var options = {
             cache: false,
-            url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
+            url: this.getDatabaseUrl() + relativeUrl,
             data: args,
 			type: method,
 			beforeSend: undefined

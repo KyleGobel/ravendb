@@ -1,4 +1,8 @@
-define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugins/router", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __app__, __sys__, __router__, __database__, __collection__, __document__, __raven__, __pagedList__) {
+/// <reference path="../../Scripts/typings/durandal/durandal.d.ts" />
+/// <reference path="shell.ts" />
+/// <reference path="../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
+/// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
+define(["require", "exports", "durandal/app", "durandal/system", "plugins/router", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __app__, __sys__, __router__, __database__, __collection__, __document__, __raven__, __pagedList__) {
     
     var app = __app__;
     var sys = __sys__;
@@ -31,16 +35,19 @@ define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugi
                 return _this.onSelectedCollectionChanged(c);
             });
             ko.postbox.subscribe("EditDocument", function (args) {
-                return router.navigateTo("#edit?id=" + encodeURIComponent(args.item.getId()));
+                return router.navigate("#edit?id=" + encodeURIComponent(args.item.getId()));
             });
         }
         documents.prototype.collectionsLoaded = function (collections) {
             var _this = this;
+            // Set the color class for each of the collections.
+            // These styles are found in app.less.
             var collectionStyleCount = 7;
             collections.forEach(function (c, index) {
                 return c.colorClass = "collection-style-" + (index % collectionStyleCount);
             });
 
+            // Create the "All Documents" pseudo collection.
             this.allDocumentsCollection = new collection("All Documents");
             this.allDocumentsCollection.colorClass = "all-documents-collection";
             this.allDocumentsCollection.documentCount = ko.computed(function () {
@@ -53,6 +60,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugi
                 }, 0);
             });
 
+            // All systems a-go. Load them into the UI and select the first one.
             var allCollections = [this.allDocumentsCollection].concat(collections);
             this.collections(allCollections);
 
@@ -61,10 +69,13 @@ define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugi
             })[0] || this.allDocumentsCollection;
             collectionToSelect.activate();
 
+            // Fetch the collection info for each collection.
+            // The collection info contains information such as total number of documents.
             collections.forEach(function (c) {
                 return _this.fetchTotalDocuments(c);
             });
 
+            // Listen for when the grid deletes the item
             ko.postbox.subscribe("DeleteItems", function (items) {
                 return _this.showDeletePrompt(items);
             });
@@ -95,7 +106,8 @@ define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugi
         };
 
         documents.prototype.activate = function (args) {
-            this.collectionToSelectName = args.collection;
+            // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
+            this.collectionToSelectName = args ? args.collection : null;
             return this.collectionsLoadedTask;
         };
 
@@ -130,4 +142,4 @@ define(["require", "exports", "durandal/app", "durandal/system", "durandal/plugi
     
     return documents;
 });
-//@ sourceMappingURL=documents.js.map
+//# sourceMappingURL=documents.js.map

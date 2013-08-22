@@ -25,4 +25,4 @@ define(["require", "exports", "models/document"], function(require, exports, __d
     
     return collectionInfo;
 });
-//@ sourceMappingURL=collectionInfo.js.map
+//# sourceMappingURL=collectionInfo.js.map

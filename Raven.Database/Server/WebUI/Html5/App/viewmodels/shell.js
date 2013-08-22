@@ -8,10 +8,15 @@ define(["require", "exports", "durandal/plugins/router", "durandal/app", "durand
 
     var shell = (function () {
         function shell() {
+            var _this = this;
             this.router = router;
             this.databases = ko.observableArray();
             this.activeDatabase = ko.observable().subscribeTo("ActivateDatabase");
             this.ravenDb = new raven();
+
+            ko.postbox.subscribe("EditDocument", function (args) {
+                return _this.launchDocEditor(args.doc.getId());
+            });
         }
         shell.prototype.databasesLoaded = function (databases) {
             var systemDatabase = new database("<system>");
@@ -31,6 +36,10 @@ define(["require", "exports", "durandal/plugins/router", "durandal/app", "durand
             }).then(function () {
                 return router.activate('documents');
             });
+        };
+
+        shell.prototype.launchDocEditor = function (docId) {
+            router.navigateTo("#edit?id=" + encodeURIComponent(docId));
         };
         return shell;
     })();

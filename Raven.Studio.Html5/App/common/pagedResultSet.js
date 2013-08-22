@@ -10,4 +10,4 @@ define(["require", "exports"], function(require, exports) {
     
     return pagedResultSet;
 });
-//@ sourceMappingURL=pagedResultSet.js.map
+//# sourceMappingURL=pagedResultSet.js.map

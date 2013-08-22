@@ -1,7 +1,4 @@
 define(["require", "exports"], function(require, exports) {
-    
-    
-
     var query = (function () {
         function query() {
             this.displayName = "query";
@@ -15,4 +12,4 @@ define(["require", "exports"], function(require, exports) {
     })();
     exports.query = query;
 });
-//@ sourceMappingURL=query.js.map
+//# sourceMappingURL=query.js.map

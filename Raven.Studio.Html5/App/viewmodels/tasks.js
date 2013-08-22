@@ -1,7 +1,4 @@
 define(["require", "exports"], function(require, exports) {
-    
-    
-
     var tasks = (function () {
         function tasks() {
             this.displayName = "tasks";
@@ -15,4 +12,4 @@ define(["require", "exports"], function(require, exports) {
     })();
     exports.tasks = tasks;
 });
-//@ sourceMappingURL=tasks.js.map
+//# sourceMappingURL=tasks.js.map

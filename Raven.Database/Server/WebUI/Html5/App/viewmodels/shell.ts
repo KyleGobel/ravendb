@@ -1,25 +1,27 @@
 /// <reference path="../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../durandal/typings/durandal.d.ts"/>
 
-import router = module("durandal/plugins/router");
-import app = module("durandal/app");
-import sys = module("durandal/system");
+import router = require("durandal/plugins/router");
+import app = require("durandal/app");
+import sys = require("durandal/system");
 
-import database = module("models/database");
-import raven = module("common/raven");
+import database = require("models/database");
+import raven = require("common/raven");
 
 class shell {
 
-    router = router; 
+    //router = router; 
 	databases = ko.observableArray<database>(); 
 	activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 	ravenDb: raven;
 
 	constructor() {
-        this.ravenDb = new raven();
+		this.ravenDb = new raven();
+        console.log("yes to the shell!");
+		ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
     }
 
-    databasesLoaded(databases: database[]) {
+    databasesLoaded(databases) {
         var systemDatabase = new database("<system>");
         systemDatabase.isSystem = true;
 		this.databases(databases.concat([systemDatabase]));
@@ -27,7 +29,7 @@ class shell {
     }
 
 	activate() {
-
+    
         // Activate the first page only after we've connected to Raven
         // and selected the first database.
         return this.ravenDb
@@ -39,7 +41,11 @@ class shell {
             })
             .then(results => this.databasesLoaded(results))
             .then(() => router.activate('documents'));
-    }
+	}
+
+	launchDocEditor(docId: string) {
+		router.navigateTo("#edit?id=" + encodeURIComponent(docId))
+	}
 }
 
 export = shell; 

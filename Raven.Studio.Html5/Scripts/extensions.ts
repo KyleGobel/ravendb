@@ -5,12 +5,12 @@
 */
 
 interface KnockoutObservable<T> {
-    where: (predicate: (item: T) => bool) => KnockoutObservableString;
-    throttle: (throttleTimeInMs: number) => KnockoutObservable<T>;
-    select: (selector: (item: any) => any) => KnockoutObservable<TReturn>;
+    where(predicate: (item: T) => boolean): KnockoutObservable<string>;
+    throttle(throttleTimeInMs: number): KnockoutObservable<T>;
+    select<TReturn>(selector: (item: any) => any): KnockoutObservable<TReturn>;
 }
 
-interface KnockoutObservableArray<T> { 
+interface KnockoutObservableArray<T> {
     pushAll: (items: T[]) => number;
 }
 
@@ -22,7 +22,7 @@ var subscribableFn: any = ko.subscribable.fn;
 var observabelArrayFn: any = ko.observableArray.fn;
 
 // observable.where
-subscribableFn.where = function (predicate: (item) => bool) {
+subscribableFn.where = function (predicate: (item) => boolean) {
     var observable: KnockoutObservable<any> = this;
     var matches = ko.observable();
     observable.subscribe(val => {
@@ -42,20 +42,21 @@ subscribableFn.throttle = function (throttleTimeMs: number) {
 // observable.select
 subscribableFn.select = function (selector: (any) => any) {
     var observable = this;
-    var selectedResults = ko.observable(); 
+    var selectedResults = ko.observable();
     observable.subscribe(val => selectedResults(selector(val)));
     return selectedResults;
 }
 
 // observable.pushAll
-observabelArrayFn.pushAll = function (items: any[]) {
-	this.push.apply(this, items);
+observabelArrayFn.pushAll = function (items: Array<any>) {
+    this.push.apply(this, items);
 }
 
 // Function.memoize
 var functionPrototype: any = Function.prototype;
 functionPrototype.memoize = function (thisVal) {
-    var self = this, cache = {};
+    var self = this
+    var cache = {};
     return function (arg) {
         if (arg in cache) {
             return cache[arg];
@@ -85,9 +86,9 @@ arrayPrototype.remove = function (item) {
 }
 
 // Array.removeAll
-arrayPrototype.removeAll = function (items: any[]) {
+arrayPrototype.removeAll = function (items: Array<any>) {
     var i = 0;
-    var self: any[] = this;
+    var self: Array<any> = this;
     for (var i = self.length - 1; i >= 0 && items.length > 0; i--) {
         var itemsIndex = items.indexOf(self[i]);
         if (itemsIndex >= 0) {

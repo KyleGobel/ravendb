@@ -90,22 +90,11 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return this.docsById(searchTerm, start, pageSize, metadataOnly, resultsSelector);
         };
 
-        raven.prototype.docsById = function (idOrPartialId, start, pageSize, metadataOnly, resultsSelector) {
-            var url = "/docs/";
-            var args = {
-                startsWith: idOrPartialId,
-                start: start,
-                pageSize: pageSize
-            };
-            return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
-        };
-
         raven.prototype.deleteDocuments = function (ids) {
             var _this = this;
             var deleteDocs = ids.map(function (id) {
                 return _this.createDeleteDocument(id);
             });
-
             return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
         };
 
@@ -119,6 +108,29 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             var args = JSON.stringify(doc.toDto());
             var url = "/docs/" + doc.__metadata.id;
             return this.put(url, args, raven.activeDatabase(), customHeaders);
+        };
+
+        raven.prototype.getBaseUrl = function () {
+            return this.baseUrl;
+        };
+
+        raven.prototype.getDatabaseUrl = function () {
+            var database = raven.activeDatabase();
+            if (database) {
+                return this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "");
+            }
+
+            return this.baseUrl;
+        };
+
+        raven.prototype.docsById = function (idOrPartialId, start, pageSize, metadataOnly, resultsSelector) {
+            var url = "/docs/";
+            var args = {
+                startsWith: idOrPartialId,
+                start: start,
+                pageSize: pageSize
+            };
+            return this.fetch(url, args, raven.activeDatabase(), resultsSelector);
         };
 
         raven.prototype.createDeleteDocument = function (id) {
@@ -166,7 +178,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
         raven.prototype.ajax = function (relativeUrl, args, method, database, customHeaders) {
             var options = {
                 cache: false,
-                url: this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "") + relativeUrl,
+                url: this.getDatabaseUrl() + relativeUrl,
                 data: args,
                 type: method,
                 beforeSend: undefined

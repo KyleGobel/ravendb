@@ -1,4 +1,4 @@
-import documentMetadata = module("models/documentMetadata");
+import documentMetadata = require("models/documentMetadata");
 
 class document {
 	__metadata: documentMetadata;
@@ -30,7 +30,7 @@ class document {
 			dto['@metadata'] = this.__metadata.toDto();
 		}
 
-		return dto;
+		return <any>dto;
 	}
 }
 

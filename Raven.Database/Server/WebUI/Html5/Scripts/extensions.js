@@ -1,6 +1,8 @@
+/// <reference path="./typings/knockout/knockout.d.ts" />
 var subscribableFn = ko.subscribable.fn;
 var observabelArrayFn = ko.observableArray.fn;
 
+// observable.where
 subscribableFn.where = function (predicate) {
     var observable = this;
     var matches = ko.observable();
@@ -12,6 +14,7 @@ subscribableFn.where = function (predicate) {
     return matches;
 };
 
+// observable.throttled
 subscribableFn.throttle = function (throttleTimeMs) {
     var observable = this;
     return ko.computed(function () {
@@ -19,6 +22,7 @@ subscribableFn.throttle = function (throttleTimeMs) {
     }).extend({ throttle: throttleTimeMs });
 };
 
+// observable.select
 subscribableFn.select = function (selector) {
     var observable = this;
     var selectedResults = ko.observable();
@@ -28,13 +32,16 @@ subscribableFn.select = function (selector) {
     return selectedResults;
 };
 
+// observable.pushAll
 observabelArrayFn.pushAll = function (items) {
     this.push.apply(this, items);
 };
 
+// Function.memoize
 var functionPrototype = Function.prototype;
 functionPrototype.memoize = function (thisVal) {
-    var self = this, cache = {};
+    var self = this;
+    var cache = {};
     return function (arg) {
         if (arg in cache) {
             return cache[arg];
@@ -44,6 +51,7 @@ functionPrototype.memoize = function (thisVal) {
     };
 };
 
+// Array.remove
 var arrayPrototype = Array.prototype;
 arrayPrototype.remove = function (item) {
     var self = this;
@@ -54,6 +62,7 @@ arrayPrototype.remove = function (item) {
     return index;
 };
 
+// Array.removeAll
 arrayPrototype.removeAll = function (items) {
     var i = 0;
     var self = this;
@@ -66,6 +75,7 @@ arrayPrototype.removeAll = function (items) {
     }
 };
 
+// Array.last
 arrayPrototype.last = function () {
     var self = this;
     if (self.length > 0) {
@@ -74,4 +84,4 @@ arrayPrototype.last = function () {
 
     return null;
 };
-//@ sourceMappingURL=extensions.js.map
+//# sourceMappingURL=extensions.js.map

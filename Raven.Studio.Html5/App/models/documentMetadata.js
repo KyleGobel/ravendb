@@ -1,3 +1,4 @@
+/// <reference path="../models/dto.ts" />
 define(["require", "exports"], function(require, exports) {
     var documentMetadata = (function () {
         function documentMetadata(dto) {
@@ -30,4 +31,4 @@ define(["require", "exports"], function(require, exports) {
     
     return documentMetadata;
 });
-//@ sourceMappingURL=documentMetadata.js.map
+//# sourceMappingURL=documentMetadata.js.map

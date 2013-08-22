@@ -1,5 +1,8 @@
-define(["require", "exports", "common/pagedResultSet"], function(require, exports, __pagedResultSet__) {
-    var pagedResultSet = __pagedResultSet__;
+/// <reference path="../../Scripts/typings/jquery/jquery.d.ts" />
+/// <reference path="../../Scripts/typings/knockout/knockout.d.ts" />
+/// <reference path="../../Scripts/extensions.ts" />
+define(["require", "exports"], function(require, exports) {
+    
 
     var pagedList = (function () {
         function pagedList(fetcher, take) {
@@ -30,4 +33,4 @@ define(["require", "exports", "common/pagedResultSet"], function(require, export
     
     return pagedList;
 });
-//@ sourceMappingURL=pagedList.js.map
+//# sourceMappingURL=pagedList.js.map

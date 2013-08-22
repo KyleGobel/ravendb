@@ -1,7 +1,4 @@
 define(["require", "exports"], function(require, exports) {
-    
-    
-
     var indexes = (function () {
         function indexes() {
             this.displayName = "indexes";
@@ -15,4 +12,4 @@ define(["require", "exports"], function(require, exports) {
     })();
     exports.indexes = indexes;
 });
-//@ sourceMappingURL=indexes.js.map
+//# sourceMappingURL=indexes.js.map

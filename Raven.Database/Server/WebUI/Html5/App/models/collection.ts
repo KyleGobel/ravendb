@@ -1,7 +1,7 @@
 /// <reference path="../../Scripts/extensions.ts" />
 
-import raven = module("common/raven");
-import pagedList = module("common/pagedList");
+import raven = require("common/raven");
+import pagedList = require("common/pagedList");
 
 class collection {
 

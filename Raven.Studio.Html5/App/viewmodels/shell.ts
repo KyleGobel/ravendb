@@ -1,34 +1,43 @@
-/// <reference path="../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
-/// <reference path="../durandal/typings/durandal.d.ts"/>
+import router = require("plugins/router");
+import app = require("durandal/app");
+import sys = require("durandal/system");
 
-import router = module("durandal/plugins/router");
-import app = module("durandal/app");
-import sys = module("durandal/system");
-
-import database = module("models/database");
-import raven = module("common/raven");
+import database = require("models/database");
+import raven = require("common/raven");
 
 class shell {
-
     router = router; 
-	databases = ko.observableArray<database>(); 
-	activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
-	ravenDb: raven;
+    databases = ko.observableArray<database>();
+    activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
+    ravenDb: raven;
 
-	constructor() {
-		this.ravenDb = new raven();
-
-		ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
+    constructor() {
+        this.ravenDb = new raven();
+        ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
     }
 
-    databasesLoaded(databases: database[]) {
+    databasesLoaded(databases) {
         var systemDatabase = new database("<system>");
         systemDatabase.isSystem = true;
-		this.databases(databases.concat([systemDatabase]));
-		this.databases()[0].activate();
+        this.databases(databases.concat([systemDatabase]));
+        this.databases()[0].activate();
     }
 
-	activate() {
+    launchDocEditor(docId: string) {
+        router.navigate("#edit?id=" + encodeURIComponent(docId))
+	}
+
+    activate() {
+
+        router.map([
+            { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
+            { route: 'indexes', title: 'Indexes', moduleId: 'viewmodels/indexes', nav: true },
+            { route: 'query', title: 'Query', moduleId: 'viewmodels/query', nav: true },
+            { route: 'tasks', title: 'Tasks', moduleId: 'viewmodels/tasks', nav: true },
+            { route: 'settings', title: 'Settings', moduleId: 'viewmodels/settings', nav: true },
+            { route: 'status', title: 'Status', moduleId: 'viewmodels/status', nav: true },
+            { route: 'edit', title: 'Edit Document', moduleId: 'viewmodels/editDocument', nav: false }
+        ]).buildNavigationModel();
 
         // Activate the first page only after we've connected to Raven
         // and selected the first database.
@@ -40,12 +49,10 @@ class shell {
                 $('.splash').hide();
             })
             .then(results => this.databasesLoaded(results))
-            .then(() => router.activate('documents'));
-	}
+            .then(() => router.activate());
 
-	launchDocEditor(docId: string) {
-		router.navigateTo("#edit?id=" + encodeURIComponent(docId))
-	}
+        return router.activate();
+    }
 }
 
-export = shell; 
+export = shell;

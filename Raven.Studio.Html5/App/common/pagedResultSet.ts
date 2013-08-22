@@ -3,4 +3,4 @@ class pagedResultSet {
 	}
 }
 
-export = pagedResultSet; 
+export = pagedResultSet;

@@ -1,1 +1,1 @@
-//@ sourceMappingURL=promise.js.map
+//# sourceMappingURL=promise.js.map

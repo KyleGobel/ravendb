@@ -1,11 +1,11 @@
-/// <reference path="../common/dto.ts" />
+/// <reference path="../models/dto.ts" />
 
 class documentMetadata {
 	ravenEntityName: string;
 	ravenClrType: string;
 	nonAuthoritativeInfo: boolean;
 	id: string;
-	tempIndexScore: number;
+	tempIndexScore: number; 
 	lastModified: string; 
 	ravenLastModified: string;
 	etag: string;
@@ -23,8 +23,8 @@ class documentMetadata {
         }
 	}
 
-	toDto(): documentMetadataDto {
-		return {
+    toDto(): documentMetadataDto {
+		return <any>{
 			'Raven-Entity-Name': this.ravenEntityName,
 			'Raven-Clr-Type': this.ravenClrType,
 			'Non-Authoritative-Information': this.nonAuthoritativeInfo,

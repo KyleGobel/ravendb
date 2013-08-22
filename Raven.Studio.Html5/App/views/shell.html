@@ -1,9 +1,9 @@
 ﻿<div>
-    <div class="navbar navbar-fixed-top">
+    <div class="navbar navbar-fixed-top navbar-default">
         <div class="navbar-inner">
-            <ul class="nav navbar-nav" data-bind="foreach: router.visibleRoutes">
+            <ul class="nav navbar-nav" data-bind="foreach: router.navigationModel">
                 <li data-bind="css: { active: isActive }">
-                    <a data-bind="attr: { href: hash }, html: name"></a>
+                    <a data-bind="attr: { href: hash }, html: title"></a>
                 </li>
             </ul>
             <ul class="nav navbar-nav">
@@ -27,7 +27,7 @@
             <!--<form class="nav navbar-search" > 
                 <input type="text" class="search-query input-medium" placeholder="Go To Document" />
             </form> -->
-            <form class="navbar-form pull-left" action=""> <!--data-bind="submit: search"-->
+            <form class="navbar-form pull-left"> <!--data-bind="submit: search"-->
                 <input type="text" class="form-control col-lg-8" placeholder="Go to document">
             </form>
             <div class="loader pull-right" data-bind="css: { active: router.isNavigating }">
@@ -50,23 +50,19 @@
                 </li>
                 <li><a href="#" title="edit database settings"><i class="icon-cogs"></i></a></li>
                 <li>
-                    <a class="navbar-brand" data-bind="attr: { href: router.visibleRoutes()[0].hash }">
+                    <a class="navbar-brand" data-bind="attr: { href: router.navigationModel()[0].hash }">
                         <i class="icon-home"></i>
                         <span>RavenDB</span>
                     </a>
                 </li>
             </ul>
+            <div class="loader pull-right" data-bind="css: { active: router.isNavigating }">
+                <i class="icon-spinner icon-2x icon-spin"></i>
+            </div>
         </div>
     </div>
     
-    <div class="container-fluid page-host">
-        <!--ko compose: { 
-            model: router.activeItem, //wiring the router
-            afterCompose: router.afterCompose, //wiring the router
-            transition:'entrance', //use the 'entrance' transition when switching views
-            cacheViews: false //telling composition to keep views in the dom, and reuse them (only a good idea with singleton view models)
-        }--><!--/ko-->
-    </div>
+    <div class="container-fluid page-host" data-bind="router: { transition:'entrance', cacheViews:false }"></div>
 </div>
 
 <footer>

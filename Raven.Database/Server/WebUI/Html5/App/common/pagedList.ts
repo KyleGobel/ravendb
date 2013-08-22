@@ -3,7 +3,7 @@
 /// <reference path="../../Scripts/typings/knockout/knockout.d.ts" />
 /// <reference path="../../Scripts/extensions.ts" />
 
-import pagedResultSet = module("common/pagedResultSet");
+import pagedResultSet = require("common/pagedResultSet");
 
 class pagedList { 
 	isFetching = ko.observable(false);

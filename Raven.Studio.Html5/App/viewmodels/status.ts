@@ -1,14 +1,10 @@
-///<reference path="../durandal/typings/durandal.d.ts"/>
-import http = module("durandal/http");
-import app = module("durandal/app");
-
-export class staus {
+export class status {
 
     displayName = "status";
     activate() { 
         
     }
     canDeactivate() {
-        return true;
+        return true; 
     } 
 }

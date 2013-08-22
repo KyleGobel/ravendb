@@ -3,17 +3,17 @@
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
 /// <reference path="../durandal/typings/durandal.d.ts"/>
 
-import http = module("durandal/http");
-import app = module("durandal/app");
-import sys = module("durandal/system");
-import router = module("durandal/plugins/router");
+import http = require("durandal/http");
+import app = require("durandal/app");
+import sys = require("durandal/system");
+import router = require("durandal/plugins/router");
 
-import database = module("models/database");
-import collection = module("models/collection");
-import document = module("models/document");
+import database = require("models/database");
+import collection = require("models/collection");
+import document = require("models/document");
 
-import raven = module("common/raven");
-import pagedList = module("common/pagedList");
+import raven = require("common/raven");
+import pagedList = require("common/pagedList");
 
 class documents {
 
@@ -40,7 +40,7 @@ class documents {
         ko.postbox.subscribe("EditDocument", args => router.navigateTo("#edit?id=" + encodeURIComponent(args.item.getId())));
     }
 
-    collectionsLoaded(collections: collection[]) {
+    collectionsLoaded(collections: Array<collection>) {
         // Set the color class for each of the collections.
         // These styles are found in app.less.
         var collectionStyleCount = 7;
@@ -100,7 +100,7 @@ class documents {
         return this.collectionsLoadedTask;
     }
 
-    showDeletePrompt(args: { items: document[]; callback: () => void }) {
+    showDeletePrompt(args: { items: Array<document>; callback: () => void }) {
         this.deleteCallback = args.callback;
         this.itemsToDelete(args.items);
         $('#DeleteDocumentsConfirmation').modal({

@@ -1,10 +1,8 @@
-/// <reference path="../common/dto.ts" />
-
-import document = module("models/document");
+import document = require("models/document");
 
 class collectionInfo {
-	results: document[];
-	includes: any[];
+	results: Array<document>;
+	includes: any[]; 
 	isStale: boolean;
 	indexTimestamp: Date; 
 	totalResults: number;

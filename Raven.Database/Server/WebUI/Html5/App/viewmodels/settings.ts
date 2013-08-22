@@ -1,6 +1,6 @@
 ///<reference path="../durandal/typings/durandal.d.ts"/>
-import http = module("durandal/http");
-import app = module("durandal/app");
+import http = require("durandal/http");
+import app = require("durandal/app");
 
 export class settings {
 

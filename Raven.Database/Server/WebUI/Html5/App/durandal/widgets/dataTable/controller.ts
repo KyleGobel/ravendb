@@ -2,11 +2,11 @@
 ///<reference path="../../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 ///<reference path="../../../../Scripts/extensions.ts"/>
 
-import widget = module("durandal/widget");
-import pagedList = module("common/pagedList");
-import document = module("models/document");
-import collection = module("models/collection");
-import pagedResultSet = module("common/pagedResultSet"); 
+import widget = require("durandal/widget");
+import pagedList = require("common/pagedList");
+import document = require("models/document");
+import collection = require("models/collection");
+import pagedResultSet = require("common/pagedResultSet"); 
 
 interface cell {
     templateName: string;
@@ -14,7 +14,7 @@ interface cell {
 }
 
 interface row {
-	isChecked: KnockoutObservable<bool>;
+	isChecked: KnockoutObservable<boolean>;
 	cells: KnockoutObservableArray<cell>;
 	data: any;
 }

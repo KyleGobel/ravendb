@@ -1,18 +1,15 @@
 define(["require", "exports"], function(require, exports) {
-    
-    
-
-    var staus = (function () {
-        function staus() {
+    var status = (function () {
+        function status() {
             this.displayName = "status";
         }
-        staus.prototype.activate = function () {
+        status.prototype.activate = function () {
         };
-        staus.prototype.canDeactivate = function () {
+        status.prototype.canDeactivate = function () {
             return true;
         };
-        return staus;
+        return status;
     })();
-    exports.staus = staus;
+    exports.status = status;
 });
-//@ sourceMappingURL=status.js.map
+//# sourceMappingURL=status.js.map
