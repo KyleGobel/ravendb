@@ -1,11 +1,11 @@
 /// <reference path="../../../Scripts/extensions.ts" />
 /// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../../../Scripts/typings/durandal/durandal.d.ts" />
-define(["require", "exports", "common/pagedResultSet"], function(require, exports, __pagedResultSet__) {
+define(["require", "exports", "common/pagedList", "models/document", "models/collection", "common/pagedResultSet"], function(require, exports, __pagedList__, __document__, __collection__, __pagedResultSet__) {
     
-    
-    
-    
+    var pagedList = __pagedList__;
+    var document = __document__;
+    var collection = __collection__;
     var pagedResultSet = __pagedResultSet__;
 
     // Durandal.js configuration requires that exported widgets be named ctor.

@@ -6,7 +6,7 @@ import database = require("models/database");
 import raven = require("common/raven");
 
 class shell {
-    router = router; 
+    private router = router; 
     databases = ko.observableArray<database>();
     activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
     ravenDb: raven;
@@ -30,7 +30,7 @@ class shell {
     activate() {
 
         router.map([
-            { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
+            { route: '', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
             { route: 'indexes', title: 'Indexes', moduleId: 'viewmodels/indexes', nav: true },
             { route: 'query', title: 'Query', moduleId: 'viewmodels/query', nav: true },
             { route: 'tasks', title: 'Tasks', moduleId: 'viewmodels/tasks', nav: true },

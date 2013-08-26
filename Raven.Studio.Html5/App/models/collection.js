@@ -1,6 +1,6 @@
-define(["require", "exports"], function(require, exports) {
+define(["require", "exports", "common/pagedList"], function(require, exports, __pagedList__) {
     
-    
+    var pagedList = __pagedList__;
 
     var collection = (function () {
         function collection(name) {

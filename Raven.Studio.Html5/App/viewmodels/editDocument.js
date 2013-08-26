@@ -1,6 +1,6 @@
-define(["require", "exports", "durandal/app", "models/document", "models/documentMetadata", "common/raven"], function(require, exports, __app__, __document__, __documentMetadata__, __raven__) {
+define(["require", "exports", "durandal/app", "durandal/system", "models/document", "models/documentMetadata", "common/raven"], function(require, exports, __app__, __sys__, __document__, __documentMetadata__, __raven__) {
     var app = __app__;
-    
+    var sys = __sys__;
 
     var document = __document__;
     var documentMetadata = __documentMetadata__;
@@ -10,16 +10,24 @@ define(["require", "exports", "durandal/app", "models/document", "models/documen
         function editDocument() {
             var _this = this;
             this.document = ko.observable();
+            this.documentText = ko.observable('');
+            this.metadataText = ko.observable('');
             this.ravenDb = new raven();
-
-            this.documentText = ko.computed(function () {
-                return _this.document() ? _this.stringify(_this.document().toDto()) : null;
-            });
             this.metadata = ko.computed(function () {
                 return _this.document() ? _this.document().__metadata : null;
             });
-            this.metadataText = ko.computed(function () {
-                return _this.metadata() ? _this.stringify(_this.metadata().toDto()) : null;
+
+            this.document.subscribe(function (doc) {
+                if (doc) {
+                    var docText = _this.stringify(doc.toDto());
+                    _this.documentText(docText);
+                }
+            });
+            this.metadata.subscribe(function (meta) {
+                if (meta) {
+                    var metaString = _this.stringify(_this.metadata().toDto());
+                    _this.metadataText(metaString);
+                }
             });
         }
         editDocument.prototype.activate = function (navigationArgs) {
@@ -56,6 +64,8 @@ define(["require", "exports", "durandal/app", "models/document", "models/documen
         };
         return editDocument;
     })();
-    exports.editDocument = editDocument;
+
+    
+    return editDocument;
 });
 //# sourceMappingURL=editDocument.js.map

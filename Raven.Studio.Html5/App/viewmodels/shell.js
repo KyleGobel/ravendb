@@ -31,7 +31,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
         shell.prototype.activate = function () {
             var _this = this;
             router.map([
-                { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
+                { route: '', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
                 { route: 'indexes', title: 'Indexes', moduleId: 'viewmodels/indexes', nav: true },
                 { route: 'query', title: 'Query', moduleId: 'viewmodels/query', nav: true },
                 { route: 'tasks', title: 'Tasks', moduleId: 'viewmodels/tasks', nav: true },

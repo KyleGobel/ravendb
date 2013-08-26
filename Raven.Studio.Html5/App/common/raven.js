@@ -180,17 +180,13 @@ define(["require", "exports", "models/database", "models/collection", "models/co
                 cache: false,
                 url: this.getDatabaseUrl() + relativeUrl,
                 data: args,
+                contentType: "application/json; charset=utf-8",
                 type: method,
-                beforeSend: undefined
+                headers: undefined
             };
 
             if (customHeaders) {
-                options.beforeSend = function (jqXHR, settings) {
-                    for (var prop in customHeaders) {
-                        options[prop] = customHeaders[prop];
-                        jqXHR.setRequestHeader(prop, options[prop]);
-                    }
-                };
+                options.headers = customHeaders;
             }
 
             return $.ajax(options);

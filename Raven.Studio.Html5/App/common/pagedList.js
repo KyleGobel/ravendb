@@ -1,8 +1,8 @@
 /// <reference path="../../Scripts/typings/jquery/jquery.d.ts" />
 /// <reference path="../../Scripts/typings/knockout/knockout.d.ts" />
 /// <reference path="../../Scripts/extensions.ts" />
-define(["require", "exports"], function(require, exports) {
-    
+define(["require", "exports", "common/pagedResultSet"], function(require, exports, __pagedResultSet__) {
+    var pagedResultSet = __pagedResultSet__;
 
     var pagedList = (function () {
         function pagedList(fetcher, take) {
