@@ -18,8 +18,8 @@
 <div class="btn-toolbar-inverse">
     <div class="btn-group">
         <button type="button" class="btn btn-default" data-bind="click: saveDocument" title="Save"><i class="icon-save"></i></button>
-        <button type="button" class="btn btn-default" title="Refresh"><i class="icon-refresh"></i></button>
-        <button type="button" class="btn btn-default" title="Delete"><i class="icon-remove"></i></button>
+        <button type="button" class="btn btn-default" data-bind="click: refreshDocument" title="Refresh"><i class="icon-refresh"></i></button>
+        <button type="button" class="btn btn-default" data-bind="click: deleteDocument" title="Delete"><i class="icon-remove"></i></button>
         <button type="button" class="btn btn-default" title="Format JSON"><i class="icon-list-alt"></i></button>
     </div>
     
@@ -36,17 +36,17 @@
     <div class="col-lg-8">
         <div class="row" data-bind="with: metadata">
             <div class="col-lg-12">
-                <input type="text" class="form-control" placeholder="document id" data-bind="value: id" />
+                <input type="text" class="form-control" placeholder="document id" data-bind="value: id, attr: { disabled: $root.isBusy }" />
             </div>
         </div>
         <br />
         <div class="row">
             <div class="col-lg-12">
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="#">Data</a></li>
-                    <li><a href="#">Metadata</a></li>
+                    <li data-bind="click: activateDoc, css: { active: isEditingMetadata() === false }"><a style="cursor: pointer;">Data</a></li>
+                    <li data-bind="click: activateMeta, css: { active: isEditingMetadata }"><a style="cursor: pointer;">Metadata</a></li>
                 </ul>
-                <textarea rows="20" class="form-control" data-bind="value: documentText, valueUpdate: 'afterkeydown'" />
+                <textarea rows="20" class="form-control" data-bind="value: documentTextOrMetaText, attr: { disabled: isBusy }" />
             </div>
         </div>
     </div>

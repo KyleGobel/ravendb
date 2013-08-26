@@ -11,10 +11,19 @@ define(["require", "exports"], function(require, exports) {
                 this.lastModified = dto['Last-Modified'];
                 this.ravenLastModified = dto['Raven-Last-Modified'];
                 this.etag = dto['@etag'];
+
+                for (var property in dto) {
+                    if (property !== 'Raven-Entity-Name' && property !== 'Raven-Clr-Type' && property !== 'Non-Authoritative-Information' && property !== '@id' && property !== 'Temp-Index-Score' && property !== 'Last-Modified' && property !== 'Raven-Last-Modified' && property !== '@etag') {
+                        this.nonStandardProps = this.nonStandardProps || [];
+                        this[property] = dto[property];
+                        this.nonStandardProps.push(property);
+                    }
+                }
             }
         }
         documentMetadata.prototype.toDto = function () {
-            return {
+            var _this = this;
+            var dto = {
                 'Raven-Entity-Name': this.ravenEntityName,
                 'Raven-Clr-Type': this.ravenClrType,
                 'Non-Authoritative-Information': this.nonAuthoritativeInfo,
@@ -24,6 +33,14 @@ define(["require", "exports"], function(require, exports) {
                 'Raven-Last-Modified': this.ravenLastModified,
                 '@etag': this.etag
             };
+
+            if (this.nonStandardProps) {
+                this.nonStandardProps.forEach(function (p) {
+                    return dto[p] = _this[p];
+                });
+            }
+
+            return dto;
         };
         return documentMetadata;
     })();

@@ -1,10 +1,11 @@
-define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__) {
+define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__) {
     var router = __router__;
     var app = __app__;
     var sys = __sys__;
 
     var database = __database__;
     var raven = __raven__;
+    var document = __document__;
 
     var shell = (function () {
         function shell() {
@@ -12,9 +13,13 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             this.router = router;
             this.databases = ko.observableArray();
             this.activeDatabase = ko.observable().subscribeTo("ActivateDatabase");
+            this.itemsToDelete = ko.observableArray();
             this.ravenDb = new raven();
             ko.postbox.subscribe("EditDocument", function (args) {
                 return _this.launchDocEditor(args.doc.getId());
+            });
+            ko.postbox.subscribe("DeleteDocuments", function (args) {
+                return _this.showDeletePrompt(args);
             });
         }
         shell.prototype.databasesLoaded = function (databases) {
@@ -53,6 +58,32 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             });
 
             return router.activate();
+        };
+
+        shell.prototype.showDeletePrompt = function (args) {
+            this.deleteCallback = args.callback;
+            this.itemsToDelete(args.items);
+            $('#DeleteDocumentsConfirmation').modal({
+                backdrop: true,
+                show: true
+            });
+        };
+
+        shell.prototype.confirmDelete = function () {
+            var _this = this;
+            if (this.deleteCallback && this.itemsToDelete().length > 0) {
+                var deletedItemIds = this.itemsToDelete().map(function (i) {
+                    return i.__metadata.id;
+                });
+                var deleteTask = this.ravenDb.deleteDocuments(deletedItemIds);
+                deleteTask.done(function () {
+                    _this.deleteCallback();
+                });
+                deleteTask.fail(function (response) {
+                    sys.log("Failed to delete items", response);
+                    app.showMessage("An error occurred deleting the item(s). Details in the browser console.", ":-(");
+                });
+            }
         };
         return shell;
     })();

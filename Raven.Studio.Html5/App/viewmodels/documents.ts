@@ -28,8 +28,6 @@ class documents {
     collectionDocumentsLoaded = 0;
     collectionToSelectName: string;
     private currentCollectionPagedItems = ko.observable<pagedList>();
-    itemsToDelete = ko.observableArray<document>();
-    deleteCallback: Function;
 
     constructor() {
         this.ravenDb = new raven();
@@ -38,7 +36,6 @@ class documents {
             .then(results => this.collectionsLoaded(results));
 
         this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
-        ko.postbox.subscribe("EditDocument", args =>  router.navigate("#edit?id=" + encodeURIComponent(args.item.getId())));
     }
 
     collectionsLoaded(collections: Array<collection>) {
@@ -66,9 +63,6 @@ class documents {
         // Fetch the collection info for each collection.
         // The collection info contains information such as total number of documents.
         collections.forEach(c => this.fetchTotalDocuments(c));
-
-        // Listen for when the grid deletes the item 
-        ko.postbox.subscribe("DeleteItems", items => this.showDeletePrompt(items));
     }
 
     fetchTotalDocuments(collection: collection) {
@@ -99,29 +93,6 @@ class documents {
         // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
         this.collectionToSelectName = args ? args.collection : null;
         return this.collectionsLoadedTask;
-    }
-
-    showDeletePrompt(args: { items: Array<document>; callback: () => void }) {
-        this.deleteCallback = args.callback;
-        this.itemsToDelete(args.items);
-        $('#DeleteDocumentsConfirmation').modal({
-            backdrop: true,
-            show: true
-        });
-    }
-
-    confirmDelete() {
-        if (this.deleteCallback && this.itemsToDelete().length > 0) {
-            var deletedItemIds = this.itemsToDelete().map(i => i.__metadata.id);
-            var deleteTask = this.ravenDb.deleteDocuments(deletedItemIds);
-            deleteTask.done(() => {
-                this.deleteCallback();
-            });
-            deleteTask.fail((response) => {
-                sys.log("Failed to delete items", response);
-                app.showMessage("An error occurred deleting the item(s). Details in the browser console.", ":-(");
-            });
-        }
     }
 }
 

@@ -76,7 +76,7 @@ class raven {
         return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
     }
 
-    public saveDocument(doc: document): JQueryPromise<any> {
+    public saveDocument(doc: document): JQueryPromise<{ Key: string; ETag: string }> {
         var customHeaders = {
             'Raven-Client-Version': '2.5.0.0',
             'Raven-Entity-Name': doc.__metadata.ravenEntityName,

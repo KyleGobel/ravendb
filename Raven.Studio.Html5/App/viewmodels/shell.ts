@@ -4,16 +4,20 @@ import sys = require("durandal/system");
 
 import database = require("models/database");
 import raven = require("common/raven");
+import document = require("models/document");
 
 class shell {
     private router = router; 
     databases = ko.observableArray<database>();
     activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
     ravenDb: raven;
+    itemsToDelete = ko.observableArray<document>();
+    deleteCallback: Function;
 
     constructor() {
         this.ravenDb = new raven();
         ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
+        ko.postbox.subscribe("DeleteDocuments", args => this.showDeletePrompt(args));
     }
 
     databasesLoaded(databases) {
@@ -52,6 +56,29 @@ class shell {
             .then(() => router.activate());
 
         return router.activate();
+    }
+
+    showDeletePrompt(args: { items: Array<document>; callback: () => void }) {
+        this.deleteCallback = args.callback;
+        this.itemsToDelete(args.items);
+        $('#DeleteDocumentsConfirmation').modal({
+            backdrop: true,
+            show: true
+        });
+    }
+
+    confirmDelete() {
+        if (this.deleteCallback && this.itemsToDelete().length > 0) {
+            var deletedItemIds = this.itemsToDelete().map(i => i.__metadata.id);
+            var deleteTask = this.ravenDb.deleteDocuments(deletedItemIds);
+            deleteTask.done(() => {
+                this.deleteCallback();
+            });
+            deleteTask.fail((response) => {
+                sys.log("Failed to delete items", response);
+                app.showMessage("An error occurred deleting the item(s). Details in the browser console.", ":-(");
+            });
+        }
     }
 }
 

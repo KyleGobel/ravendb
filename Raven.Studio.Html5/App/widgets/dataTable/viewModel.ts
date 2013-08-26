@@ -283,7 +283,7 @@ class ctor {
                 items: selectedItems,
                 callback: () => this.onItemsDeleted(selectedItems)
             };
-            ko.postbox.publish("DeleteItems", deletionArgs);
+            ko.postbox.publish("DeleteDocuments", deletionArgs);
         }
     }
 

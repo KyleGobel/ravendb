@@ -12,9 +12,23 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
             this.document = ko.observable();
             this.documentText = ko.observable('');
             this.metadataText = ko.observable('');
+            this.isEditingMetadata = ko.observable(false);
+            this.isBusy = ko.observable(false);
             this.ravenDb = new raven();
             this.metadata = ko.computed(function () {
                 return _this.document() ? _this.document().__metadata : null;
+            });
+            this.documentTextOrMetaText = ko.computed({
+                read: function () {
+                    return _this.isEditingMetadata() ? _this.metadataText() : _this.documentText();
+                },
+                write: function (val) {
+                    if (_this.isEditingMetadata()) {
+                        _this.metadataText(val);
+                    } else {
+                        _this.documentText(val);
+                    }
+                }
             });
 
             this.document.subscribe(function (doc) {
@@ -23,24 +37,22 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
                     _this.documentText(docText);
                 }
             });
+
             this.metadata.subscribe(function (meta) {
                 if (meta) {
-                    var metaString = _this.stringify(_this.metadata().toDto());
+                    var metaDto = _this.metadata().toDto();
+                    var removedProps = ["Origin", "Non-Authoritative-Information", "@id", "Last-Modified", "Raven-Last-Modified", "@etag"];
+                    removedProps.forEach(function (p) {
+                        return delete metaDto[p];
+                    });
+                    var metaString = _this.stringify(metaDto);
                     _this.metadataText(metaString);
                 }
             });
         }
         editDocument.prototype.activate = function (navigationArgs) {
-            var _this = this;
             if (navigationArgs.id) {
-                var loadDocTask = this.ravenDb.documentWithMetadata(navigationArgs.id);
-                loadDocTask.done(function (document) {
-                    return _this.document(document);
-                });
-                loadDocTask.fail(function (response) {
-                    return _this.failedToLoadDoc(navigationArgs.id, response);
-                });
-                return loadDocTask;
+                return this.loadDocument(navigationArgs.id);
             }
         };
 
@@ -50,17 +62,67 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
         };
 
         editDocument.prototype.saveDocument = function () {
+            var _this = this;
             var updatedDto = JSON.parse(this.documentText());
             updatedDto['@metadata'] = JSON.parse(this.metadataText());
             var newDoc = new document(updatedDto);
-            this.ravenDb.saveDocument(newDoc).then(function () {
-                return console.log("done saving!");
+            this.ravenDb.saveDocument(newDoc).then(function (idAndEtag) {
+                return _this.loadDocument(idAndEtag.Key);
             });
         };
 
         editDocument.prototype.stringify = function (obj) {
             var prettifySpacing = 4;
             return JSON.stringify(obj, null, prettifySpacing);
+        };
+
+        editDocument.prototype.activateMeta = function () {
+            this.isEditingMetadata(true);
+        };
+
+        editDocument.prototype.activateDoc = function () {
+            this.isEditingMetadata(false);
+        };
+
+        editDocument.prototype.loadDocument = function (id) {
+            var _this = this;
+            var loadDocTask = this.ravenDb.documentWithMetadata(id);
+            loadDocTask.done(function (document) {
+                return _this.document(document);
+            });
+            loadDocTask.fail(function (response) {
+                return _this.failedToLoadDoc(id, response);
+            });
+            loadDocTask.always(function () {
+                return _this.isBusy(false);
+            });
+            this.isBusy(true);
+            return loadDocTask;
+        };
+
+        editDocument.prototype.refreshDocument = function () {
+            var meta = this.metadata();
+            if (meta) {
+                this.loadDocument(meta.id);
+                this.document(null);
+                this.documentText(null);
+                this.metadata(null);
+                this.metadataText(null);
+            }
+        };
+
+        editDocument.prototype.deleteDocument = function () {
+            var _this = this;
+            var doc = this.document();
+            if (doc) {
+                var deleteArgs = { items: [doc], callback: function () {
+                        return _this.nextDocumentOrFirst();
+                    } };
+                ko.postbox.publish("DeleteDocuments", deleteArgs);
+            }
+        };
+
+        editDocument.prototype.nextDocumentOrFirst = function () {
         };
         return editDocument;
     })();

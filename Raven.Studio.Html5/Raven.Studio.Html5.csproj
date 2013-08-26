@@ -137,7 +137,6 @@
     <TypeScriptCompile Include="App\models\collection.ts" />
     <TypeScriptCompile Include="App\models\collectionInfo.ts" />
     <TypeScriptCompile Include="App\models\database.ts" />
-    <TypeScriptCompile Include="App\models\documentMetadata.ts" />
     <TypeScriptCompile Include="App\viewmodels\documents.ts" />
     <TypeScriptCompile Include="App\viewmodels\indexes.ts" />
     <TypeScriptCompile Include="App\viewmodels\query.ts" />
@@ -146,6 +145,7 @@
     <TypeScriptCompile Include="App\viewmodels\tasks.ts" />
     <TypeScriptCompile Include="App\models\document.ts" />
     <TypeScriptCompile Include="App\viewmodels\editDocument.ts" />
+    <TypeScriptCompile Include="App\models\documentMetadata.ts" />
     <Content Include="App\views\documents.html" />
     <Content Include="App\views\editDocument.html" />
     <Content Include="App\views\indexes.html" />
