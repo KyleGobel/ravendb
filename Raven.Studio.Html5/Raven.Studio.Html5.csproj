@@ -137,15 +137,15 @@
     <TypeScriptCompile Include="App\models\collection.ts" />
     <TypeScriptCompile Include="App\models\collectionInfo.ts" />
     <TypeScriptCompile Include="App\models\database.ts" />
-    <TypeScriptCompile Include="App\viewmodels\documents.ts" />
     <TypeScriptCompile Include="App\viewmodels\indexes.ts" />
     <TypeScriptCompile Include="App\viewmodels\query.ts" />
     <TypeScriptCompile Include="App\viewmodels\settings.ts" />
     <TypeScriptCompile Include="App\viewmodels\status.ts" />
     <TypeScriptCompile Include="App\viewmodels\tasks.ts" />
-    <TypeScriptCompile Include="App\models\document.ts" />
     <TypeScriptCompile Include="App\viewmodels\editDocument.ts" />
     <TypeScriptCompile Include="App\models\documentMetadata.ts" />
+    <TypeScriptCompile Include="App\models\document.ts" />
+    <TypeScriptCompile Include="App\viewmodels\documents.ts" />
     <Content Include="App\views\documents.html" />
     <Content Include="App\views\editDocument.html" />
     <Content Include="App\views\indexes.html" />
@@ -155,6 +155,7 @@
     <Content Include="App\views\tasks.html" />
     <TypeScriptCompile Include="App\widgets\dataTable\viewModel.ts" />
     <Content Include="App\widgets\dataTable\view.html" />
+    <TypeScriptCompile Include="Scripts\extensions.ts" />
     <Content Include="Scripts\typings\knockout.postbox\knockout-postbox.d.ts" />
     <TypeScriptCompile Include="App\viewmodels\shell.ts" />
     <Content Include="App\views\detail.html" />
@@ -207,10 +208,6 @@
     <Content Include="Content\fonts\glyphicons-halflings-regular.eot" />
     <Content Include="Content\app.less" />
     <None Include="Scripts\jquery-2.0.3.intellisense.js" />
-    <TypeScriptCompile Include="Scripts\extensions.ts" />
-    <Content Include="Scripts\extensions.js">
-      <DependentUpon>extensions.ts</DependentUpon>
-    </Content>
     <Content Include="Scripts\jquery-2.0.3.js" />
     <Content Include="Scripts\jquery-2.0.3.min.js" />
     <Content Include="Scripts\jquery.appear-0.3.3.js" />

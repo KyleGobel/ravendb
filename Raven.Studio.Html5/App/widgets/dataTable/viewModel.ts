@@ -76,7 +76,7 @@ class ctor {
 
         // Initialize the context menu (using Bootstrap-ContextMenu library).
         // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
-        (<any>$('.datatable tbody')).contextmenu({ 'target': '#context-menu' });
+        (<any>$('.datatable tbody')).contextmenu({ 'target': '#documents-grid-context-menu' });
     }
     
     fetchNextChunk() {

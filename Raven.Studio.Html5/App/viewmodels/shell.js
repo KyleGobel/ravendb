@@ -1,3 +1,4 @@
+/// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
 define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__) {
     var router = __router__;
     var app = __app__;

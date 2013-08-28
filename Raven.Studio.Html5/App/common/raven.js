@@ -98,6 +98,15 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
         };
 
+        raven.prototype.deleteCollection = function (collectionName) {
+            var args = {
+                query: "Tag:" + collectionName,
+                pageSize: 128,
+                allowStale: true
+            };
+            return this.delete_("/bulk_docs/Raven/DocumentsByEntityName", args, raven.activeDatabase());
+        };
+
         raven.prototype.saveDocument = function (doc) {
             var customHeaders = {
                 'Raven-Client-Version': '2.5.0.0',
@@ -173,6 +182,10 @@ define(["require", "exports", "models/database", "models/collection", "models/co
 
         raven.prototype.put = function (relativeUrl, args, database, customHeaders) {
             return this.ajax(relativeUrl, args, "PUT", database, customHeaders);
+        };
+
+        raven.prototype.delete_ = function (relativeUrl, args, database, customHeaders) {
+            return this.ajax(relativeUrl, args, "DELETE", database, customHeaders);
         };
 
         raven.prototype.ajax = function (relativeUrl, args, method, database, customHeaders) {

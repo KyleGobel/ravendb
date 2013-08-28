@@ -9,7 +9,7 @@
 			<!-- /ko -->
 		</tr>
 	</thead>
-	<tbody data-bind="foreach: rows, delegatedHandler: ['click', 'mouseup']" data-toggle="context" data-target="#context-menu">
+	<tbody data-bind="foreach: rows, delegatedHandler: ['click', 'mouseup']" data-toggle="context" data-target="#documents-grid-context-menu">
 		<tr class="document-row" data-mouseup="selectOnRightClick" data-bind="css: { checked: isChecked }">
 			<td>
 				<img class="row-check" data-click="toggleChecked" data-bind="attr: { src: isChecked() ? 'content/images/checked.png' : 'content/images/unchecked.png' }" />
@@ -36,7 +36,7 @@
     <div class="progress-bar" style="width: 100%;"></div>
 </div>
 
-<div id="context-menu">
+<div id="documents-grid-context-menu">
     <ul class="dropdown-menu" role="menu">
         <li><a tabindex="-1" href="#">Copy</a></li>
         <li><a tabindex="-1" href="#">Copy Id(s)</a></li>

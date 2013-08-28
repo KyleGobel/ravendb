@@ -1,4 +1,4 @@
-define(["require", "exports", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __database__, __collection__, __document__, __raven__, __pagedList__) {
+define(["require", "exports", "models/database", "models/collection", "common/raven", "common/pagedList"], function(require, exports, __database__, __collection__, __raven__, __pagedList__) {
     
     
     
@@ -6,7 +6,7 @@ define(["require", "exports", "models/database", "models/collection", "models/do
 
     var database = __database__;
     var collection = __collection__;
-    var document = __document__;
+    
 
     var raven = __raven__;
     var pagedList = __pagedList__;
@@ -16,7 +16,7 @@ define(["require", "exports", "models/database", "models/collection", "models/do
             var _this = this;
             this.displayName = "documents";
             this.collections = ko.observableArray();
-            this.selectedCollection = ko.observable().subscribeTo("ActivateCollection").distinctUntilChanged();
+            this.selectedCollection = ko.observable().subscribeTo("ActivateCollection");
             this.collectionColors = [];
             this.collectionsLoadedTask = $.Deferred();
             this.collectionDocumentsLoaded = 0;
@@ -93,15 +93,14 @@ define(["require", "exports", "models/database", "models/collection", "models/do
         };
 
         documents.prototype.activate = function (args) {
-            // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
-            this.collectionToSelectName = args ? args.collection : null;
-            return this.collectionsLoadedTask;
-        };
-
-        documents.prototype.attached = function (view, parent) {
             // Initialize the context menu (using Bootstrap-ContextMenu library).
             // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
-            ($('.document-collections li')).contextmenu({ 'target': '#collections-context-menu' });
+            ($('.document-collections')).contextmenu({ 'target': '#collections-context-menu' });
+
+            // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
+            this.collectionToSelectName = args ? args.collection : null;
+            console.log("zzzz", args);
+            return this.collectionsLoadedTask;
         };
         return documents;
     })();

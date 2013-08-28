@@ -14,6 +14,20 @@ subscribableFn.where = function (predicate) {
     return matches;
 };
 
+// observable.distinctUntilChanged
+subscribableFn.distinctUntilChanged = function () {
+    var observable = this;
+    var matches = ko.observable();
+    var lastMatch = observable();
+    observable.subscribe(function (val) {
+        if (val !== lastMatch) {
+            lastMatch = val;
+            matches(val);
+        }
+    });
+    return matches;
+};
+
 // observable.throttled
 subscribableFn.throttle = function (throttleTimeMs) {
     var observable = this;

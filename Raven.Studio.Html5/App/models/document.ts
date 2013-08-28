@@ -6,7 +6,7 @@ class document {
         this.__metadata = new documentMetadata(dto['@metadata']);
         for (var property in dto) {
             if (property !== '@metadata') {
-                this[property] = dto[property]; 
+                this[property] = dto[property];
             }
         }
     }
@@ -33,4 +33,4 @@ class document {
     }
 }
 
-export = document; 
+export = document;

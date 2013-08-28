@@ -1,9 +1,3 @@
-/// <reference path="../../Scripts/typings/durandal/durandal.d.ts" />
-/// <reference path="shell.ts" />
-/// <reference path="../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
-/// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-
-
 import http = require("plugins/http");
 import app = require("durandal/app");
 import sys = require("durandal/system");
@@ -21,7 +15,7 @@ class documents {
     displayName = "documents";
     ravenDb: raven;
     collections = ko.observableArray<collection>();
-    selectedCollection = ko.observable<collection>().subscribeTo("ActivateCollection");
+    selectedCollection = ko.observable<collection>().subscribeTo("ActivateCollection").distinctUntilChanged();
     allDocumentsCollection: collection;
     collectionColors = []
     collectionsLoadedTask = $.Deferred();
@@ -41,7 +35,7 @@ class documents {
     collectionsLoaded(collections: Array<collection>) {
         // Set the color class for each of the collections.
         // These styles are found in app.less.
-        var collectionStyleCount = 7;
+        var collectionStyleCount = 15;
         collections.forEach((c, index) => c.colorClass = "collection-style-" + (index % collectionStyleCount));
 
         // Create the "All Documents" pseudo collection.
@@ -93,6 +87,21 @@ class documents {
         // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
         this.collectionToSelectName = args ? args.collection : null;
         return this.collectionsLoadedTask;
+    }
+
+    attached(view: HTMLElement, parent: HTMLElement) {
+        // Initialize the context menu (using Bootstrap-ContextMenu library).
+        // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
+        (<any>$('.document-collections li')).contextmenu({
+            target: '#collections-context-menu',
+            onItem: () => this.deleteCollection() // TODO: figure out why this isn't working
+        });
+    }
+
+    deleteCollection() {
+        if (this.selectedCollection()) {
+            ko.postbox.publish("DeleteCollection", this.selectedCollection());
+        }
     }
 }
 

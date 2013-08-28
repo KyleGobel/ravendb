@@ -1,17 +1,14 @@
 /// <reference path="./typings/knockout/knockout.d.ts" />
 
-/*
-  Adds methods to observables for throttling, projection, and filtering.
-*/
-
 interface KnockoutObservable<T> {
     where(predicate: (item: T) => boolean): KnockoutObservable<string>;
     throttle(throttleTimeInMs: number): KnockoutObservable<T>;
     select<TReturn>(selector: (item: any) => any): KnockoutObservable<TReturn>;
+    distinctUntilChanged(): KnockoutObservable<T>;
 }
 
 interface KnockoutObservableArray<T> {
-    pushAll: (items: T[]) => number;
+    pushAll(items: T[]): number;
 }
 
 interface Function {
@@ -27,6 +24,20 @@ subscribableFn.where = function (predicate: (item) => boolean) {
     var matches = ko.observable();
     observable.subscribe(val => {
         if (predicate(val)) {
+            matches(val);
+        }
+    });
+    return matches;
+}
+
+// observable.distinctUntilChanged
+subscribableFn.distinctUntilChanged = function () {
+    var observable: KnockoutObservable<any> = this;
+    var matches = ko.observable();
+    var lastMatch = observable();
+    observable.subscribe(val => {
+        if (val !== lastMatch) {
+            lastMatch = val;
             matches(val);
         }
     });

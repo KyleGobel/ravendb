@@ -13,8 +13,7 @@ class collection {
 	// Called from the UI when a user clicks a collection the documents page.
 	activate() {
 		ko.postbox.publish("ActivateCollection", this);
-	}
-
+    }
 }
 
 export = collection;

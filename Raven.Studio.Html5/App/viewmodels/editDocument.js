@@ -14,6 +14,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
             this.metadataText = ko.observable('');
             this.isEditingMetadata = ko.observable(false);
             this.isBusy = ko.observable(false);
+            this.metaPropsToRestoreOnSave = [];
             this.ravenDb = new raven();
             this.metadata = ko.computed(function () {
                 return _this.document() ? _this.document().__metadata : null;
@@ -40,10 +41,17 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
 
             this.metadata.subscribe(function (meta) {
                 if (meta) {
+                    _this.metaPropsToRestoreOnSave.length = 0;
                     var metaDto = _this.metadata().toDto();
-                    var removedProps = ["Origin", "Non-Authoritative-Information", "@id", "Last-Modified", "Raven-Last-Modified", "@etag"];
-                    removedProps.forEach(function (p) {
-                        return delete metaDto[p];
+
+                    // We don't want to show certain reserved properties in the metadata text area.
+                    // Remove them from the DTO, restore them on save.
+                    var metaPropsToRemove = ["Non-Authoritative-Information", "@id", "Last-Modified", "Raven-Last-Modified", "@etag", "Origin"];
+                    metaPropsToRemove.forEach(function (p) {
+                        if (metaDto[p]) {
+                            delete metaDto[p];
+                            _this.metaPropsToRestoreOnSave.push({ name: p, value: metaDto[p] });
+                        }
                     });
                     var metaString = _this.stringify(metaDto);
                     _this.metadataText(metaString);
@@ -65,6 +73,9 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
             var _this = this;
             var updatedDto = JSON.parse(this.documentText());
             updatedDto['@metadata'] = JSON.parse(this.metadataText());
+            this.metaPropsToRestoreOnSave.forEach(function (p) {
+                return updatedDto[p.name] = p.value;
+            });
             var newDoc = new document(updatedDto);
             this.ravenDb.saveDocument(newDoc).then(function (idAndEtag) {
                 return _this.loadDocument(idAndEtag.Key);

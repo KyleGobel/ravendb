@@ -76,6 +76,15 @@ class raven {
         return this.post("/bulk_docs", ko.toJSON(deleteDocs), raven.activeDatabase());
     }
 
+    public deleteCollection(collectionName: string): JQueryPromise<any> {
+        var args = {
+            query: "Tag:" + collectionName,
+            pageSize: 128,
+            allowStale: true
+        };
+        return this.delete_("/bulk_docs/Raven/DocumentsByEntityName", args, raven.activeDatabase());
+    }
+
     public saveDocument(doc: document): JQueryPromise<{ Key: string; ETag: string }> {
         var customHeaders = {
             'Raven-Client-Version': '2.5.0.0',
@@ -150,6 +159,10 @@ class raven {
 
     private put(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise {
         return this.ajax(relativeUrl, args, "PUT", database, customHeaders);
+    }
+
+    private delete_(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise {
+        return this.ajax(relativeUrl, args, "DELETE", database, customHeaders);
     }
 
     private ajax(relativeUrl: string, args: any, method: string, database?: database, customHeaders?: any): JQueryPromise {

@@ -15,6 +15,7 @@ class editDocument {
     documentTextOrMetaText: KnockoutComputed<string>;
     isEditingMetadata = ko.observable(false);
     isBusy = ko.observable(false);
+    metaPropsToRestoreOnSave = [];
 
     constructor() {
         this.ravenDb = new raven();
@@ -39,9 +40,18 @@ class editDocument {
 
         this.metadata.subscribe(meta => {
             if (meta) {
+                this.metaPropsToRestoreOnSave.length = 0;
                 var metaDto = this.metadata().toDto();
-                var removedProps = ["Origin", "Non-Authoritative-Information", "@id", "Last-Modified", "Raven-Last-Modified", "@etag"];
-                removedProps.forEach(p => delete metaDto[p]);
+
+                // We don't want to show certain reserved properties in the metadata text area.
+                // Remove them from the DTO, restore them on save.
+                var metaPropsToRemove = ["Non-Authoritative-Information", "@id", "Last-Modified", "Raven-Last-Modified", "@etag", "Origin"];
+                metaPropsToRemove.forEach(p => {
+                    if (metaDto[p]) {
+                        delete metaDto[p];
+                        this.metaPropsToRestoreOnSave.push({ name: p, value: metaDto[p] });
+                    }
+                });
                 var metaString = this.stringify(metaDto);
                 this.metadataText(metaString);
             }
@@ -62,6 +72,7 @@ class editDocument {
     saveDocument() {
         var updatedDto = JSON.parse(this.documentText());
         updatedDto['@metadata'] = JSON.parse(this.metadataText());
+        this.metaPropsToRestoreOnSave.forEach(p => updatedDto[p.name] = p.value);
         var newDoc = new document(updatedDto);
         this.ravenDb
             .saveDocument(newDoc)

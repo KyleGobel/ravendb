@@ -1,3 +1,5 @@
+/// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
+
 import router = require("plugins/router");
 import app = require("durandal/app");
 import sys = require("durandal/system");
@@ -18,6 +20,7 @@ class shell {
         this.ravenDb = new raven();
         ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
         ko.postbox.subscribe("DeleteDocuments", args => this.showDeletePrompt(args));
+        ko.postbox.subscribe("DeleteCollection", args => console.log("del collection"));
     }
 
     databasesLoaded(databases) {
