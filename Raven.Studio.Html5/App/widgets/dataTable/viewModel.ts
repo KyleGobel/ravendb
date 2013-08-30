@@ -7,6 +7,8 @@ import pagedList = require("common/pagedList");
 import document = require("models/document");
 import collection = require("models/collection");
 import pagedResultSet = require("common/pagedResultSet"); 
+import deleteDocuments = require("viewmodels/deleteDocuments");
+import app = require("durandal/app");
 
 interface cell {
     templateName: string;
@@ -278,12 +280,10 @@ class ctor {
 
     deleteSelection() {
         if (this.selectionStack.length > 0) {
-            var selectedItems = this.selectionStack.map(s => s.data);
-            var deletionArgs = {
-                items: selectedItems,
-                callback: () => this.onItemsDeleted(selectedItems)
-            };
-            ko.postbox.publish("DeleteDocuments", deletionArgs);
+            var selectedItems = this.selectionStack.map(s => <document>s.data);
+            var deleteDocsVm = new deleteDocuments(selectedItems);
+            deleteDocsVm.deletionTask.done(deletedDocs => this.onItemsDeleted(deletedDocs));
+            app.showDialog(deleteDocsVm);
         }
     }
 

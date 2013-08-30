@@ -1,12 +1,14 @@
 /// <reference path="../../../Scripts/extensions.ts" />
 /// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../../../Scripts/typings/durandal/durandal.d.ts" />
-define(["require", "exports", "common/pagedList", "models/document", "models/collection", "common/pagedResultSet"], function(require, exports, __pagedList__, __document__, __collection__, __pagedResultSet__) {
+define(["require", "exports", "common/pagedList", "models/document", "models/collection", "common/pagedResultSet", "viewmodels/deleteDocuments", "durandal/app"], function(require, exports, __pagedList__, __document__, __collection__, __pagedResultSet__, __deleteDocuments__, __app__) {
     
     var pagedList = __pagedList__;
     var document = __document__;
     var collection = __collection__;
     var pagedResultSet = __pagedResultSet__;
+    var deleteDocuments = __deleteDocuments__;
+    var app = __app__;
 
     // Durandal.js configuration requires that exported widgets be named ctor.
     var ctor = (function () {
@@ -287,13 +289,11 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
                 var selectedItems = this.selectionStack.map(function (s) {
                     return s.data;
                 });
-                var deletionArgs = {
-                    items: selectedItems,
-                    callback: function () {
-                        return _this.onItemsDeleted(selectedItems);
-                    }
-                };
-                ko.postbox.publish("DeleteDocuments", deletionArgs);
+                var deleteDocsVm = new deleteDocuments(selectedItems);
+                deleteDocsVm.deletionTask.done(function (deletedDocs) {
+                    return _this.onItemsDeleted(deletedDocs);
+                });
+                app.showDialog(deleteDocsVm);
             }
         };
 

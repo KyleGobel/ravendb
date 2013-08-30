@@ -133,6 +133,17 @@
     <TypeScriptCompile Include="App\common\pagedList.ts" />
     <TypeScriptCompile Include="App\common\pagedResultSet.ts" />
     <TypeScriptCompile Include="App\common\raven.ts" />
+    <TypeScriptCompile Include="App\common\dialogResult.ts" />
+    <TypeScriptCompile Include="App\commands\deleteDocumentsCommand.ts" />
+    <TypeScriptCompile Include="App\commands\commandBase.ts" />
+    <Content Include="App\commands\commandBase.js">
+      <DependentUpon>commandBase.ts</DependentUpon>
+    </Content>
+    <Content Include="App\commands\deleteDocumentsCommand.js">
+      <DependentUpon>deleteDocumentsCommand.ts</DependentUpon>
+    </Content>
+    <TypeScriptCompile Include="App\common\alertType.ts" />
+    <TypeScriptCompile Include="App\common\alertArgs.ts" />
     <Content Include="App\main.js" />
     <TypeScriptCompile Include="App\models\collection.ts" />
     <TypeScriptCompile Include="App\models\collectionInfo.ts" />
@@ -146,6 +157,8 @@
     <TypeScriptCompile Include="App\models\documentMetadata.ts" />
     <TypeScriptCompile Include="App\models\document.ts" />
     <TypeScriptCompile Include="App\viewmodels\documents.ts" />
+    <TypeScriptCompile Include="App\viewmodels\deleteDocuments.ts" />
+    <Content Include="App\views\deleteDocuments.html" />
     <Content Include="App\views\documents.html" />
     <Content Include="App\views\editDocument.html" />
     <Content Include="App\views\indexes.html" />

@@ -4,6 +4,7 @@ import sys = require("durandal/system");
 import document = require("models/document");
 import documentMetadata = require("models/documentMetadata");
 import raven = require("common/raven");
+import deleteDocuments = require("viewmodels/deleteDocuments");
 
 class editDocument {
 
@@ -115,13 +116,14 @@ class editDocument {
     deleteDocument() {
         var doc = this.document();
         if (doc) {
-            var deleteArgs = { items: [doc], callback: () => this.nextDocumentOrFirst() };
-            ko.postbox.publish("DeleteDocuments", deleteArgs);
+            var viewModel = new deleteDocuments([doc]);
+            viewModel.deletionTask.done(() => this.nextDocumentOrFirst());
+            app.showDialog(viewModel);
         }
     }
 
     nextDocumentOrFirst() {
-        
+        // TODO: implement editDoc.nextDocOrFirst
     }
 }
 

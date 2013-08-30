@@ -1,10 +1,11 @@
-define(["require", "exports", "durandal/app", "durandal/system", "models/document", "models/documentMetadata", "common/raven"], function(require, exports, __app__, __sys__, __document__, __documentMetadata__, __raven__) {
+define(["require", "exports", "durandal/app", "durandal/system", "models/document", "models/documentMetadata", "common/raven", "viewmodels/deleteDocuments"], function(require, exports, __app__, __sys__, __document__, __documentMetadata__, __raven__, __deleteDocuments__) {
     var app = __app__;
     var sys = __sys__;
 
     var document = __document__;
     var documentMetadata = __documentMetadata__;
     var raven = __raven__;
+    var deleteDocuments = __deleteDocuments__;
 
     var editDocument = (function () {
         function editDocument() {
@@ -126,14 +127,16 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
             var _this = this;
             var doc = this.document();
             if (doc) {
-                var deleteArgs = { items: [doc], callback: function () {
-                        return _this.nextDocumentOrFirst();
-                    } };
-                ko.postbox.publish("DeleteDocuments", deleteArgs);
+                var viewModel = new deleteDocuments([doc]);
+                viewModel.deletionTask.done(function () {
+                    return _this.nextDocumentOrFirst();
+                });
+                app.showDialog(viewModel);
             }
         };
 
         editDocument.prototype.nextDocumentOrFirst = function () {
+            // TODO: implement editDoc.nextDocOrFirst
         };
         return editDocument;
     })();

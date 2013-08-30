@@ -136,7 +136,7 @@ class raven {
         }
     }
 
-    private fetch(relativeUrl: string, args: any, database?: database, resultsSelector?: (results: any) => any): JQueryPromise {
+    private fetch(relativeUrl: string, args: any, database?: database, resultsSelector?: (results: any) => any): JQueryPromise<any> {
         var ajax = this.ajax(relativeUrl, args, "GET", database);
 
         var foo: JQueryXHR = null;
@@ -153,19 +153,19 @@ class raven {
         }
     }
 
-    private post(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise {
+    private post(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise<any> {
         return this.ajax(relativeUrl, args, "POST", database, customHeaders);
     }
 
-    private put(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise {
+    private put(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise<any> {
         return this.ajax(relativeUrl, args, "PUT", database, customHeaders);
     }
 
-    private delete_(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise {
+    private delete_(relativeUrl: string, args: any, database?: database, customHeaders?: any): JQueryPromise<any> {
         return this.ajax(relativeUrl, args, "DELETE", database, customHeaders);
     }
 
-    private ajax(relativeUrl: string, args: any, method: string, database?: database, customHeaders?: any): JQueryPromise {
+    private ajax(relativeUrl: string, args: any, method: string, database?: database, customHeaders?: any): JQueryPromise<any> {
         
         var options = {
             cache: false,

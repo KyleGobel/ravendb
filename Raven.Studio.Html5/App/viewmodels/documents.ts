@@ -93,8 +93,7 @@ class documents {
         // Initialize the context menu (using Bootstrap-ContextMenu library).
         // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
         (<any>$('.document-collections li')).contextmenu({
-            target: '#collections-context-menu',
-            onItem: () => this.deleteCollection() // TODO: figure out why this isn't working
+            target: '#collections-context-menu'
         });
     }
 

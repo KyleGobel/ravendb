@@ -101,7 +101,15 @@ define(["require", "exports", "models/database", "models/collection", "models/do
         documents.prototype.attached = function (view, parent) {
             // Initialize the context menu (using Bootstrap-ContextMenu library).
             // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
-            ($('.document-collections li')).contextmenu({ 'target': '#collections-context-menu' });
+            ($('.document-collections li')).contextmenu({
+                target: '#collections-context-menu'
+            });
+        };
+
+        documents.prototype.deleteCollection = function () {
+            if (this.selectedCollection()) {
+                ko.postbox.publish("DeleteCollection", this.selectedCollection());
+            }
         };
         return documents;
     })();
