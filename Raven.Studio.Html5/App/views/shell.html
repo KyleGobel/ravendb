@@ -24,9 +24,6 @@
                     </ul>
                 </li>
             </ul>
-            <!--<form class="nav navbar-search" > 
-                <input type="text" class="search-query input-medium" placeholder="Go To Document" />
-            </form> -->
             <form class="navbar-form pull-left"> <!--data-bind="submit: search"-->
                 <input type="text" class="form-control col-lg-8" placeholder="Go to document">
             </form>
@@ -61,6 +58,13 @@
             </div>
         </div>
     </div>
+    
+    <!--TODO: implement alert-->
+    <!--<div class="studio-alerts" data-bind="with: currentAlert">
+        <div class="alert fade in" data-bind="css: { 'alert-info': type === 'info', 'alert-success': type === 'success', 'alert-warning': type === 'warning', 'alert-danger': type === 'danger' }">
+            <div></div>
+        </div>
+    </div>-->
     
     <div class="container-fluid page-host" data-bind="router: { transition:'entrance', cacheViews:false }"></div>
 </div>
