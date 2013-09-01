@@ -139,6 +139,10 @@
     <Content Include="App\commands\commandBase.js">
       <DependentUpon>commandBase.ts</DependentUpon>
     </Content>
+    <TypeScriptCompile Include="App\commands\deleteCollectionCommand.ts" />
+    <Content Include="App\commands\deleteCollectionCommand.js">
+      <DependentUpon>deleteCollectionCommand.ts</DependentUpon>
+    </Content>
     <Content Include="App\commands\deleteDocumentsCommand.js">
       <DependentUpon>deleteDocumentsCommand.ts</DependentUpon>
     </Content>
@@ -158,6 +162,11 @@
     <TypeScriptCompile Include="App\models\document.ts" />
     <TypeScriptCompile Include="App\viewmodels\documents.ts" />
     <TypeScriptCompile Include="App\viewmodels\deleteDocuments.ts" />
+    <TypeScriptCompile Include="App\viewmodels\deleteCollection.ts" />
+    <Content Include="App\viewmodels\deleteCollection.js">
+      <DependentUpon>deleteCollection.ts</DependentUpon>
+    </Content>
+    <Content Include="App\views\deleteCollection.html" />
     <Content Include="App\views\deleteDocuments.html" />
     <Content Include="App\views\documents.html" />
     <Content Include="App\views\editDocument.html" />

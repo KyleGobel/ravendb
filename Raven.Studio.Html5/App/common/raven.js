@@ -7,7 +7,8 @@ define(["require", "exports", "models/database", "models/collection", "models/co
 
     var raven = (function () {
         function raven() {
-            this.baseUrl = "http://localhost:8080";
+            //private baseUrl = "http://localhost:8080"; // For debugging purposes, uncomment this line to point Raven at an already-running Raven server. Requires the Raven server to have it's config set to <add key="Raven/AccessControlAllowOrigin" value="*" />
+            this.baseUrl = "";
         }
         raven.prototype.databases = function () {
             var resultsSelector = function (databaseNames) {

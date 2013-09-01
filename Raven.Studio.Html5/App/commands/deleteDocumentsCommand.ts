@@ -1,5 +1,4 @@
 import commandBase = require("commands/commandBase");
-import alertType = require("common/alertType");
 
 class deleteDocumentsCommand extends commandBase {
 
@@ -12,10 +11,10 @@ class deleteDocumentsCommand extends commandBase {
 
         var docCount = this.docIds.length;
         var alertInfoTitle = docCount > 1 ? "Deleting " + docCount + "docs..." : "Deleting " + this.docIds[0];
-        this.reportProgress(alertType.info, alertInfoTitle);
+        this.reportInfo(alertInfoTitle);
 
-        deleteTask.done(() => this.reportProgress(alertType.success, "Deleted " + docCount + " docs"));
-        deleteTask.fail((response) => this.reportProgress(alertType.danger, "Doc delete failed", JSON.stringify(response)));
+        deleteTask.done(() => this.reportSuccess("Deleted " + docCount + " docs"));
+        deleteTask.fail((response) => this.reportError("Failed to delete docs", JSON.stringify(response)));
         return deleteTask;
     }
 }

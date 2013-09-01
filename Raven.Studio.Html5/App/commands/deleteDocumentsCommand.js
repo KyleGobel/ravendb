@@ -4,9 +4,8 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-define(["require", "exports", "commands/commandBase", "common/alertType"], function(require, exports, __commandBase__, __alertType__) {
+define(["require", "exports", "commands/commandBase"], function(require, exports, __commandBase__) {
     var commandBase = __commandBase__;
-    var alertType = __alertType__;
 
     var deleteDocumentsCommand = (function (_super) {
         __extends(deleteDocumentsCommand, _super);
@@ -20,13 +19,13 @@ define(["require", "exports", "commands/commandBase", "common/alertType"], funct
 
             var docCount = this.docIds.length;
             var alertInfoTitle = docCount > 1 ? "Deleting " + docCount + "docs..." : "Deleting " + this.docIds[0];
-            this.reportProgress(alertType.info, alertInfoTitle);
+            this.reportInfo(alertInfoTitle);
 
             deleteTask.done(function () {
-                return _this.reportProgress(alertType.success, "Deleted " + docCount + " docs");
+                return _this.reportSuccess("Deleted " + docCount + " docs");
             });
             deleteTask.fail(function (response) {
-                return _this.reportProgress(alertType.danger, "Doc delete failed", JSON.stringify(response));
+                return _this.reportError("Failed to delete docs", JSON.stringify(response));
             });
             return deleteTask;
         };

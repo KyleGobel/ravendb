@@ -6,7 +6,7 @@ import router = require("plugins/router");
 import database = require("models/database");
 import collection = require("models/collection");
 import document = require("models/document");
-
+import deleteCollection = require("viewmodels/deleteCollection");
 import raven = require("common/raven");
 import pagedList = require("common/pagedList");
 
@@ -98,8 +98,11 @@ class documents {
     }
 
     deleteCollection() {
-        if (this.selectedCollection()) {
-            ko.postbox.publish("DeleteCollection", this.selectedCollection());
+        var collection = this.selectedCollection();
+        if (collection) {
+            var viewModel = new deleteCollection(collection);
+            viewModel.deletionTask.done(() => this.collections.remove(collection));
+            app.showDialog(viewModel);
         }
     }
 }

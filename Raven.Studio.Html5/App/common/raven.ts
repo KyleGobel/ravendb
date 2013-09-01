@@ -6,8 +6,8 @@ import pagedResultSet = require("common/pagedResultSet");
 
 class raven {
 
-    private baseUrl = "http://localhost:8080"; // For debugging purposes, uncomment this line to point Raven at an already-running Raven server. Requires the Raven server to have it's config set to <add key="Raven/AccessControlAllowOrigin" value="*" />
-    //private baseUrl = ""; // This should be used when serving HTML5 Studio from the server app.
+    //private baseUrl = "http://localhost:8080"; // For debugging purposes, uncomment this line to point Raven at an already-running Raven server. Requires the Raven server to have it's config set to <add key="Raven/AccessControlAllowOrigin" value="*" />
+    private baseUrl = ""; // This should be used when serving HTML5 Studio from the server app.
 
     public static activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 
@@ -130,7 +130,7 @@ class raven {
         }
     }
 
-    private requireActiveDatabase(): void {
+    private requireActiveDatabase() {
         if (!raven.activeDatabase()) {
             throw new Error("Must have an active database before calling this method.");
         }

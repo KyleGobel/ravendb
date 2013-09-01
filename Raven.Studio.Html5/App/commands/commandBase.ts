@@ -13,7 +13,23 @@ class commandBase {
         throw new Error("Execute must be overridden.");
     }
 
-    reportProgress(type: alertType, title: string, details?: string) {
+    reportInfo(title: string, details?: string) {
+        this.reportProgress(alertType.info, title, details);
+    }
+
+    reportError(title: string, details?: string) {
+        this.reportProgress(alertType.danger, title, details);
+    }
+
+    reportSuccess(title: string, details?: string) {
+        this.reportProgress(alertType.success, title, details);
+    }
+
+    reportWarning(title: string, details?: string) {
+        this.reportProgress(alertType.warning, title, details);
+    }
+
+    private reportProgress(type: alertType, title: string, details?: string) {
         ko.postbox.publish("Alert", new alertArgs(type, title, details));
     }
 }

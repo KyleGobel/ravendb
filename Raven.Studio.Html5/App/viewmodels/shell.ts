@@ -59,8 +59,6 @@ class shell {
             })
             .then(results => this.databasesLoaded(results))
             .then(() => router.activate());
-
-        return router.activate();
     }
 
     showDeleteCollectionPrompt(args: { collection: collection }) {

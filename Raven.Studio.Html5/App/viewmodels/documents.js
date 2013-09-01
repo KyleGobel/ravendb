@@ -1,13 +1,13 @@
-define(["require", "exports", "models/database", "models/collection", "models/document", "common/raven", "common/pagedList"], function(require, exports, __database__, __collection__, __document__, __raven__, __pagedList__) {
+define(["require", "exports", "durandal/app", "models/database", "models/collection", "models/document", "viewmodels/deleteCollection", "common/raven", "common/pagedList"], function(require, exports, __app__, __database__, __collection__, __document__, __deleteCollection__, __raven__, __pagedList__) {
     
-    
+    var app = __app__;
     
     
 
     var database = __database__;
     var collection = __collection__;
     var document = __document__;
-
+    var deleteCollection = __deleteCollection__;
     var raven = __raven__;
     var pagedList = __pagedList__;
 
@@ -107,8 +107,14 @@ define(["require", "exports", "models/database", "models/collection", "models/do
         };
 
         documents.prototype.deleteCollection = function () {
-            if (this.selectedCollection()) {
-                ko.postbox.publish("DeleteCollection", this.selectedCollection());
+            var _this = this;
+            var collection = this.selectedCollection();
+            if (collection) {
+                var viewModel = new deleteCollection(collection);
+                viewModel.deletionTask.done(function () {
+                    return _this.collections.remove(collection);
+                });
+                app.showDialog(viewModel);
             }
         };
         return documents;
