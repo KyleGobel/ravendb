@@ -6,7 +6,7 @@ class collection {
     colorClass = ""; 
 	documentCount = ko.observable(0);
 
-	constructor(public name: string) {
+	constructor(public name: string, public isAllCollections?: boolean) {
 	}
 
 	// Notifies consumers that this collection should be the selected one.

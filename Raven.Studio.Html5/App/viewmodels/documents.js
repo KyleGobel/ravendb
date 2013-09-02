@@ -40,7 +40,7 @@ define(["require", "exports", "durandal/app", "models/database", "models/collect
             });
 
             // Create the "All Documents" pseudo collection.
-            this.allDocumentsCollection = new collection("All Documents");
+            this.allDocumentsCollection = new collection("All Documents", true);
             this.allDocumentsCollection.colorClass = "all-documents-collection";
             this.allDocumentsCollection.documentCount = ko.computed(function () {
                 return _this.collections().filter(function (c) {
@@ -112,7 +112,8 @@ define(["require", "exports", "durandal/app", "models/database", "models/collect
             if (collection) {
                 var viewModel = new deleteCollection(collection);
                 viewModel.deletionTask.done(function () {
-                    return _this.collections.remove(collection);
+                    _this.collections.remove(collection);
+                    _this.allDocumentsCollection.activate();
                 });
                 app.showDialog(viewModel);
             }

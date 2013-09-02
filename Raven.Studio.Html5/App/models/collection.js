@@ -3,8 +3,9 @@ define(["require", "exports", "common/pagedList"], function(require, exports, __
     var pagedList = __pagedList__;
 
     var collection = (function () {
-        function collection(name) {
+        function collection(name, isAllCollections) {
             this.name = name;
+            this.isAllCollections = isAllCollections;
             this.colorClass = "";
             this.documentCount = ko.observable(0);
         }

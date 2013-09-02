@@ -8,6 +8,7 @@ define(["require", "exports", "models/document", "plugins/dialog", "commands/del
         function deleteCollection(collection) {
             this.collection = collection;
             this.deletionTask = $.Deferred();
+            this.deletionStarted = false;
         }
         deleteCollection.prototype.deleteCollection = function () {
             var _this = this;
@@ -19,6 +20,7 @@ define(["require", "exports", "models/document", "plugins/dialog", "commands/del
             deleteCommandTask.fail(function (response) {
                 return _this.deletionTask.reject(response);
             });
+            this.deletionStarted = true;
             dialog.close(this);
         };
 
@@ -27,7 +29,7 @@ define(["require", "exports", "models/document", "plugins/dialog", "commands/del
         };
 
         deleteCollection.prototype.deactivate = function () {
-            if (this.deletionTask.state() === "pending") {
+            if (!this.deletionStarted) {
                 this.deletionTask.reject();
             }
         };

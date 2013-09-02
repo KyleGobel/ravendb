@@ -16,6 +16,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
             this.isEditingMetadata = ko.observable(false);
             this.isBusy = ko.observable(false);
             this.metaPropsToRestoreOnSave = [];
+            this.userSpecifiedId = ko.observable('');
             this.ravenDb = new raven();
             this.metadata = ko.computed(function () {
                 return _this.document() ? _this.document().__metadata : null;
@@ -56,6 +57,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
                     });
                     var metaString = _this.stringify(metaDto);
                     _this.metadataText(metaString);
+                    _this.userSpecifiedId(meta.id);
                 }
             });
         }
@@ -78,6 +80,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
                 return updatedDto[p.name] = p.value;
             });
             var newDoc = new document(updatedDto);
+            newDoc.__metadata.id = this.userSpecifiedId();
             this.ravenDb.saveDocument(newDoc).then(function (idAndEtag) {
                 return _this.loadDocument(idAndEtag.Key);
             });

@@ -17,6 +17,7 @@ class editDocument {
     isEditingMetadata = ko.observable(false);
     isBusy = ko.observable(false);
     metaPropsToRestoreOnSave = [];
+    userSpecifiedId = ko.observable('');
 
     constructor() {
         this.ravenDb = new raven();
@@ -39,7 +40,7 @@ class editDocument {
             }
         });
 
-        this.metadata.subscribe(meta => {
+        this.metadata.subscribe((meta: documentMetadata) => {
             if (meta) {
                 this.metaPropsToRestoreOnSave.length = 0;
                 var metaDto = this.metadata().toDto();
@@ -55,6 +56,7 @@ class editDocument {
                 });
                 var metaString = this.stringify(metaDto);
                 this.metadataText(metaString);
+                this.userSpecifiedId(meta.id);
             }
         });
     }
@@ -75,6 +77,7 @@ class editDocument {
         updatedDto['@metadata'] = JSON.parse(this.metadataText());
         this.metaPropsToRestoreOnSave.forEach(p => updatedDto[p.name] = p.value);
         var newDoc = new document(updatedDto);
+        newDoc.__metadata.id = this.userSpecifiedId();
         this.ravenDb
             .saveDocument(newDoc)
             .then(idAndEtag => this.loadDocument(idAndEtag.Key));

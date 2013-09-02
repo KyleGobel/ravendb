@@ -7,8 +7,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
 
     var raven = (function () {
         function raven() {
-            //private baseUrl = "http://localhost:8080"; // For debugging purposes, uncomment this line to point Raven at an already-running Raven server. Requires the Raven server to have it's config set to <add key="Raven/AccessControlAllowOrigin" value="*" />
-            this.baseUrl = "";
+            this.baseUrl = "http://localhost:8080";
         }
         raven.prototype.databases = function () {
             var resultsSelector = function (databaseNames) {
@@ -105,12 +104,14 @@ define(["require", "exports", "models/database", "models/collection", "models/co
                 pageSize: 128,
                 allowStale: true
             };
-            return this.delete_("/bulk_docs/Raven/DocumentsByEntityName", args, raven.activeDatabase());
+            var url = "/bulk_docs/Raven/DocumentsByEntityName";
+            var urlParams = "?query=Tag%3A" + encodeURIComponent(collectionName) + "&pageSize=128&allowStale=true";
+            return this.delete_(url + urlParams, null, raven.activeDatabase());
         };
 
         raven.prototype.saveDocument = function (doc) {
             var customHeaders = {
-                'Raven-Client-Version': '2.5.0.0',
+                'Raven-Client-Version': raven.ravenClientVersion,
                 'Raven-Entity-Name': doc.__metadata.ravenEntityName,
                 'Raven-Clr-Type': doc.__metadata.ravenClrType,
                 'If-None-Match': doc.__metadata.etag
@@ -205,6 +206,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
 
             return $.ajax(options);
         };
+        raven.ravenClientVersion = '2.5.0.0';
         raven.activeDatabase = ko.observable().subscribeTo("ActivateDatabase");
         return raven;
     })();

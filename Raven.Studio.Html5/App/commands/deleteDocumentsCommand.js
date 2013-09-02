@@ -27,6 +27,7 @@ define(["require", "exports", "commands/commandBase"], function(require, exports
             deleteTask.fail(function (response) {
                 return _this.reportError("Failed to delete docs", JSON.stringify(response));
             });
+
             return deleteTask;
         };
         return deleteDocumentsCommand;

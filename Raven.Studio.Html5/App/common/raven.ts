@@ -6,9 +6,10 @@ import pagedResultSet = require("common/pagedResultSet");
 
 class raven {
 
-    //private baseUrl = "http://localhost:8080"; // For debugging purposes, uncomment this line to point Raven at an already-running Raven server. Requires the Raven server to have it's config set to <add key="Raven/AccessControlAllowOrigin" value="*" />
-    private baseUrl = ""; // This should be used when serving HTML5 Studio from the server app.
+    private baseUrl = "http://localhost:8080"; // For debugging purposes, uncomment this line to point Raven at an already-running Raven server. Requires the Raven server to have it's config set to <add key="Raven/AccessControlAllowOrigin" value="*" />
+    //private baseUrl = ""; // This should be used when serving HTML5 Studio from the server app.
 
+    private static ravenClientVersion = '2.5.0.0';
     public static activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 
     public databases(): JQueryPromise<Array<database>> {
@@ -82,12 +83,14 @@ class raven {
             pageSize: 128,
             allowStale: true
         };
-        return this.delete_("/bulk_docs/Raven/DocumentsByEntityName", args, raven.activeDatabase());
+        var url = "/bulk_docs/Raven/DocumentsByEntityName";
+        var urlParams = "?query=Tag%3A" + encodeURIComponent(collectionName) + "&pageSize=128&allowStale=true";
+        return this.delete_(url + urlParams, null, raven.activeDatabase());
     }
 
     public saveDocument(doc: document): JQueryPromise<{ Key: string; ETag: string }> {
         var customHeaders = {
-            'Raven-Client-Version': '2.5.0.0',
+            'Raven-Client-Version': raven.ravenClientVersion,
             'Raven-Entity-Name': doc.__metadata.ravenEntityName,
             'Raven-Clr-Type': doc.__metadata.ravenClrType,
             'If-None-Match': doc.__metadata.etag

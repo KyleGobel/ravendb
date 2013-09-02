@@ -15,6 +15,7 @@ class deleteDocumentsCommand extends commandBase {
 
         deleteTask.done(() => this.reportSuccess("Deleted " + docCount + " docs"));
         deleteTask.fail((response) => this.reportError("Failed to delete docs", JSON.stringify(response)));
+
         return deleteTask;
     }
 }

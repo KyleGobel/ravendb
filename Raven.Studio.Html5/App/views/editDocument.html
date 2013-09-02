@@ -10,8 +10,8 @@
     <li data-bind="with: metadata">
         <a href="#" data-bind="text: ravenEntityName, attr: { href: '#documents?collection=' + ravenEntityName }"></a>
     </li>
-    <li class="active" data-bind="with: metadata">
-        <span data-bind="text: id"></span>
+    <li class="active">
+        <span data-bind="text: userSpecifiedId"></span>
     </li>
 </ul>
 

@@ -52,15 +52,15 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
 
             // Activate the first page only after we've connected to Raven
             // and selected the first database.
-            this.ravenDb.databases().fail(function (result) {
+            return this.ravenDb.databases().fail(function (result) {
                 sys.log("Unable to connect to Raven.", result);
                 app.showMessage("Couldn't connect to Raven. Details in the browser console.", ":-(", ['Dismiss']);
                 $('.splash').hide();
             }).then(function (results) {
                 return _this.databasesLoaded(results);
+            }).then(function () {
+                return router.activate();
             });
-
-            return router.activate();
         };
 
         shell.prototype.showDeleteCollectionPrompt = function (args) {

@@ -39,7 +39,7 @@ class documents {
         collections.forEach((c, index) => c.colorClass = "collection-style-" + (index % collectionStyleCount));
 
         // Create the "All Documents" pseudo collection.
-        this.allDocumentsCollection = new collection("All Documents");
+        this.allDocumentsCollection = new collection("All Documents", true);
         this.allDocumentsCollection.colorClass = "all-documents-collection";
         <any>this.allDocumentsCollection.documentCount = ko.computed(() =>
             this.collections()
@@ -101,7 +101,10 @@ class documents {
         var collection = this.selectedCollection();
         if (collection) {
             var viewModel = new deleteCollection(collection);
-            viewModel.deletionTask.done(() => this.collections.remove(collection));
+            viewModel.deletionTask.done(() => {
+                this.collections.remove(collection);
+                this.allDocumentsCollection.activate();
+            });
             app.showDialog(viewModel);
         }
     }
