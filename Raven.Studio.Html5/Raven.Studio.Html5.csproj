@@ -148,6 +148,10 @@
     <TypeScriptCompile Include="App\common\alertType.ts" />
     <TypeScriptCompile Include="App\common\alertArgs.ts" />
     <TypeScriptCompile Include="App\common\raven.ts" />
+    <TypeScriptCompile Include="App\commands\saveDocumentCommand.ts" />
+    <Content Include="App\commands\saveDocumentCommand.js">
+      <DependentUpon>saveDocumentCommand.ts</DependentUpon>
+    </Content>
     <Content Include="App\common\raven.js">
       <DependentUpon>raven.ts</DependentUpon>
     </Content>

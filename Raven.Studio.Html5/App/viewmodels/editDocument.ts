@@ -3,6 +3,7 @@ import sys = require("durandal/system");
 
 import document = require("models/document");
 import documentMetadata = require("models/documentMetadata");
+import saveDocumentCommand = require("commands/saveDocumentCommand");
 import raven = require("common/raven");
 import deleteDocuments = require("viewmodels/deleteDocuments");
 
@@ -78,9 +79,11 @@ class editDocument {
         this.metaPropsToRestoreOnSave.forEach(p => updatedDto[p.name] = p.value);
         var newDoc = new document(updatedDto);
         newDoc.__metadata.id = this.userSpecifiedId();
-        this.ravenDb
-            .saveDocument(newDoc)
-            .then(idAndEtag => this.loadDocument(idAndEtag.Key));
+
+        var saveCommand = new saveDocumentCommand(newDoc);
+        var saveTask = saveCommand.execute();
+        saveTask
+            .done(idAndEtag => this.loadDocument(idAndEtag.Key));
     }
 
     stringify(obj: any) {

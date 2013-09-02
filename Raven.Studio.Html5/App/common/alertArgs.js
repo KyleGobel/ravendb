@@ -6,6 +6,7 @@ define(["require", "exports", "common/alertType"], function(require, exports, __
             this.type = type;
             this.title = title;
             this.details = details;
+            this.id = "alert_" + new Date().getMilliseconds().toString() + "_" + title.length.toString() + "_" + (details ? details.length.toString() : '0');
         }
         return alertArgs;
     })();

@@ -56,12 +56,14 @@
         </div>
     </div>
     
-    <!--TODO: implement alert-->
-    <!--<div class="studio-alerts" data-bind="with: currentAlert">
-        <div class="alert fade in" data-bind="css: { 'alert-info': type === 'info', 'alert-success': type === 'success', 'alert-warning': type === 'warning', 'alert-danger': type === 'danger' }">
-            <div></div>
+    <div class="studio-alerts" data-bind="with: currentAlert" style="position: fixed; top: 60px; right: 50px; z-index: 2000">
+        <div class="alert alert-dismissable fade in" data-bind="attr: { id: id }, css: { 'alert-info': type === 0, 'alert-success': type === 1, 'alert-warning': type === 2, 'alert-danger': type === 3 }">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <strong data-bind="visible: type === 3">Oh snap!</strong> 
+            <span data-bind="text: title"></span>
+            <a class="alert-link" href="javascript:void(0)" data-bind="visible: details">Details</a>
         </div>
-    </div>-->
+    </div>
     
     <div class="container-fluid page-host" data-bind="router: { transition:'entrance', cacheViews:false }"></div>
 </div>

@@ -10,16 +10,21 @@ import document = require("models/document");
 import collection = require("models/collection");
 import deleteDocuments = require("viewmodels/deleteDocuments");
 import dialogResult = require("common/dialogResult");
+import alertArgs = require("common/alertArgs");
+import alertType = require("common/alertType");
 
 class shell {
     private router = router; 
     databases = ko.observableArray<database>();
     activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
     ravenDb: raven;
+    currentAlert = ko.observable<alertArgs>();
+    queuedAlerts = ko.observableArray<alertArgs>();
 
     constructor() {
         this.ravenDb = new raven();
         ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
+        ko.postbox.subscribe("Alert", (alert: alertArgs) => this.showAlert(alert));
     }
 
     databasesLoaded(databases) {
@@ -30,7 +35,7 @@ class shell {
     }
 
     launchDocEditor(docId: string) {
-        router.navigate("#edit?id=" + encodeURIComponent(docId))
+        router.navigate("#edit?id=" + encodeURIComponent(docId));
 	}
 
     activate() {
@@ -55,8 +60,32 @@ class shell {
                 app.showMessage("Couldn't connect to Raven. Details in the browser console.", ":-(", ['Dismiss']);
                 $('.splash').hide();
             })
-            .then(results => this.databasesLoaded(results))
+            .done(results => this.databasesLoaded(results))
             .then(() => router.activate());
+    }
+
+    showAlert(alert: alertArgs) {
+        var currentAlert = this.currentAlert();
+        if (currentAlert) {
+            // Maintain a 500ms time between alerts; otherwise successive alerts can fly by too quickly.
+            this.queuedAlerts.push(alert);
+            if (currentAlert.type !== alertType.danger) {
+                setTimeout(() => this.closeAlertAndShowNext(this.currentAlert()), 500);
+            }
+        } else {
+            this.currentAlert(alert);
+            var fadeTime = 2000;
+            if (alert.type === alertType.danger || alert.type === alertType.warning) {
+                fadeTime = 5000;
+            }
+            setTimeout(() => this.closeAlertAndShowNext(alert), fadeTime);
+        }
+    }
+
+    closeAlertAndShowNext(alertToClose: alertArgs) {
+        $('#' + alertToClose.id).alert('close');
+        var nextAlert = this.queuedAlerts.pop();
+        setTimeout(() => this.currentAlert(nextAlert), 500); // Give the alert a chance to fade out before we push in the new alert.
     }
 }
 

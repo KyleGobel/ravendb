@@ -1,9 +1,10 @@
-define(["require", "exports", "durandal/app", "durandal/system", "models/document", "models/documentMetadata", "common/raven", "viewmodels/deleteDocuments"], function(require, exports, __app__, __sys__, __document__, __documentMetadata__, __raven__, __deleteDocuments__) {
+define(["require", "exports", "durandal/app", "durandal/system", "models/document", "models/documentMetadata", "commands/saveDocumentCommand", "common/raven", "viewmodels/deleteDocuments"], function(require, exports, __app__, __sys__, __document__, __documentMetadata__, __saveDocumentCommand__, __raven__, __deleteDocuments__) {
     var app = __app__;
     var sys = __sys__;
 
     var document = __document__;
     var documentMetadata = __documentMetadata__;
+    var saveDocumentCommand = __saveDocumentCommand__;
     var raven = __raven__;
     var deleteDocuments = __deleteDocuments__;
 
@@ -81,7 +82,10 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
             });
             var newDoc = new document(updatedDto);
             newDoc.__metadata.id = this.userSpecifiedId();
-            this.ravenDb.saveDocument(newDoc).then(function (idAndEtag) {
+
+            var saveCommand = new saveDocumentCommand(newDoc);
+            var saveTask = saveCommand.execute();
+            saveTask.done(function (idAndEtag) {
                 return _this.loadDocument(idAndEtag.Key);
             });
         };
