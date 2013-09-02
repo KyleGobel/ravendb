@@ -2,6 +2,7 @@
 
 class database {
     isSystem = false;
+    isSelected = ko.observable(false);
 
     constructor(public name: string) {
     }

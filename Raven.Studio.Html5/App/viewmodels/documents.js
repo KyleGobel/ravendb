@@ -1,10 +1,9 @@
-define(["require", "exports", "durandal/app", "models/database", "models/collection", "models/document", "viewmodels/deleteCollection", "common/raven", "common/pagedList"], function(require, exports, __app__, __database__, __collection__, __document__, __deleteCollection__, __raven__, __pagedList__) {
+define(["require", "exports", "durandal/app", "plugins/router", "models/collection", "models/document", "viewmodels/deleteCollection", "common/raven", "common/pagedList"], function(require, exports, __app__, __router__, __collection__, __document__, __deleteCollection__, __raven__, __pagedList__) {
     
     var app = __app__;
     
-    
+    var router = __router__;
 
-    var database = __database__;
     var collection = __collection__;
     var document = __document__;
     var deleteCollection = __deleteCollection__;
@@ -18,14 +17,8 @@ define(["require", "exports", "durandal/app", "models/database", "models/collect
             this.collections = ko.observableArray();
             this.selectedCollection = ko.observable().subscribeTo("ActivateCollection").distinctUntilChanged();
             this.collectionColors = [];
-            this.collectionsLoadedTask = $.Deferred();
-            this.collectionDocumentsLoaded = 0;
             this.currentCollectionPagedItems = ko.observable();
             this.ravenDb = new raven();
-            this.ravenDb.collections().then(function (results) {
-                return _this.collectionsLoaded(results);
-            });
-
             this.selectedCollection.subscribe(function (c) {
                 return _this.onSelectedCollectionChanged(c);
             });
@@ -69,13 +62,8 @@ define(["require", "exports", "durandal/app", "models/database", "models/collect
         };
 
         documents.prototype.fetchTotalDocuments = function (collection) {
-            var _this = this;
-            this.ravenDb.collectionInfo(collection.name).then(function (info) {
+            this.ravenDb.collectionInfo(collection.name).done(function (info) {
                 collection.documentCount(info.totalResults);
-                _this.collectionDocumentsLoaded++;
-                if (_this.collectionDocumentsLoaded === _this.collections().length - 1) {
-                    _this.collectionsLoadedTask.resolve();
-                }
             });
         };
 
@@ -93,9 +81,14 @@ define(["require", "exports", "durandal/app", "models/database", "models/collect
         };
 
         documents.prototype.activate = function (args) {
+            var _this = this;
+            var collectionsLoadedTask = this.ravenDb.collections().done(function (results) {
+                return _this.collectionsLoaded(results);
+            });
+
             // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
             this.collectionToSelectName = args ? args.collection : null;
-            return this.collectionsLoadedTask;
+            return collectionsLoadedTask;
         };
 
         documents.prototype.attached = function (view, parent) {
@@ -117,6 +110,11 @@ define(["require", "exports", "durandal/app", "models/database", "models/collect
                 });
                 app.showDialog(viewModel);
             }
+        };
+
+        documents.prototype.activateCollection = function (collection) {
+            collection.activate();
+            router.navigate("#documents?collection=" + collection.name, false);
         };
         return documents;
     })();

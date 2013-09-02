@@ -21,11 +21,6 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             ko.postbox.subscribe("EditDocument", function (args) {
                 return _this.launchDocEditor(args.doc.getId());
             });
-            ko.postbox.subscribe("DeleteCollection", function (args) {
-                return _this.showDeleteCollectionPrompt(args);
-            });
-            //sys.log("Failed to delete items", response);
-            //app.showMessage("An error occurred deleting the item(s). Details in the browser console.", ":-(");
         }
         shell.prototype.databasesLoaded = function (databases) {
             var systemDatabase = new database("<system>");
@@ -41,7 +36,8 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
         shell.prototype.activate = function () {
             var _this = this;
             router.map([
-                { route: '', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
+                { route: '', title: 'Databases', moduleId: 'viewmodels/databases', nav: false },
+                { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
                 { route: 'indexes', title: 'Indexes', moduleId: 'viewmodels/indexes', nav: true },
                 { route: 'query', title: 'Query', moduleId: 'viewmodels/query', nav: true },
                 { route: 'tasks', title: 'Tasks', moduleId: 'viewmodels/tasks', nav: true },
@@ -61,9 +57,6 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             }).then(function () {
                 return router.activate();
             });
-        };
-
-        shell.prototype.showDeleteCollectionPrompt = function (args) {
         };
         return shell;
     })();

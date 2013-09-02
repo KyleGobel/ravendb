@@ -104,10 +104,9 @@ class raven {
         return this.baseUrl;
     }
 
-    public getDatabaseUrl() {
-        var database = raven.activeDatabase();
-        if (database) {
-            return this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "");
+    public getDatabaseUrl(database: database) {
+        if (database && !database.isSystem) {
+            return this.baseUrl + "/databases/" + database.name;
         }
 
         return this.baseUrl;
@@ -141,8 +140,6 @@ class raven {
 
     private fetch(relativeUrl: string, args: any, database?: database, resultsSelector?: (results: any) => any): JQueryPromise<any> {
         var ajax = this.ajax(relativeUrl, args, "GET", database);
-
-        var foo: JQueryXHR = null;
         if (resultsSelector) {
             var task = $.Deferred();
             ajax.done((results) => {
@@ -172,7 +169,7 @@ class raven {
         
         var options = {
             cache: false,
-            url: this.getDatabaseUrl() + relativeUrl,
+            url: this.getDatabaseUrl(database) + relativeUrl,
             data: args,
             contentType: "application/json; charset=utf-8",
             type: method,

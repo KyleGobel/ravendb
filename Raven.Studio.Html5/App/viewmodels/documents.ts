@@ -3,7 +3,6 @@ import app = require("durandal/app");
 import sys = require("durandal/system");
 import router = require("plugins/router");
 
-import database = require("models/database");
 import collection = require("models/collection");
 import document = require("models/document");
 import deleteCollection = require("viewmodels/deleteCollection");
@@ -17,18 +16,12 @@ class documents {
     collections = ko.observableArray<collection>();
     selectedCollection = ko.observable<collection>().subscribeTo("ActivateCollection").distinctUntilChanged();
     allDocumentsCollection: collection;
-    collectionColors = []
-    collectionsLoadedTask = $.Deferred();
-    collectionDocumentsLoaded = 0;
+    collectionColors = [];
     collectionToSelectName: string;
     private currentCollectionPagedItems = ko.observable<pagedList>();
 
     constructor() {
         this.ravenDb = new raven();
-        this.ravenDb
-            .collections()
-            .then(results => this.collectionsLoaded(results));
-
         this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
     }
 
@@ -62,12 +55,8 @@ class documents {
     fetchTotalDocuments(collection: collection) {
         this.ravenDb
             .collectionInfo(collection.name)
-            .then(info => {
+            .done(info => {
                 collection.documentCount(info.totalResults);
-                this.collectionDocumentsLoaded++;
-                if (this.collectionDocumentsLoaded === this.collections().length - 1) {
-                    this.collectionsLoadedTask.resolve();
-                }
             });
     }
 
@@ -83,10 +72,14 @@ class documents {
         }
     }
 
-    activate(args) {
+    activate(args) {        
+        var collectionsLoadedTask = this.ravenDb
+            .collections()
+            .done(results => this.collectionsLoaded(results));
+
         // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
         this.collectionToSelectName = args ? args.collection : null;
-        return this.collectionsLoadedTask;
+        return collectionsLoadedTask;
     }
 
     attached(view: HTMLElement, parent: HTMLElement) {
@@ -107,6 +100,11 @@ class documents {
             });
             app.showDialog(viewModel);
         }
+    }
+
+    activateCollection(collection: collection) {
+        collection.activate();
+        router.navigate("#documents?collection=" + collection.name, false);
     }
 }
 

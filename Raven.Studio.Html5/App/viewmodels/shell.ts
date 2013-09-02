@@ -20,9 +20,6 @@ class shell {
     constructor() {
         this.ravenDb = new raven();
         ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
-        ko.postbox.subscribe("DeleteCollection", args => this.showDeleteCollectionPrompt(args));
-        //sys.log("Failed to delete items", response);
-        //app.showMessage("An error occurred deleting the item(s). Details in the browser console.", ":-(");
     }
 
     databasesLoaded(databases) {
@@ -39,7 +36,8 @@ class shell {
     activate() {
 
         router.map([
-            { route: '', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
+            { route: '', title: 'Databases', moduleId: 'viewmodels/databases', nav: false },
+            { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
             { route: 'indexes', title: 'Indexes', moduleId: 'viewmodels/indexes', nav: true },
             { route: 'query', title: 'Query', moduleId: 'viewmodels/query', nav: true },
             { route: 'tasks', title: 'Tasks', moduleId: 'viewmodels/tasks', nav: true },
@@ -59,9 +57,6 @@ class shell {
             })
             .then(results => this.databasesLoaded(results))
             .then(() => router.activate());
-    }
-
-    showDeleteCollectionPrompt(args: { collection: collection }) {
     }
 }
 

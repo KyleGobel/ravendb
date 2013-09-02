@@ -125,10 +125,9 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return this.baseUrl;
         };
 
-        raven.prototype.getDatabaseUrl = function () {
-            var database = raven.activeDatabase();
-            if (database) {
-                return this.baseUrl + (database && database.isSystem === false ? "/databases/" + database.name : "");
+        raven.prototype.getDatabaseUrl = function (database) {
+            if (database && !database.isSystem) {
+                return this.baseUrl + "/databases/" + database.name;
             }
 
             return this.baseUrl;
@@ -161,8 +160,6 @@ define(["require", "exports", "models/database", "models/collection", "models/co
 
         raven.prototype.fetch = function (relativeUrl, args, database, resultsSelector) {
             var ajax = this.ajax(relativeUrl, args, "GET", database);
-
-            var foo = null;
             if (resultsSelector) {
                 var task = $.Deferred();
                 ajax.done(function (results) {
@@ -193,7 +190,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
         raven.prototype.ajax = function (relativeUrl, args, method, database, customHeaders) {
             var options = {
                 cache: false,
-                url: this.getDatabaseUrl() + relativeUrl,
+                url: this.getDatabaseUrl(database) + relativeUrl,
                 data: args,
                 contentType: "application/json; charset=utf-8",
                 type: method,
