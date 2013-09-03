@@ -87,7 +87,7 @@ body {
   background-color: #c7c700;
 }
 .collection-style-9 {
-  background-color: #c7c700;
+  background-color: #c700c7;
 }
 .collection-style-10 {
   background-color: #fe8000;
@@ -178,6 +178,20 @@ body {
 }
 .breadcrumb {
   padding: 0 10px 0 10px;
+}
+.studio-alerts {
+  position: fixed;
+  top: 60px;
+  left: 45%;
+  right: 45%;
+  z-index: 2000;
+  width: 300px;
+}
+#editDocumentContainer:focus {
+  outline: 0;
+}
+.keyboard-shortcut {
+  margin-left: 20px;
 }
 footer {
   position: fixed;

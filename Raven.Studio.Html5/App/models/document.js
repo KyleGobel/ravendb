@@ -31,6 +31,14 @@ define(["require", "exports", "models/documentMetadata"], function(require, expo
 
             return dto;
         };
+
+        document.empty = function () {
+            var emptyDto = {
+                '@metadata': {},
+                'Name': '...'
+            };
+            return new document(emptyDto);
+        };
         return document;
     })();
 

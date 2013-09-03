@@ -109,7 +109,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return this.delete_(url + urlParams, null, raven.activeDatabase());
         };
 
-        raven.prototype.saveDocument = function (doc) {
+        raven.prototype.saveDocument = function (id, doc) {
             var customHeaders = {
                 'Raven-Client-Version': raven.ravenClientVersion,
                 'Raven-Entity-Name': doc.__metadata.ravenEntityName,
@@ -117,7 +117,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
                 'If-None-Match': doc.__metadata.etag
             };
             var args = JSON.stringify(doc.toDto());
-            var url = "/docs/" + doc.__metadata.id;
+            var url = "/docs/" + id;
             return this.put(url, args, raven.activeDatabase(), customHeaders);
         };
 

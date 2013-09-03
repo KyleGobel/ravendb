@@ -1,5 +1,5 @@
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "common/alertArgs", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __alertArgs__, __alertType__) {
+define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__) {
     var router = __router__;
     var app = __app__;
     var sys = __sys__;
@@ -8,8 +8,8 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
     var raven = __raven__;
     var document = __document__;
     var collection = __collection__;
-    
-    
+    var deleteDocuments = __deleteDocuments__;
+    var dialogResult = __dialogResult__;
     var alertArgs = __alertArgs__;
     var alertType = __alertType__;
 
@@ -37,7 +37,8 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
         };
 
         shell.prototype.launchDocEditor = function (docId) {
-            router.navigate("#edit?id=" + encodeURIComponent(docId));
+            var url = docId ? "#edit?id=" + encodeURIComponent(docId) : "#edit";
+            router.navigate(url);
         };
 
         shell.prototype.activate = function () {
@@ -66,6 +67,15 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             });
         };
 
+        // When the view is attached to the DOM, hook up some keyboard shortcuts to some of the DOM elements.
+        shell.prototype.attached = function () {
+            var _this = this;
+            jwerty.key("alt+n", function (e) {
+                e.preventDefault();
+                _this.newDocument();
+            });
+        };
+
         shell.prototype.showAlert = function (alert) {
             var _this = this;
             var currentAlert = this.currentAlert();
@@ -79,7 +89,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
                 }
             } else {
                 this.currentAlert(alert);
-                var fadeTime = 2000;
+                var fadeTime = 3000;
                 if (alert.type === alertType.danger || alert.type === alertType.warning) {
                     fadeTime = 5000;
                 }
@@ -96,6 +106,10 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             setTimeout(function () {
                 return _this.currentAlert(nextAlert);
             }, 500);
+        };
+
+        shell.prototype.newDocument = function () {
+            this.launchDocEditor(null);
         };
         return shell;
     })();

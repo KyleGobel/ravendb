@@ -10,21 +10,22 @@ define(["require", "exports", "commands/commandBase", "models/document"], functi
 
     var saveDocumentCommand = (function (_super) {
         __extends(saveDocumentCommand, _super);
-        function saveDocumentCommand(document) {
+        function saveDocumentCommand(id, document) {
             _super.call(this);
+            this.id = id;
             this.document = document;
         }
         saveDocumentCommand.prototype.execute = function () {
             var _this = this;
-            var saveTask = this.ravenDb.saveDocument(this.document);
+            var saveTask = this.ravenDb.saveDocument(this.id, this.document);
 
-            this.reportInfo("Saving " + this.document.getId() + "...");
+            this.reportInfo("Saving " + this.id + "...");
 
             saveTask.done(function () {
-                return _this.reportSuccess("Saved " + _this.document.getId());
+                return _this.reportSuccess("Saved " + _this.id);
             });
             saveTask.fail(function (response) {
-                return _this.reportError("Failed to save " + _this.document.getId(), JSON.stringify(response));
+                return _this.reportError("Failed to save " + _this.id, JSON.stringify(response));
             });
             return saveTask;
         };

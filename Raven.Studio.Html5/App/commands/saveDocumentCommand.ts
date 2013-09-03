@@ -3,17 +3,17 @@ import document = require("models/document");
 
 class saveDocumentCommand extends commandBase {
 
-    constructor(private document: document) {
+    constructor(private id: string, private document: document) {
         super();
     }
 
-    execute(): JQueryPromise<any> {
-        var saveTask = this.ravenDb.saveDocument(this.document);
+    execute(): JQueryPromise<{ Key: string; ETag: string }> {
+        var saveTask = this.ravenDb.saveDocument(this.id, this.document);
 
-        this.reportInfo("Saving " + this.document.getId() + "...");
+        this.reportInfo("Saving " + this.id + "...");
 
-        saveTask.done(() => this.reportSuccess("Saved " + this.document.getId()));
-        saveTask.fail((response) => this.reportError("Failed to save " + this.document.getId(), JSON.stringify(response)));
+        saveTask.done(() => this.reportSuccess("Saved " + this.id));
+        saveTask.fail((response) => this.reportError("Failed to save " + this.id, JSON.stringify(response)));
         return saveTask;
     }
 }

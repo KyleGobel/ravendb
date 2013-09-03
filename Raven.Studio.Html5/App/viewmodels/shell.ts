@@ -34,8 +34,9 @@ class shell {
         this.databases()[0].activate();
     }
 
-    launchDocEditor(docId: string) {
-        router.navigate("#edit?id=" + encodeURIComponent(docId));
+    launchDocEditor(docId?: string) {
+        var url = docId ? "#edit?id=" + encodeURIComponent(docId) : "#edit";
+        router.navigate(url);
 	}
 
     activate() {
@@ -64,6 +65,14 @@ class shell {
             .then(() => router.activate());
     }
 
+    // When the view is attached to the DOM, hook up some keyboard shortcuts to some of the DOM elements.
+    attached() {
+        jwerty.key("alt+n", e => {
+            e.preventDefault();
+            this.newDocument();
+        });
+    }
+
     showAlert(alert: alertArgs) {
         var currentAlert = this.currentAlert();
         if (currentAlert) {
@@ -74,7 +83,7 @@ class shell {
             }
         } else {
             this.currentAlert(alert);
-            var fadeTime = 2000;
+            var fadeTime = 3000;
             if (alert.type === alertType.danger || alert.type === alertType.warning) {
                 fadeTime = 5000;
             }
@@ -86,6 +95,10 @@ class shell {
         $('#' + alertToClose.id).alert('close');
         var nextAlert = this.queuedAlerts.pop();
         setTimeout(() => this.currentAlert(nextAlert), 500); // Give the alert a chance to fade out before we push in the new alert.
+    }
+
+    newDocument() {
+        this.launchDocEditor(null);
     }
 }
 

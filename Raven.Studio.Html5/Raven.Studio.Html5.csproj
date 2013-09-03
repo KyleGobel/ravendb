@@ -129,6 +129,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Scripts\jwerty-0.3.js" />
+    <TypeScriptCompile Include="Scripts\typings\jwerty\jwerty.d.ts" />
+    <Content Include="Scripts\typings\jwerty\jwerty.d.js">
+      <DependentUpon>jwerty.d.ts</DependentUpon>
+    </Content>
+    <Content Include="web.config" />
+    <None Include="web.Debug.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+    <None Include="web.Release.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
     <TypeScriptCompile Include="App\models\dto.ts" />
     <TypeScriptCompile Include="App\common\pagedList.ts" />
     <TypeScriptCompile Include="App\common\pagedResultSet.ts" />

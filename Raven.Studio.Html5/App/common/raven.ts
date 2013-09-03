@@ -88,7 +88,7 @@ class raven {
         return this.delete_(url + urlParams, null, raven.activeDatabase());
     }
 
-    public saveDocument(doc: document): JQueryPromise<{ Key: string; ETag: string }> {
+    public saveDocument(id: string, doc: document): JQueryPromise<{ Key: string; ETag: string }> {
         var customHeaders = {
             'Raven-Client-Version': raven.ravenClientVersion,
             'Raven-Entity-Name': doc.__metadata.ravenEntityName,
@@ -96,7 +96,7 @@ class raven {
             'If-None-Match': doc.__metadata.etag
         };
         var args = JSON.stringify(doc.toDto());
-        var url = "/docs/" + doc.__metadata.id;
+        var url = "/docs/" + id;
         return this.put(url, args, raven.activeDatabase(), customHeaders);
     }
 

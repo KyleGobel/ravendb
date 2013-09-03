@@ -1,6 +1,7 @@
-define(["require", "exports", "durandal/app", "durandal/system", "models/document", "models/documentMetadata", "commands/saveDocumentCommand", "common/raven", "viewmodels/deleteDocuments"], function(require, exports, __app__, __sys__, __document__, __documentMetadata__, __saveDocumentCommand__, __raven__, __deleteDocuments__) {
+define(["require", "exports", "durandal/app", "durandal/system", "plugins/router", "models/document", "models/documentMetadata", "commands/saveDocumentCommand", "common/raven", "viewmodels/deleteDocuments"], function(require, exports, __app__, __sys__, __router__, __document__, __documentMetadata__, __saveDocumentCommand__, __raven__, __deleteDocuments__) {
     var app = __app__;
     var sys = __sys__;
+    var router = __router__;
 
     var document = __document__;
     var documentMetadata = __documentMetadata__;
@@ -18,6 +19,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
             this.isBusy = ko.observable(false);
             this.metaPropsToRestoreOnSave = [];
             this.userSpecifiedId = ko.observable('');
+            this.isCreatingNewDocument = ko.observable(false);
             this.ravenDb = new raven();
             this.metadata = ko.computed(function () {
                 return _this.document() ? _this.document().__metadata : null;
@@ -61,11 +63,39 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
                     _this.userSpecifiedId(meta.id);
                 }
             });
+
+            this.editedDocId = ko.computed(function () {
+                return _this.metadata() ? _this.metadata().id : '';
+            });
         }
         editDocument.prototype.activate = function (navigationArgs) {
-            if (navigationArgs.id) {
+            if (navigationArgs && navigationArgs.id) {
                 return this.loadDocument(navigationArgs.id);
+            } else {
+                this.editNewDocument();
             }
+        };
+
+        editDocument.prototype.editNewDocument = function () {
+            this.isCreatingNewDocument(true);
+            this.document(document.empty());
+        };
+
+        editDocument.prototype.attached = function () {
+            var _this = this;
+            jwerty.key("ctrl+s", function (e) {
+                e.preventDefault();
+                _this.saveDocument();
+            }, this, "#editDocumentContainer");
+
+            jwerty.key("ctrl+r", function (e) {
+                e.preventDefault();
+                _this.refreshDocument();
+            }, this, "#editDocumentContainer");
+        };
+
+        editDocument.prototype.deactivate = function () {
+            $("#editDocumentContainer").unbind('keydown.jwerty');
         };
 
         editDocument.prototype.failedToLoadDoc = function (docId, errorResponse) {
@@ -76,18 +106,43 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
         editDocument.prototype.saveDocument = function () {
             var _this = this;
             var updatedDto = JSON.parse(this.documentText());
-            updatedDto['@metadata'] = JSON.parse(this.metadataText());
-            this.metaPropsToRestoreOnSave.forEach(function (p) {
-                return updatedDto[p.name] = p.value;
-            });
-            var newDoc = new document(updatedDto);
-            newDoc.__metadata.id = this.userSpecifiedId();
+            var meta = JSON.parse(this.metadataText());
+            updatedDto['@metadata'] = meta;
 
-            var saveCommand = new saveDocumentCommand(newDoc);
+            if (this.isCreatingNewDocument()) {
+                this.attachReservedMetaProperties(this.userSpecifiedId(), meta);
+            } else {
+                // If we're editing a document, we hide some reserved properties from the user.
+                // Restore these before we save.
+                this.metaPropsToRestoreOnSave.forEach(function (p) {
+                    return meta[p.name] = p.value;
+                });
+            }
+
+            var newDoc = new document(updatedDto);
+            var saveCommand = new saveDocumentCommand(this.userSpecifiedId(), newDoc);
             var saveTask = saveCommand.execute();
             saveTask.done(function (idAndEtag) {
-                return _this.loadDocument(idAndEtag.Key);
+                _this.isCreatingNewDocument(false);
+                _this.loadDocument(idAndEtag.Key);
+                router.navigate("#editDocument?id=" + idAndEtag.Key, false);
             });
+        };
+
+        editDocument.prototype.attachReservedMetaProperties = function (id, target) {
+            target['@etag'] = '00000000-0000-0000-0000-000000000000';
+            target['Raven-Entity-Name'] = this.getEntityNameFromId(id);
+            target['@id'] = id;
+        };
+
+        editDocument.prototype.getEntityNameFromId = function (id) {
+            // TODO: is there a better way to do this?
+            var slashIndex = id.indexOf('/');
+            if (slashIndex >= 1) {
+                return id.substring(0, slashIndex);
+            }
+
+            return id;
         };
 
         editDocument.prototype.stringify = function (obj) {
@@ -121,12 +176,14 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
 
         editDocument.prototype.refreshDocument = function () {
             var meta = this.metadata();
-            if (meta) {
-                this.loadDocument(meta.id);
+            if (!this.isCreatingNewDocument()) {
                 this.document(null);
                 this.documentText(null);
-                this.metadata(null);
                 this.metadataText(null);
+                this.userSpecifiedId('');
+                this.loadDocument(this.editedDocId());
+            } else {
+                this.editNewDocument();
             }
         };
 
@@ -144,6 +201,8 @@ define(["require", "exports", "durandal/app", "durandal/system", "models/documen
 
         editDocument.prototype.nextDocumentOrFirst = function () {
             // TODO: implement editDoc.nextDocOrFirst
+            // For now, just head back to documents.
+            router.navigate("#documents");
         };
         return editDocument;
     })();

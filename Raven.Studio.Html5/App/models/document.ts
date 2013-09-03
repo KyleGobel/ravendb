@@ -31,6 +31,14 @@ class document {
 
         return <any>dto;
     }
+
+    public static empty(): document {
+        var emptyDto = {
+            '@metadata': {},
+            'Name': '...'
+        };
+        return new document(<any>emptyDto);
+    }
 }
 
 export = document;

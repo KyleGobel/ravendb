@@ -1,5 +1,6 @@
 import app = require("durandal/app");
 import sys = require("durandal/system");
+import router = require("plugins/router");
 
 import document = require("models/document");
 import documentMetadata = require("models/documentMetadata");
@@ -18,7 +19,9 @@ class editDocument {
     isEditingMetadata = ko.observable(false);
     isBusy = ko.observable(false);
     metaPropsToRestoreOnSave = [];
+    editedDocId: KnockoutComputed<string>;
     userSpecifiedId = ko.observable('');
+    isCreatingNewDocument = ko.observable(false);
 
     constructor() {
         this.ravenDb = new raven();
@@ -60,12 +63,38 @@ class editDocument {
                 this.userSpecifiedId(meta.id);
             }
         });
+
+        this.editedDocId = ko.computed(() => this.metadata() ? this.metadata().id : '');
     }
 
     activate(navigationArgs) {
-        if (navigationArgs.id) {
+
+        if (navigationArgs && navigationArgs.id) {
             return this.loadDocument(navigationArgs.id);
+        } else {
+            this.editNewDocument();
         }
+    }
+
+    editNewDocument() {
+        this.isCreatingNewDocument(true);
+        this.document(document.empty());
+    }
+
+    attached() {
+        jwerty.key("ctrl+s", e => {
+            e.preventDefault();
+            this.saveDocument();
+        }, this, "#editDocumentContainer");
+
+        jwerty.key("ctrl+r", e => {
+            e.preventDefault();
+            this.refreshDocument();
+        }, this, "#editDocumentContainer");
+    }
+
+    deactivate() {
+        $("#editDocumentContainer").unbind('keydown.jwerty');
     }
 
     failedToLoadDoc(docId, errorResponse) {
@@ -75,15 +104,43 @@ class editDocument {
 
     saveDocument() {
         var updatedDto = JSON.parse(this.documentText());
-        updatedDto['@metadata'] = JSON.parse(this.metadataText());
-        this.metaPropsToRestoreOnSave.forEach(p => updatedDto[p.name] = p.value);
-        var newDoc = new document(updatedDto);
-        newDoc.__metadata.id = this.userSpecifiedId();
+        var meta = JSON.parse(this.metadataText());
+        updatedDto['@metadata'] = meta;
 
-        var saveCommand = new saveDocumentCommand(newDoc);
+        // Fix up the metadata: if we're a new doc, attach the expected reserved properties like ID, ETag, and RavenEntityName.
+        // AFAICT, Raven requires these reserved meta properties in order for the doc to be seen as a member of a collection.
+        if (this.isCreatingNewDocument()) {
+            this.attachReservedMetaProperties(this.userSpecifiedId(), meta);
+        } else {
+            // If we're editing a document, we hide some reserved properties from the user.
+            // Restore these before we save.
+            this.metaPropsToRestoreOnSave.forEach(p => meta[p.name] = p.value);
+        }
+
+        var newDoc = new document(updatedDto);
+        var saveCommand = new saveDocumentCommand(this.userSpecifiedId(), newDoc);
         var saveTask = saveCommand.execute();
-        saveTask
-            .done(idAndEtag => this.loadDocument(idAndEtag.Key));
+        saveTask.done((idAndEtag: { Key: string; ETag: string }) => {
+            this.isCreatingNewDocument(false);
+            this.loadDocument(idAndEtag.Key);
+            router.navigate("#editDocument?id=" + idAndEtag.Key, false);
+        });
+    }
+
+    attachReservedMetaProperties(id: string, target: documentMetadataDto) {
+        target['@etag'] = '00000000-0000-0000-0000-000000000000';
+        target['Raven-Entity-Name'] = this.getEntityNameFromId(id);
+        target['@id'] = id;
+    }
+
+    getEntityNameFromId(id: string): string {
+        // TODO: is there a better way to do this?
+        var slashIndex = id.indexOf('/');
+        if (slashIndex >= 1) {
+            return id.substring(0, slashIndex);
+        }
+
+        return id;
     }
 
     stringify(obj: any) {
@@ -110,12 +167,14 @@ class editDocument {
 
     refreshDocument() {
         var meta = this.metadata();
-        if (meta) {
-            this.loadDocument(meta.id);
+        if (!this.isCreatingNewDocument()) {
             this.document(null);
             this.documentText(null);
-            this.metadata(null);
             this.metadataText(null);
+            this.userSpecifiedId('');
+            this.loadDocument(this.editedDocId());
+        } else {
+            this.editNewDocument();
         }
     }
 
@@ -130,6 +189,8 @@ class editDocument {
 
     nextDocumentOrFirst() {
         // TODO: implement editDoc.nextDocOrFirst
+        // For now, just head back to documents.
+        router.navigate("#documents");
     }
 }
 
