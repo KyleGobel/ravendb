@@ -50,6 +50,12 @@ body {
   padding: 0 10px 20px 10px;
   width: 98%;
 }
+.databases-container {
+  margin-top: 10px;
+}
+.databases-container li {
+  padding: 10px;
+}
 .document-collections {
   margin-top: 40px;
 }
