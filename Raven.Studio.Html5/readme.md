@@ -2,7 +2,7 @@
 
 Raven.Studio.Html5 is a replacement of the old Silverlight Studio, built using modern web technologies.
 
-Raven.Studio.Html5 is a single page application (SPA) with no server-side component, communicating only with a Raven server. It uses Durandal.js to partition the app into logical modules, <a href="http://getbootstrap.com">Twitter Bootstrap</a> for a consistent UX, <a href="http://knockoutjs.com">KnockoutJS</a> for data-binding, and <a href="http://requirejs.org">RequireJS</a> for loading views and view models on demand.
+Raven.Studio.Html5 is a single page application (SPA) with no server-side component, communicating only with a Raven server. It uses <a href="http://durandaljs.com">Durandal.js</a> to partition the app into logical modules, <a href="http://getbootstrap.com">Twitter Bootstrap</a> for a consistent UX, <a href="http://knockoutjs.com">KnockoutJS</a> for data-binding, and <a href="http://requirejs.org">RequireJS</a> for loading views and view models on demand.
 
 The application code is written in <a href="http://typescriptlang.org">TypeScript</a>.
 
