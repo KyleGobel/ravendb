@@ -1,7 +1,9 @@
+/// <reference path="../../Scripts/typings/ace/ace.d.ts" />
 define(["require", "exports", "durandal/app", "durandal/system", "plugins/router", "models/document", "models/documentMetadata", "commands/saveDocumentCommand", "common/raven", "viewmodels/deleteDocuments"], function(require, exports, __app__, __sys__, __router__, __document__, __documentMetadata__, __saveDocumentCommand__, __raven__, __deleteDocuments__) {
     var app = __app__;
     var sys = __sys__;
     var router = __router__;
+    var ace = require("AceAjax");
 
     var document = __document__;
     var documentMetadata = __documentMetadata__;
@@ -69,6 +71,9 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             });
         }
         editDocument.prototype.activate = function (navigationArgs) {
+            console.log("activated!");
+            console.log("here is ace: ", ace);
+
             if (navigationArgs && navigationArgs.id) {
                 return this.loadDocument(navigationArgs.id);
             } else {

@@ -4,19 +4,21 @@
         'durandal': '../Scripts/durandal',
         'plugins': '../Scripts/durandal/plugins',
         'transitions': '../Scripts/durandal/transitions'
+        //'ace': "../Scripts/ace" // 'ace': 'lib/ace'
     }
 });
 
 define('jquery', function() { return jQuery; });
 define('knockout', ko);
 
-define(['durandal/system', 'durandal/app', 'durandal/viewLocator'],  function (system, app, viewLocator) {
+define(['durandal/system', 'durandal/app', 'durandal/viewLocator', 'plugins/dialog'], function (system, app, viewLocator, dialog, ace) {
     //>>excludeStart("build", true);
     system.debug(true);
-    //>>excludeEnd("build");
+	//>>excludeEnd("build");
 
     app.title = 'Raven.Studio';
-
+    dialog.MessageBox.setViewUrl('views/dialog.html');
+	
     app.configurePlugins({
         router: true,
         dialog: true,

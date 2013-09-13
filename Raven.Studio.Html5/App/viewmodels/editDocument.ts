@@ -1,12 +1,14 @@
 import app = require("durandal/app");
 import sys = require("durandal/system");
-import router = require("plugins/router");
+import router = require("plugins/router"); 
 
 import document = require("models/document");
 import documentMetadata = require("models/documentMetadata");
 import saveDocumentCommand = require("commands/saveDocumentCommand");
 import raven = require("common/raven");
 import deleteDocuments = require("viewmodels/deleteDocuments");
+
+declare var require;
 
 class editDocument {
 
@@ -68,7 +70,7 @@ class editDocument {
     }
 
     activate(navigationArgs) {
-
+		
         if (navigationArgs && navigationArgs.id) {
             return this.loadDocument(navigationArgs.id);
         } else {

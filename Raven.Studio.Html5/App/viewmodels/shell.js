@@ -1,5 +1,5 @@
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__) {
+define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __alertType__) {
     var router = __router__;
     var app = __app__;
     var sys = __sys__;
@@ -8,9 +8,9 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
     var raven = __raven__;
     var document = __document__;
     var collection = __collection__;
-    var deleteDocuments = __deleteDocuments__;
-    var dialogResult = __dialogResult__;
-    var alertArgs = __alertArgs__;
+    
+    
+    
     var alertType = __alertType__;
 
     var shell = (function () {
@@ -42,7 +42,6 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
         };
 
         shell.prototype.activate = function () {
-            var _this = this;
             router.map([
                 { route: '', title: 'Databases', moduleId: 'viewmodels/databases', nav: false },
                 { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
@@ -54,17 +53,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
                 { route: 'edit', title: 'Edit Document', moduleId: 'viewmodels/editDocument', nav: false }
             ]).buildNavigationModel();
 
-            // Activate the first page only after we've connected to Raven
-            // and selected the first database.
-            return this.ravenDb.databases().fail(function (result) {
-                sys.log("Unable to connect to Raven.", result);
-                app.showMessage("Couldn't connect to Raven. Details in the browser console.", ":-(", ['Dismiss']);
-                $('.splash').hide();
-            }).done(function (results) {
-                return _this.databasesLoaded(results);
-            }).then(function () {
-                return router.activate();
-            });
+            this.connectToRavenServer();
         };
 
         // When the view is attached to the DOM, hook up some keyboard shortcuts to some of the DOM elements.
@@ -73,6 +62,30 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             jwerty.key("alt+n", function (e) {
                 e.preventDefault();
                 _this.newDocument();
+            });
+        };
+
+        shell.prototype.connectToRavenServer = function () {
+            var _this = this;
+            // Activate the first page only after we've connected to Raven
+            // and selected the first database.
+            this.ravenDb.databases().fail(function (result) {
+                return _this.handleRavenConnectionFailure(result);
+            }).done(function (results) {
+                _this.databasesLoaded(results);
+                router.activate();
+            });
+        };
+
+        shell.prototype.handleRavenConnectionFailure = function (result) {
+            var _this = this;
+            sys.log("Unable to connect to Raven.", result);
+            var tryAgain = 'Try again';
+            var messageBoxResultPromise = app.showMessage("Couldn't connect to Raven. Details in the browser console.", ":-(", [tryAgain]);
+            messageBoxResultPromise.done(function (messageBoxResult) {
+                if (messageBoxResult === tryAgain) {
+                    _this.connectToRavenServer();
+                }
             });
         };
 
