@@ -1,5 +1,5 @@
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __alertType__) {
+define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__) {
     var router = __router__;
     var app = __app__;
     var sys = __sys__;
@@ -8,9 +8,9 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
     var raven = __raven__;
     var document = __document__;
     var collection = __collection__;
-    
-    
-    
+    var deleteDocuments = __deleteDocuments__;
+    var dialogResult = __dialogResult__;
+    var alertArgs = __alertArgs__;
     var alertType = __alertType__;
 
     var shell = (function () {

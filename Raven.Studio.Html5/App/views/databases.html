@@ -11,10 +11,10 @@
 
 <div class="btn-toolbar">
     <div class="btn-group">
-        <button type="button" class="btn btn-default"><i class="icon-plus"></i> New Database</button>
+        <button type="button" class="btn btn-primary"><i class="icon-plus"></i> New Database</button>
     </div>
 </div>
 
-<ul class="nav nav-pills databases-container" data-bind="foreach: databases">
-    <li data-bind="css: { active: isSelected }"><a href="#documents" data-bind="text: name, click: $root.navigateToDocuments.bind($root)"></a></li>
+<ul class="pager databases-container" data-bind="foreach: databases">
+    <li class="pull-left" data-bind="css: { active: isSelected }"><a href="#documents" data-bind="text: name, click: $root.navigateToDocuments.bind($root)"></a></li>
 </ul>

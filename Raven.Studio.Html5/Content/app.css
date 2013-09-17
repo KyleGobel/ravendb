@@ -209,7 +209,7 @@ footer {
   width: 100%;
 }
 footer ul {
-  display: inline-block;
+  height: 32px;
 }
 .splash .message {
   font-size: 5em;

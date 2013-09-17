@@ -5,6 +5,7 @@ define(["require", "exports"], function(require, exports) {
             this.name = name;
             this.isSystem = false;
             this.isSelected = ko.observable(false);
+            this.statistics = ko.observable();
         }
         database.prototype.activate = function () {
             ko.postbox.publish("ActivateDatabase", this);

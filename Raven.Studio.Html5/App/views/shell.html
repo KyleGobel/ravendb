@@ -74,7 +74,25 @@
 </div>
 
 <footer>
-    <div>
+    <div class="navbar navbar-fixed-bottom navbar-inverse" data-bind="with: activeDatabase">
+        <div class="navbar-inner">
+            <ul class="nav navbar-nav">
+                <li><a class="navbar-brand" href="#/status">Stats</a></li>
+                <li><a href="#documents">1057 docs</a></li>
+                <li><a href="#documents">5 indexes</a></li>
+                <li><a href="#documents">0 stale</a></li>
+                <li><a href="#documents">0 errors</a></li>
+                <li><a href="#documents">8 triggers</a></li>
+                <li><a href="#documents">0 tasks</a></li>
+            </ul>
+            <ul class="nav navbar-nav pull-right">
+                <li><a>AGPL - Open Source</a></li>
+                <li><a>Server Build #30</a></li>
+                <li><a>Client Build #30</a></li>
+            </ul>
+        </div>
+    </div>
+    <!--<div>
         <ul class="list-inline">
             <li><a href="#">Statistics: </a></li>
             <li><a href="#">N documents</a></li>
@@ -91,5 +109,5 @@
             <li><span>Server Build #NNNN</span></li>
             <li><span>Client Build #NNNN</span></li>
         </ul>
-    </div>
+    </div>-->
 </footer>
