@@ -312,7 +312,13 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
         ctor.prototype.editSelection = function () {
             var lastSelected = this.selectionStack.last();
             if (lastSelected) {
-                var args = { doc: lastSelected.data };
+                var docsList = this.currentItemsCollection();
+                var currentItemIndex = this.rows.indexOf(lastSelected);
+                if (currentItemIndex === -1) {
+                    currentItemIndex = 0;
+                }
+                docsList.currentItemIndex(currentItemIndex);
+                var args = { doc: lastSelected.data, docsList: docsList };
                 ko.postbox.publish("EditDocument", args);
             }
         };

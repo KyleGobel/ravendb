@@ -33,7 +33,7 @@ class documents {
         this.collectionToSelectName = args ? args.collection : null;
 
         // See if we've got a database to select.
-        if (args.database) {
+        if (args && args.database) {
             ko.postbox.publish("ActivateDatabaseWithName", args.database);
         }
 
@@ -90,7 +90,8 @@ class documents {
                 return this.ravenDb.documents(collectionName, skip, take);
             };
 
-            var documentsList = new pagedList(fetcher, 30)
+            var documentsList = new pagedList(fetcher, 30);
+            documentsList.collectionName = selected.name;
 			this.currentCollectionPagedItems(documentsList);
         }
     }

@@ -1,5 +1,5 @@
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__) {
+define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType", "common/pagedList"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__, __pagedList__) {
     var router = __router__;
     var app = __app__;
     var sys = __sys__;
@@ -12,6 +12,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
     var dialogResult = __dialogResult__;
     var alertArgs = __alertArgs__;
     var alertType = __alertType__;
+    var pagedList = __pagedList__;
 
     var shell = (function () {
         function shell() {
@@ -23,7 +24,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             this.queuedAlerts = ko.observableArray();
             this.ravenDb = new raven();
             ko.postbox.subscribe("EditDocument", function (args) {
-                return _this.launchDocEditor(args.doc.getId());
+                return _this.launchDocEditor(args.doc.getId(), args.docsList);
             });
             ko.postbox.subscribe("Alert", function (alert) {
                 return _this.showAlert(alert);
@@ -39,9 +40,11 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             this.databases()[0].activate();
         };
 
-        shell.prototype.launchDocEditor = function (docId) {
-            var url = docId ? "#edit?id=" + encodeURIComponent(docId) : "#edit";
-            router.navigate(url);
+        shell.prototype.launchDocEditor = function (docId, docsList) {
+            var databaseUrlPart = this.activeDatabase() ? "&database=" + encodeURIComponent(this.activeDatabase().name) : "";
+            var docIdUrlPart = docId ? "&id=" + encodeURIComponent(docId) + databaseUrlPart : "";
+            var pagedListInfo = docsList && docsList.collectionName ? "&list=" + docsList.collectionName + "&item=" + docsList.currentItemIndex() : "";
+            router.navigate("edit?" + docIdUrlPart + databaseUrlPart + pagedListInfo);
         };
 
         shell.prototype.activate = function () {

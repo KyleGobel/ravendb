@@ -7,6 +7,7 @@ import documentMetadata = require("models/documentMetadata");
 import saveDocumentCommand = require("commands/saveDocumentCommand");
 import raven = require("common/raven");
 import deleteDocuments = require("viewmodels/deleteDocuments");
+import pagedList = require("common/pagedList");
 
 class editDocument {
 
@@ -22,6 +23,7 @@ class editDocument {
     editedDocId: KnockoutComputed<string>;
     userSpecifiedId = ko.observable('');
     isCreatingNewDocument = ko.observable(false);
+    docsList = ko.observable<pagedList>();
 
     constructor() {
         this.ravenDb = new raven();
@@ -68,6 +70,25 @@ class editDocument {
     }
 
     activate(navigationArgs) {
+
+        // Find the database and collection we're supposed to load.
+        // Used for paging through items.
+        if (navigationArgs && navigationArgs.database) {
+            ko.postbox.publish("ActivateDatabaseWithName", navigationArgs.database);
+        }
+
+        if (navigationArgs && navigationArgs.list && navigationArgs.item) {
+            var itemIndex = parseInt(navigationArgs.item, 10);
+            if (!isNaN(itemIndex)) {
+                var collectionName = navigationArgs.list === "All Documents" ? null : navigationArgs.list;
+                var fetcher = (skip: number, take: number) => this.ravenDb.documents(collectionName, skip, take);
+                var list = new pagedList(fetcher, 1);
+                list.collectionName = navigationArgs.list;
+                list.currentItemIndex(itemIndex);
+                list.loadNextChunk();
+                this.docsList(list);
+            }
+        }
 		
         if (navigationArgs && navigationArgs.id) {
             return this.loadDocument(navigationArgs.id);
@@ -82,12 +103,12 @@ class editDocument {
     }
 
     attached() {
-        jwerty.key("ctrl+s", e => {
+        jwerty.key("alt+s", e => {
             e.preventDefault();
             this.saveDocument();
         }, this, "#editDocumentContainer");
 
-        jwerty.key("ctrl+r", e => {
+        jwerty.key("alt+r", e => {
             e.preventDefault();
             this.refreshDocument();
         }, this, "#editDocumentContainer");
@@ -123,7 +144,7 @@ class editDocument {
         saveTask.done((idAndEtag: { Key: string; ETag: string }) => {
             this.isCreatingNewDocument(false);
             this.loadDocument(idAndEtag.Key);
-            router.navigate("#editDocument?id=" + idAndEtag.Key, false);
+            this.updateUrl(idAndEtag.Key);
         });
     }
 
@@ -188,9 +209,67 @@ class editDocument {
     }
 
     nextDocumentOrFirst() {
-        // TODO: implement editDoc.nextDocOrFirst
-        // For now, just head back to documents.
-        router.navigate("#documents");
+        var list = this.docsList(); 
+        if (list) {
+            var nextIndex = list.currentItemIndex() + 1;
+            if (nextIndex >= list.totalResults()) {
+                nextIndex = 0;
+            }
+            this.pageToItem(nextIndex);
+        }
+    }
+
+    previousDocumentOrLast() {
+        var list = this.docsList();
+        if (list) {
+            var previousIndex = list.currentItemIndex() - 1;
+            if (previousIndex < 0) {
+                previousIndex = list.totalResults() - 1;
+            }
+            this.pageToItem(previousIndex);
+        }
+    }
+
+    lastDocument() {
+        var list = this.docsList();
+        if (list) {
+            this.pageToItem(list.totalResults() - 1);
+        }
+    }
+
+    firstDocument() {
+        this.pageToItem(0);
+    }
+
+    pageToItem(index: number) {
+        var list = this.docsList();
+        if (list) {
+            list
+                .getNthItem(index)
+                .done((doc: document) => {
+                    console.log("fetched item at index", index, doc);
+                    this.loadDocument(doc.getId());
+                    list.currentItemIndex(index);
+                    this.updateUrl(doc.getId());
+                });
+        }
+    }
+
+    navigateToCollection(collectionName: string) {
+        var databaseFragment = raven.activeDatabase() ? "&database=" + raven.activeDatabase().name : "";
+        var collectionFragment = collectionName ? "&collection=" + collectionName : "";
+        router.navigate("#documents?" + collectionFragment + databaseFragment);
+    }
+
+    navigateToDocuments() {
+        this.navigateToCollection(null);
+    }
+
+    updateUrl(docId: string) {
+        var docIdPart = "&id=" + encodeURI(docId);
+        var databasePart = raven.activeDatabase() ? "&database=" + raven.activeDatabase().name : "";
+        var listPart = this.docsList() ? "&list=" + this.docsList().collectionName + "&item=" + this.docsList().currentItemIndex() : "";
+        router.navigate("#editDocument" + docIdPart + databasePart + listPart, false);
     }
 }
 

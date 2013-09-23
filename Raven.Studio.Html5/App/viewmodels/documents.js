@@ -31,7 +31,7 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
             // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123&database="blahDb"
             this.collectionToSelectName = args ? args.collection : null;
 
-            if (args.database) {
+            if (args && args.database) {
                 ko.postbox.publish("ActivateDatabaseWithName", args.database);
             }
 
@@ -99,6 +99,7 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
                 };
 
                 var documentsList = new pagedList(fetcher, 30);
+                documentsList.collectionName = selected.name;
                 this.currentCollectionPagedItems(documentsList);
             }
         };

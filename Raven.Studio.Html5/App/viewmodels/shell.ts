@@ -12,6 +12,7 @@ import deleteDocuments = require("viewmodels/deleteDocuments");
 import dialogResult = require("common/dialogResult");
 import alertArgs = require("common/alertArgs");
 import alertType = require("common/alertType");
+import pagedList = require("common/pagedList");
 
 class shell {
 	private router = router;
@@ -24,7 +25,7 @@ class shell {
 
 	constructor() {
 		this.ravenDb = new raven();
-		ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
+		ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId(), args.docsList));
         ko.postbox.subscribe("Alert", (alert: alertArgs) => this.showAlert(alert));
         ko.postbox.subscribe("ActivateDatabaseWithName", (databaseName: string) => this.activateDatabase(databaseName));
 	}
@@ -36,9 +37,11 @@ class shell {
 		this.databases()[0].activate();
 	}
 
-	launchDocEditor(docId?: string) {
-		var url = docId ? "#edit?id=" + encodeURIComponent(docId) : "#edit";
-		router.navigate(url);
+    launchDocEditor(docId?: string, docsList?: pagedList) {
+        var databaseUrlPart = this.activeDatabase() ? "&database=" + encodeURIComponent(this.activeDatabase().name) : "";
+        var docIdUrlPart = docId ? "&id=" + encodeURIComponent(docId) + databaseUrlPart : "";
+        var pagedListInfo = docsList && docsList.collectionName ? "&list=" + docsList.collectionName + "&item=" + docsList.currentItemIndex() : "";
+        router.navigate("edit?" + docIdUrlPart + databaseUrlPart + pagedListInfo);
 	}
 
 	activate() {

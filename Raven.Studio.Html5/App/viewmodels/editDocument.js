@@ -1,4 +1,4 @@
-define(["require", "exports", "durandal/app", "durandal/system", "plugins/router", "models/document", "models/documentMetadata", "commands/saveDocumentCommand", "common/raven", "viewmodels/deleteDocuments"], function(require, exports, __app__, __sys__, __router__, __document__, __documentMetadata__, __saveDocumentCommand__, __raven__, __deleteDocuments__) {
+define(["require", "exports", "durandal/app", "durandal/system", "plugins/router", "models/document", "models/documentMetadata", "commands/saveDocumentCommand", "common/raven", "viewmodels/deleteDocuments", "common/pagedList"], function(require, exports, __app__, __sys__, __router__, __document__, __documentMetadata__, __saveDocumentCommand__, __raven__, __deleteDocuments__, __pagedList__) {
     var app = __app__;
     var sys = __sys__;
     var router = __router__;
@@ -8,6 +8,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
     var saveDocumentCommand = __saveDocumentCommand__;
     var raven = __raven__;
     var deleteDocuments = __deleteDocuments__;
+    var pagedList = __pagedList__;
 
     var editDocument = (function () {
         function editDocument() {
@@ -20,6 +21,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             this.metaPropsToRestoreOnSave = [];
             this.userSpecifiedId = ko.observable('');
             this.isCreatingNewDocument = ko.observable(false);
+            this.docsList = ko.observable();
             this.ravenDb = new raven();
             this.metadata = ko.computed(function () {
                 return _this.document() ? _this.document().__metadata : null;
@@ -69,6 +71,26 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             });
         }
         editDocument.prototype.activate = function (navigationArgs) {
+            var _this = this;
+            if (navigationArgs && navigationArgs.database) {
+                ko.postbox.publish("ActivateDatabaseWithName", navigationArgs.database);
+            }
+
+            if (navigationArgs && navigationArgs.list && navigationArgs.item) {
+                var itemIndex = parseInt(navigationArgs.item, 10);
+                if (!isNaN(itemIndex)) {
+                    var collectionName = navigationArgs.list === "All Documents" ? null : navigationArgs.list;
+                    var fetcher = function (skip, take) {
+                        return _this.ravenDb.documents(collectionName, skip, take);
+                    };
+                    var list = new pagedList(fetcher, 1);
+                    list.collectionName = navigationArgs.list;
+                    list.currentItemIndex(itemIndex);
+                    list.loadNextChunk();
+                    this.docsList(list);
+                }
+            }
+
             if (navigationArgs && navigationArgs.id) {
                 return this.loadDocument(navigationArgs.id);
             } else {
@@ -83,12 +105,12 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
 
         editDocument.prototype.attached = function () {
             var _this = this;
-            jwerty.key("ctrl+s", function (e) {
+            jwerty.key("alt+s", function (e) {
                 e.preventDefault();
                 _this.saveDocument();
             }, this, "#editDocumentContainer");
 
-            jwerty.key("ctrl+r", function (e) {
+            jwerty.key("alt+r", function (e) {
                 e.preventDefault();
                 _this.refreshDocument();
             }, this, "#editDocumentContainer");
@@ -125,7 +147,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             saveTask.done(function (idAndEtag) {
                 _this.isCreatingNewDocument(false);
                 _this.loadDocument(idAndEtag.Key);
-                router.navigate("#editDocument?id=" + idAndEtag.Key, false);
+                _this.updateUrl(idAndEtag.Key);
             });
         };
 
@@ -200,9 +222,66 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
         };
 
         editDocument.prototype.nextDocumentOrFirst = function () {
-            // TODO: implement editDoc.nextDocOrFirst
-            // For now, just head back to documents.
-            router.navigate("#documents");
+            var list = this.docsList();
+            if (list) {
+                var nextIndex = list.currentItemIndex() + 1;
+                if (nextIndex >= list.totalResults()) {
+                    nextIndex = 0;
+                }
+                this.pageToItem(nextIndex);
+            }
+        };
+
+        editDocument.prototype.previousDocumentOrLast = function () {
+            var list = this.docsList();
+            if (list) {
+                var previousIndex = list.currentItemIndex() - 1;
+                if (previousIndex < 0) {
+                    previousIndex = list.totalResults() - 1;
+                }
+                this.pageToItem(previousIndex);
+            }
+        };
+
+        editDocument.prototype.lastDocument = function () {
+            var list = this.docsList();
+            if (list) {
+                this.pageToItem(list.totalResults() - 1);
+            }
+        };
+
+        editDocument.prototype.firstDocument = function () {
+            this.pageToItem(0);
+        };
+
+        editDocument.prototype.pageToItem = function (index) {
+            var _this = this;
+            var list = this.docsList();
+            if (list) {
+                list.getNthItem(index).done(function (doc) {
+                    console.log("fetched item at index", index, doc);
+                    _this.loadDocument(doc.getId());
+                    list.currentItemIndex(index);
+                    _this.updateUrl(doc.getId());
+                });
+            }
+        };
+
+        editDocument.prototype.navigateToCollection = function (collectionName) {
+            var databaseFragment = raven.activeDatabase() ? "&database=" + raven.activeDatabase().name : "";
+            var collectionFragment = collectionName ? "&collection=" + collectionName : "";
+            router.navigate("#documents?" + collectionFragment + databaseFragment);
+        };
+
+        editDocument.prototype.navigateToDocuments = function () {
+            this.navigateToCollection(null);
+        };
+
+        editDocument.prototype.updateUrl = function (docId) {
+            var docIdPart = "&id=" + encodeURI(docId);
+            var databasePart = raven.activeDatabase() ? "&database=" + raven.activeDatabase().name : "";
+            var listPart = this.docsList() ? "&list=" + this.docsList().collectionName + "&item=" + this.docsList().currentItemIndex() : "";
+            router.navigate("#editDocument" + docIdPart + databasePart + listPart, false);
         };
         return editDocument;
     })();
