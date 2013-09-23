@@ -8,8 +8,6 @@ import saveDocumentCommand = require("commands/saveDocumentCommand");
 import raven = require("common/raven");
 import deleteDocuments = require("viewmodels/deleteDocuments");
 
-declare var require;
-
 class editDocument {
 
     ravenDb: raven;

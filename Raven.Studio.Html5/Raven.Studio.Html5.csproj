@@ -135,9 +135,14 @@
     <Content Include="App\commands\createDatabaseCommand.js">
       <DependentUpon>createDatabaseCommand.ts</DependentUpon>
     </Content>
+    <TypeScriptCompile Include="App\viewmodels\copyDocuments.ts" />
+    <Content Include="App\viewmodels\copyDocuments.js">
+      <DependentUpon>copyDocuments.ts</DependentUpon>
+    </Content>
     <Content Include="App\viewmodels\createDatabase.js">
       <DependentUpon>createDatabase.ts</DependentUpon>
     </Content>
+    <Content Include="App\views\copyDocuments.html" />
     <Content Include="App\views\createDatabase.html" />
     <Content Include="App\views\dialog.html" />
     <Content Include="Scripts\jwerty-0.3.js" />

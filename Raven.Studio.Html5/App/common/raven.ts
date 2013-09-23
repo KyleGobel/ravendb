@@ -117,10 +117,7 @@ class raven {
             "Disabled": false
         };
 
-        var createDbTask = this.put("/admin/databases/" + databaseName, JSON.stringify(databaseDoc), null);
-        createDbTask.done(() => this.fetch("/databases/" + databaseName + "/silverlight/ensureStartup", null, null));
-
-        return createDbTask;
+        return this.put("/admin/databases/" + databaseName, JSON.stringify(databaseDoc), null);
     }
 
     public getBaseUrl() {

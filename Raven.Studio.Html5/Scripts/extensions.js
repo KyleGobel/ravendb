@@ -89,10 +89,30 @@ arrayPrototype.removeAll = function (items) {
     }
 };
 
-// Array.last
-arrayPrototype.last = function () {
+// Array.first
+arrayPrototype.first = function (filter) {
     var self = this;
     if (self.length > 0) {
+        if (filter) {
+            return ko.utils.arrayFirst(self, filter);
+        } else if (self.length > 0) {
+            return self[0];
+        }
+    }
+
+    return null;
+};
+
+// Array.last
+arrayPrototype.last = function (filter) {
+    var self = this;
+    if (filter) {
+        for (var i = self.length - 1; i > 0; i--) {
+            if (filter(self[i])) {
+                return self[i];
+            }
+        }
+    } else if (self.length > 0) {
         return self[self.length - 1];
     }
 

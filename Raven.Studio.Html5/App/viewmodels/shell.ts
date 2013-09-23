@@ -19,12 +19,14 @@ class shell {
 	activeDatabase = ko.observable<database>().subscribeTo("ActivateDatabase");
 	ravenDb: raven;
 	currentAlert = ko.observable<alertArgs>();
-	queuedAlerts = ko.observableArray<alertArgs>();
+    queuedAlerts = ko.observableArray<alertArgs>();
+    databasesLoadedTask: JQueryPromise<any>;
 
 	constructor() {
 		this.ravenDb = new raven();
 		ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId()));
-		ko.postbox.subscribe("Alert", (alert: alertArgs) => this.showAlert(alert));
+        ko.postbox.subscribe("Alert", (alert: alertArgs) => this.showAlert(alert));
+        ko.postbox.subscribe("ActivateDatabaseWithName", (databaseName: string) => this.activateDatabase(databaseName));
 	}
 
 	databasesLoaded(databases) {
@@ -55,7 +57,7 @@ class shell {
 		this.connectToRavenServer();
 	}
 
-	// When the view is attached to the DOM, hook up some keyboard shortcuts to some of the DOM elements.
+	// The view must be attached to the DOM before we can hook up keyboard shortcuts.
 	attached() {
 		jwerty.key("alt+n", e => {
 			e.preventDefault();
@@ -64,9 +66,7 @@ class shell {
 	}
 
 	connectToRavenServer() {
-		// Activate the first page only after we've connected to Raven
-		// and selected the first database.
-		this.ravenDb
+        this.databasesLoadedTask = this.ravenDb
 			.databases()
 			.fail(result => this.handleRavenConnectionFailure(result))
 			.done(results => {
@@ -112,7 +112,18 @@ class shell {
 
 	newDocument() {
 		this.launchDocEditor(null);
-	}
+    }
+
+    activateDatabase(databaseName: string) {
+        if (this.databasesLoadedTask) {
+            this.databasesLoadedTask.done(() => {
+                var matchingDatabase = this.databases().first(d => d.name == databaseName);
+                if (matchingDatabase && this.activeDatabase() !== matchingDatabase) {
+                    ko.postbox.publish("ActivateDatabase", matchingDatabase);
+                }
+            });
+        }
+    }
 }
 
 export = shell;

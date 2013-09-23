@@ -1,13 +1,14 @@
 /// <reference path="../../../Scripts/extensions.ts" />
 /// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../../../Scripts/typings/durandal/durandal.d.ts" />
-define(["require", "exports", "common/pagedList", "models/document", "models/collection", "common/pagedResultSet", "viewmodels/deleteDocuments", "durandal/app"], function(require, exports, __pagedList__, __document__, __collection__, __pagedResultSet__, __deleteDocuments__, __app__) {
+define(["require", "exports", "common/pagedList", "models/document", "models/collection", "common/pagedResultSet", "viewmodels/deleteDocuments", "viewmodels/copyDocuments", "durandal/app"], function(require, exports, __pagedList__, __document__, __collection__, __pagedResultSet__, __deleteDocuments__, __copyDocuments__, __app__) {
     
     var pagedList = __pagedList__;
     var document = __document__;
     var collection = __collection__;
     var pagedResultSet = __pagedResultSet__;
     var deleteDocuments = __deleteDocuments__;
+    var copyDocuments = __copyDocuments__;
     var app = __app__;
 
     // Durandal.js configuration requires that exported widgets be named ctor.
@@ -220,6 +221,17 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             var needsMoreRows = this.rows().length < this.totalRowsCount;
             if (needsMoreRows && !this.isLoading()) {
                 this.fetchNextChunk();
+            }
+        };
+
+        ctor.prototype.copySelectedDocs = function (idsOnly) {
+            if (typeof idsOnly === "undefined") { idsOnly = false; }
+            var docs = this.selectionStack.map(function (r) {
+                return r.data;
+            });
+            if (docs.length > 0) {
+                var copyDocsViewModel = new copyDocuments(docs);
+                app.showDialog(copyDocsViewModel);
             }
         };
 

@@ -126,7 +126,6 @@ define(["require", "exports", "models/database", "models/collection", "models/co
         };
 
         raven.prototype.createDatabase = function (databaseName) {
-            var _this = this;
             if (!databaseName) {
                 throw new Error("Database must have a name.");
             }
@@ -139,12 +138,7 @@ define(["require", "exports", "models/database", "models/collection", "models/co
                 "Disabled": false
             };
 
-            var createDbTask = this.put("/admin/databases/" + databaseName, JSON.stringify(databaseDoc), null);
-            createDbTask.done(function () {
-                return _this.fetch("/databases/" + databaseName + "/silverlight/ensureStartup", null, null);
-            });
-
-            return createDbTask;
+            return this.put("/admin/databases/" + databaseName, JSON.stringify(databaseDoc), null);
         };
 
         raven.prototype.getBaseUrl = function () {

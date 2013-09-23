@@ -28,6 +28,9 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             ko.postbox.subscribe("Alert", function (alert) {
                 return _this.showAlert(alert);
             });
+            ko.postbox.subscribe("ActivateDatabaseWithName", function (databaseName) {
+                return _this.activateDatabase(databaseName);
+            });
         }
         shell.prototype.databasesLoaded = function (databases) {
             var systemDatabase = new database("<system>");
@@ -56,7 +59,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             this.connectToRavenServer();
         };
 
-        // When the view is attached to the DOM, hook up some keyboard shortcuts to some of the DOM elements.
+        // The view must be attached to the DOM before we can hook up keyboard shortcuts.
         shell.prototype.attached = function () {
             var _this = this;
             jwerty.key("alt+n", function (e) {
@@ -67,9 +70,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
 
         shell.prototype.connectToRavenServer = function () {
             var _this = this;
-            // Activate the first page only after we've connected to Raven
-            // and selected the first database.
-            this.ravenDb.databases().fail(function (result) {
+            this.databasesLoadedTask = this.ravenDb.databases().fail(function (result) {
                 return _this.handleRavenConnectionFailure(result);
             }).done(function (results) {
                 _this.databasesLoaded(results);
@@ -123,6 +124,20 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
 
         shell.prototype.newDocument = function () {
             this.launchDocEditor(null);
+        };
+
+        shell.prototype.activateDatabase = function (databaseName) {
+            var _this = this;
+            if (this.databasesLoadedTask) {
+                this.databasesLoadedTask.done(function () {
+                    var matchingDatabase = _this.databases().first(function (d) {
+                        return d.name == databaseName;
+                    });
+                    if (matchingDatabase && _this.activeDatabase() !== matchingDatabase) {
+                        ko.postbox.publish("ActivateDatabase", matchingDatabase);
+                    }
+                });
+            }
         };
         return shell;
     })();

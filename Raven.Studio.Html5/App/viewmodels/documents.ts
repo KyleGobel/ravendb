@@ -4,6 +4,7 @@ import sys = require("durandal/system");
 import router = require("plugins/router");
 
 import collection = require("models/collection");
+import database = require("models/database");
 import document = require("models/document");
 import deleteCollection = require("viewmodels/deleteCollection");
 import raven = require("common/raven");
@@ -22,7 +23,29 @@ class documents {
 
     constructor() {
         this.ravenDb = new raven();
-        this.selectedCollection.subscribe(c => this.onSelectedCollectionChanged(c));
+        this.selectedCollection.subscribe(c => this.selectedCollectionChanged(c));
+        ko.postbox.subscribe("ActivateDatabase", db => this.databaseChanged(db));
+    }
+
+    activate(args) {
+
+        // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123&database="blahDb"
+        this.collectionToSelectName = args ? args.collection : null;
+
+        // See if we've got a database to select.
+        if (args.database) {
+            ko.postbox.publish("ActivateDatabaseWithName", args.database);
+        }
+
+        return this.fetchCollections();
+    }
+
+    attached(view: HTMLElement, parent: HTMLElement) {
+        // Initialize the context menu (using Bootstrap-ContextMenu library).
+        // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
+        (<any>$('.document-collections li')).contextmenu({
+            target: '#collections-context-menu'
+        });
     }
 
     collectionsLoaded(collections: Array<collection>) {
@@ -60,7 +83,7 @@ class documents {
             });
     }
 
-    onSelectedCollectionChanged(selected: collection) {
+    selectedCollectionChanged(selected: collection) {
         if (collection) {
             var fetcher = (skip: number, take: number) => {
                 var collectionName = selected !== this.allDocumentsCollection ? selected.name : null;
@@ -72,22 +95,11 @@ class documents {
         }
     }
 
-    activate(args) {        
-        var collectionsLoadedTask = this.ravenDb
-            .collections()
-            .done(results => this.collectionsLoaded(results));
-
-        // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
-        this.collectionToSelectName = args ? args.collection : null;
-        return collectionsLoadedTask;
-    }
-
-    attached(view: HTMLElement, parent: HTMLElement) {
-        // Initialize the context menu (using Bootstrap-ContextMenu library).
-        // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
-        (<any>$('.document-collections li')).contextmenu({
-            target: '#collections-context-menu'
-        });
+    databaseChanged(db: database) {
+        if (db) {
+            router.navigate("#documents?database=" + encodeURIComponent(db.name), false);
+            this.fetchCollections();
+        }
     }
 
     deleteCollection() {
@@ -104,7 +116,15 @@ class documents {
 
     activateCollection(collection: collection) {
         collection.activate();
-        router.navigate("#documents?collection=" + collection.name, false);
+        var collectionPart = "collection=" + encodeURIComponent(collection.name);
+        var databasePart = raven.activeDatabase() ? "&database=" + raven.activeDatabase().name : "";
+        router.navigate("#documents?" + collectionPart + databasePart, false);
+    }
+
+    fetchCollections(): JQueryPromise<Array<collection>> {
+        return this.ravenDb
+            .collections()
+            .done(results => this.collectionsLoaded(results));
     }
 }
 

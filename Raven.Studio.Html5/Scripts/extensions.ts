@@ -82,7 +82,8 @@ functionPrototype.memoize = function (thisVal) {
 interface Array<T> {
     remove<T>(item: T): number;
     removeAll<T>(items: T[]): void;
-    last<T>(): T;
+    first<T>(filter?: (item: T) => boolean): T;
+    last<T>(filter?: (item: T) => boolean): T;
 }
 
 // Array.remove
@@ -109,10 +110,32 @@ arrayPrototype.removeAll = function (items: Array<any>) {
     }
 }
 
-// Array.last
-arrayPrototype.last = function () {
+// Array.first
+arrayPrototype.first = function (filter?: (item) => boolean) {
     var self: any[] = this;
     if (self.length > 0) {
+        if (filter) {
+            return ko.utils.arrayFirst(self, filter);
+        }
+        else if (self.length > 0) {
+            return self[0];
+        }
+    }
+
+    return null;
+}
+
+// Array.last
+arrayPrototype.last = function (filter?: (item) => boolean) {
+    var self: any[] = this;
+    if (filter) {
+        for (var i = self.length - 1; i > 0; i--) {
+            if (filter(self[i])) {
+                return self[i];
+            }
+        }
+    }
+    else if (self.length > 0) {
         return self[self.length - 1];
     }
 

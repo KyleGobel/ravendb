@@ -1,10 +1,11 @@
-define(["require", "exports", "durandal/app", "plugins/router", "models/collection", "models/document", "viewmodels/deleteCollection", "common/raven", "common/pagedList"], function(require, exports, __app__, __router__, __collection__, __document__, __deleteCollection__, __raven__, __pagedList__) {
+define(["require", "exports", "durandal/app", "plugins/router", "models/collection", "models/database", "models/document", "viewmodels/deleteCollection", "common/raven", "common/pagedList"], function(require, exports, __app__, __router__, __collection__, __database__, __document__, __deleteCollection__, __raven__, __pagedList__) {
     
     var app = __app__;
     
     var router = __router__;
 
     var collection = __collection__;
+    var database = __database__;
     var document = __document__;
     var deleteCollection = __deleteCollection__;
     var raven = __raven__;
@@ -20,9 +21,31 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
             this.currentCollectionPagedItems = ko.observable();
             this.ravenDb = new raven();
             this.selectedCollection.subscribe(function (c) {
-                return _this.onSelectedCollectionChanged(c);
+                return _this.selectedCollectionChanged(c);
+            });
+            ko.postbox.subscribe("ActivateDatabase", function (db) {
+                return _this.databaseChanged(db);
             });
         }
+        documents.prototype.activate = function (args) {
+            // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123&database="blahDb"
+            this.collectionToSelectName = args ? args.collection : null;
+
+            if (args.database) {
+                ko.postbox.publish("ActivateDatabaseWithName", args.database);
+            }
+
+            return this.fetchCollections();
+        };
+
+        documents.prototype.attached = function (view, parent) {
+            // Initialize the context menu (using Bootstrap-ContextMenu library).
+            // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
+            ($('.document-collections li')).contextmenu({
+                target: '#collections-context-menu'
+            });
+        };
+
         documents.prototype.collectionsLoaded = function (collections) {
             var _this = this;
             // Set the color class for each of the collections.
@@ -67,7 +90,7 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
             });
         };
 
-        documents.prototype.onSelectedCollectionChanged = function (selected) {
+        documents.prototype.selectedCollectionChanged = function (selected) {
             var _this = this;
             if (collection) {
                 var fetcher = function (skip, take) {
@@ -80,23 +103,11 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
             }
         };
 
-        documents.prototype.activate = function (args) {
-            var _this = this;
-            var collectionsLoadedTask = this.ravenDb.collections().done(function (results) {
-                return _this.collectionsLoaded(results);
-            });
-
-            // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123
-            this.collectionToSelectName = args ? args.collection : null;
-            return collectionsLoadedTask;
-        };
-
-        documents.prototype.attached = function (view, parent) {
-            // Initialize the context menu (using Bootstrap-ContextMenu library).
-            // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
-            ($('.document-collections li')).contextmenu({
-                target: '#collections-context-menu'
-            });
+        documents.prototype.databaseChanged = function (db) {
+            if (db) {
+                router.navigate("#documents?database=" + encodeURIComponent(db.name), false);
+                this.fetchCollections();
+            }
         };
 
         documents.prototype.deleteCollection = function () {
@@ -114,7 +125,16 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
 
         documents.prototype.activateCollection = function (collection) {
             collection.activate();
-            router.navigate("#documents?collection=" + collection.name, false);
+            var collectionPart = "collection=" + encodeURIComponent(collection.name);
+            var databasePart = raven.activeDatabase() ? "&database=" + raven.activeDatabase().name : "";
+            router.navigate("#documents?" + collectionPart + databasePart, false);
+        };
+
+        documents.prototype.fetchCollections = function () {
+            var _this = this;
+            return this.ravenDb.collections().done(function (results) {
+                return _this.collectionsLoaded(results);
+            });
         };
         return documents;
     })();

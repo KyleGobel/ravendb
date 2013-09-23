@@ -8,6 +8,7 @@ import document = require("models/document");
 import collection = require("models/collection");
 import pagedResultSet = require("common/pagedResultSet"); 
 import deleteDocuments = require("viewmodels/deleteDocuments");
+import copyDocuments = require("viewmodels/copyDocuments");
 import app = require("durandal/app");
 
 interface cell {
@@ -214,6 +215,14 @@ class ctor {
         var needsMoreRows = this.rows().length < this.totalRowsCount;
         if (needsMoreRows && !this.isLoading()) {
             this.fetchNextChunk();
+        }
+    }
+
+    copySelectedDocs(idsOnly = false) {
+        var docs = this.selectionStack.map<document>(r => r.data);
+        if (docs.length > 0) {
+            var copyDocsViewModel = new copyDocuments(docs)
+            app.showDialog(copyDocsViewModel);
         }
     }
 

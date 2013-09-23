@@ -18,12 +18,23 @@ class databases {
     activate(navigationArgs) {
         this.ravenDb
             .databases()
-            .done((results: Array<database>) => this.databases(results));
+            .done((results: Array<database>) => this.databasesLoaded(results));
     }
 
     navigateToDocuments(db: database) {
         db.activate();
         router.navigate("#documents?db=" + encodeURIComponent(db.name));
+    }
+
+    databasesLoaded(results: Array<database>) {
+        this.databases(results);
+
+        // If we have just a few databases, grab the db stats for all of them.
+        // (Otherwise, we'll grab them when we click them.)
+        var few = 20;
+        if (results.length < 20) {
+            results.forEach(db => this.fetchStats(db));
+        }
     }
 
     newDatabase() {
@@ -39,10 +50,14 @@ class databases {
         db.activate();
 
         if (!db.statistics()) {
-            this.ravenDb
-                .databaseStats(db.name)
-                .done(result => db.statistics(result));
+            this.fetchStats(db);
         }
+    }
+
+    fetchStats(db: database) {
+        this.ravenDb
+            .databaseStats(db.name)
+            .done(result => db.statistics(result));
     }
 
     goToDocuments(db: database) {
