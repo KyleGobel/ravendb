@@ -3,6 +3,7 @@ define(["require", "exports", "common/raven", "common/alertArgs", "common/alertT
     var alertArgs = __alertArgs__;
     var alertType = __alertType__;
 
+    /// Commands encapsulate a write operation to the database and support progress notifications.
     var commandBase = (function () {
         function commandBase() {
             this.ravenDb = new raven();

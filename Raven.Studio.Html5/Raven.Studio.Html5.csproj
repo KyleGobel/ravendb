@@ -130,6 +130,15 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="App\viewmodels\shell.ts" />
+    <TypeScriptCompile Include="App\viewmodels\createDatabase.ts" />
+    <TypeScriptCompile Include="App\commands\createDatabaseCommand.ts" />
+    <Content Include="App\commands\createDatabaseCommand.js">
+      <DependentUpon>createDatabaseCommand.ts</DependentUpon>
+    </Content>
+    <Content Include="App\viewmodels\createDatabase.js">
+      <DependentUpon>createDatabase.ts</DependentUpon>
+    </Content>
+    <Content Include="App\views\createDatabase.html" />
     <Content Include="App\views\dialog.html" />
     <Content Include="Scripts\jwerty-0.3.js" />
     <TypeScriptCompile Include="Scripts\typings\jwerty\jwerty.d.ts" />
@@ -207,7 +216,6 @@
     <TypeScriptCompile Include="Scripts\extensions.ts" />
     <Content Include="Scripts\typings\knockout.postbox\knockout-postbox.d.ts" />
     <Content Include="App\views\detail.html" />
-    <Content Include="App\views\flickr.html" />
     <Content Include="App\views\shell.html" />
     <Content Include="App\views\welcome.html" />
     <Content Include="Content\app.css">

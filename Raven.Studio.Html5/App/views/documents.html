@@ -1,6 +1,6 @@
 ﻿<div class="documents-page">
     <div class="row">
-        <div class="col-lg-2">
+        <div class="col-md-2">
             <br />
             <ul class="nav nav-pills nav-stacked document-collections affix" data-bind="foreach: collections">
                 <li data-bind="event: { mousedown: $parent.activateCollection.bind($parent) }, css: { active: $data === $parent.selectedCollection() }, visible: documentCount() > 0 || isAllCollections">
@@ -12,7 +12,7 @@
                 </li>
             </ul>
         </div>
-        <div class="col-lg-10">
+        <div class="col-md-10">
             <br />
             <div data-bind="widget: { kind: 'dataTable', items: currentCollectionPagedItems, collections: collections }"></div>
         </div>

@@ -100,6 +100,25 @@ class raven {
         return this.put(url, args, raven.activeDatabase(), customHeaders);
     }
 
+    public createDatabase(databaseName: string): JQueryPromise<any> {
+        if (!databaseName) {
+            throw new Error("Database must have a name.");
+        }
+
+        var databaseDoc = {
+            "Settings": {
+                "Raven/DataDir": "~\\Databases\\" + databaseName
+            },
+            "SecuredSettings": {},
+            "Disabled": false
+        };
+
+        var createDbTask = this.put("/admin/databases/" + databaseName, JSON.stringify(databaseDoc), null);
+        createDbTask.done(() => this.fetch("/databases/" + databaseName + "/silverlight/ensureStartup", null, null));
+
+        return createDbTask;
+    }
+
     public getBaseUrl() {
         return this.baseUrl;
     }

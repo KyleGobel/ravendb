@@ -121,6 +121,28 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return this.put(url, args, raven.activeDatabase(), customHeaders);
         };
 
+        raven.prototype.createDatabase = function (databaseName) {
+            var _this = this;
+            if (!databaseName) {
+                throw new Error("Database must have a name.");
+            }
+
+            var databaseDoc = {
+                "Settings": {
+                    "Raven/DataDir": "~\\Databases\\" + databaseName
+                },
+                "SecuredSettings": {},
+                "Disabled": false
+            };
+
+            var createDbTask = this.put("/admin/databases/" + databaseName, JSON.stringify(databaseDoc), null);
+            createDbTask.done(function () {
+                return _this.fetch("/databases/" + databaseName + "/silverlight/ensureStartup", null, null);
+            });
+
+            return createDbTask;
+        };
+
         raven.prototype.getBaseUrl = function () {
             return this.baseUrl;
         };

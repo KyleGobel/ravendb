@@ -2,6 +2,7 @@ import raven = require("common/raven");
 import alertArgs = require("common/alertArgs");
 import alertType = require("common/alertType");
 
+/// Commands encapsulate a write operation to the database and support progress notifications.
 class commandBase {
     ravenDb: raven;
 

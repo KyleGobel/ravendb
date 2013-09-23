@@ -37,15 +37,15 @@
     </div>
     <br />
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-md-8">
             <div class="row" data-bind="with: metadata">
-                <div class="col-lg-12">
+                <div class="col-md-12">
                     <input type="text" class="form-control" accesskey="i" placeholder="document id" data-bind="value: $root.userSpecifiedId, valueUpdate: 'afterkeyup', attr: { disabled: $root.isBusy }" />
                 </div>
             </div>
             <br />
             <div class="row">
-                <div class="col-lg-12">
+                <div class="col-md-12">
                     <ul class="nav nav-tabs">
                         <li data-bind="click: activateDoc, css: { active: isEditingMetadata() === false }"><a style="cursor: pointer;">Data</a></li>
                         <li data-bind="click: activateMeta, css: { active: isEditingMetadata }"><a style="cursor: pointer;">Metadata</a></li>
@@ -54,38 +54,38 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4" data-bind="with: metadata">
+        <div class="col-md-4" data-bind="with: metadata">
             <h4>Metadata</h4>
             <hr />
             <div class="row">
-                <div class="col-lg-5">
+                <div class="col-md-5">
                     <label>Raven-Clr-Type</label>
                 </div>
-                <div class="col-lg-7">
+                <div class="col-md-7">
                     <span data-bind="text: ravenClrType"></span>
                 </div>
             </div>
             <div class="row">
-                <div class="col-lg-5">
+                <div class="col-md-5">
                     <label>Raven-Entity-Name</label>
                 </div>
-                <div class="col-lg-7">
+                <div class="col-md-7">
                     <span data-bind="text: ravenEntityName"></span>
                 </div>
             </div>
             <div class="row">
-                <div class="col-lg-5">
+                <div class="col-md-5">
                     <label>Etag</label>
                 </div>
-                <div class="col-lg-7">
+                <div class="col-md-7">
                     <span data-bind="text: etag"></span>
                 </div>
             </div>
             <div class="row">
-                <div class="col-lg-5">
+                <div class="col-md-5">
                     <label>Last-Modified</label>
                 </div>
-                <div class="col-lg-7">
+                <div class="col-md-7">
                     <span data-bind="text: lastModified"></span>
                 </div>
             </div>
