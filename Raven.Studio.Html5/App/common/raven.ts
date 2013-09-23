@@ -17,6 +17,10 @@ class raven {
         return this.fetch("/databases", { pageSize: 1024 }, null, resultsSelector);
     }
 
+    public databaseStats(databaseName: string): JQueryPromise<documentStatistics> {
+        return this.fetch("/databases/" + databaseName + "/stats", null, null);
+    }
+
     public collections(): JQueryPromise<Array<collection>> {
         this.requireActiveDatabase();
 

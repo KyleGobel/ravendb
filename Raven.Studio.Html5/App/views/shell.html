@@ -78,12 +78,14 @@
         <div class="navbar-inner">
             <ul class="nav navbar-nav">
                 <li><a class="navbar-brand" href="#/status">Stats</a></li>
-                <li><a href="#documents">1057 docs</a></li>
-                <li><a href="#documents">5 indexes</a></li>
-                <li><a href="#documents">0 stale</a></li>
-                <li><a href="#documents">0 errors</a></li>
-                <li><a href="#documents">8 triggers</a></li>
-                <li><a href="#documents">0 tasks</a></li>
+                <!-- ko with: statistics -->
+                <li><a href="#documents" data-bind="text: CountOfDocuments + ' documents'"></a></li>
+                <li><a href="#documents" data-bind="text: CountOfIndexes + ' indexes'"></a></li>
+                <li><a href="#documents" data-bind="text: StaleIndexes.length + ' stale'"></a></li>
+                <li><a href="#documents" data-bind="text: Errors.length + ' errors'"></a></li>
+                <li><a href="#documents" data-bind="text: Triggers.length + ' triggers'"></a></li>
+                <li><a href="#documents" data-bind="text: ApproximateTaskCount + ' tasks'"></a></li>
+                <!-- /ko -->
             </ul>
             <ul class="nav navbar-nav pull-right">
                 <li><a>AGPL - Open Source</a></li>
@@ -92,22 +94,4 @@
             </ul>
         </div>
     </div>
-    <!--<div>
-        <ul class="list-inline">
-            <li><a href="#">Statistics: </a></li>
-            <li><a href="#">N documents</a></li>
-            <li><a href="#">N indexes</a></li>
-            <li><a href="#">N stale</a></li>
-            <li><a href="#">N errors</a></li>
-            <li><a href="#">N triggers</a></li>
-            <li><a href="#">N tasks</a></li>
-            <li><a href="#">Raw Url: </a></li>
-        </ul>
-        <ul class="list-inline pull-right">
-            <li><span>Licensing Status:</span></li>
-            <li><a href="#">AGPL - Open Source</a></li>
-            <li><span>Server Build #NNNN</span></li>
-            <li><span>Client Build #NNNN</span></li>
-        </ul>
-    </div>-->
 </footer>

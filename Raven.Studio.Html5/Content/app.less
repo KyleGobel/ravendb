@@ -68,12 +68,38 @@
     width: 98%;
 }
 
-.databases-container 
+.databases-container
 {
     margin-top: 10px;
+    padding: 10px;
 
-    li {
-        padding: 10px;
+    .database
+    {
+        cursor: default;
+        border-radius: 10px;
+        -webkit-box-shadow: 0 0 5px 1px silver;
+        box-shadow: 0 0 5px 1px silver;
+        margin-right: 10px;
+        min-width: 140px;
+        min-height: 60px;
+        display: inline-block;
+        padding: 8px;
+
+        @selectColor: rgb(66, 139, 202);
+        @hoverColor: lighten(@selectColor, 10%);
+
+        &:hover
+        {
+            background-color: white;
+            -webkit-box-shadow: 0 0 5px 1px @hoverColor;
+            box-shadow: 0 0 5px 1px @hoverColor;
+        }
+
+        &.selected
+        {
+            -webkit-box-shadow: 0 0 5px 1px @selectColor;
+            box-shadow: 0 0 5px 1px @selectColor;
+        }
     }
 }
 

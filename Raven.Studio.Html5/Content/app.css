@@ -52,9 +52,27 @@ body {
 }
 .databases-container {
   margin-top: 10px;
-}
-.databases-container li {
   padding: 10px;
+}
+.databases-container .database {
+  cursor: default;
+  border-radius: 10px;
+  -webkit-box-shadow: 0 0 5px 1px silver;
+  box-shadow: 0 0 5px 1px silver;
+  margin-right: 10px;
+  min-width: 140px;
+  min-height: 60px;
+  display: inline-block;
+  padding: 8px;
+}
+.databases-container .database:hover {
+  background-color: white;
+  -webkit-box-shadow: 0 0 5px 1px #6aa3d5;
+  box-shadow: 0 0 5px 1px #6aa3d5;
+}
+.databases-container .database.selected {
+  -webkit-box-shadow: 0 0 5px 1px #428bca;
+  box-shadow: 0 0 5px 1px #428bca;
 }
 .document-collections {
   margin-top: 40px;

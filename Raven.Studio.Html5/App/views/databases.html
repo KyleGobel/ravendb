@@ -15,6 +15,23 @@
     </div>
 </div>
 
-<ul class="pager databases-container" data-bind="foreach: databases">
-    <li class="pull-left" data-bind="css: { active: isSelected }"><a href="#documents" data-bind="text: name, click: $root.navigateToDocuments.bind($root)"></a></li>
-</ul>
+<div class="databases-container" data-bind="foreach: databases">
+    <div class="database" data-bind="click: $root.selectDatabase.bind($root), css: { selected: isSelected }">
+        <a data-bind="text: name, attr: { href: '#documents?database=' + name }, click: $root.goToDocuments.bind($root)"></a>
+        <br />
+        <span class="text-muted" data-bind="style: { visibility: statistics() ? 'visible':'hidden' }, text: docCount() + ' documents'"></span>
+    </div>
+</div>
+
+<!--<ul class="pager databases-container" data-bind="foreach: databases">
+    <li class="pull-left" data-bind="css: { active: isSelected }, click: $root.selectDatabase.bind($root)">
+        <a href="#documents" data-bind="text: name, click: $root.navigateToDocuments.bind($root)"></a>
+    </li>
+</ul>-->
+
+<!--<ul class="nav nav-pills databases-container" data-bind="foreach: databases">
+    <li class="database" data-bind="css: { active: isSelected }, click: $root.selectDatabase.bind($root)">
+        <a href="javascript:void(0)" data-bind="text: name"></a>
+    </li>
+</ul>-->
+

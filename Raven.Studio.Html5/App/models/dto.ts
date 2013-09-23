@@ -28,3 +28,22 @@ interface documentMetadataDto {
 	'Raven-Last-Modified': string;
 	'@etag': string;
 }
+
+interface documentStatistics {
+    ApproximateTaskCount: number;
+    CountOfDocuments: number;
+    CountOfIndexes: number;
+    CurrentNumberOfItemsToIndexInSingleBatch: number;
+    CurrentNumberOfItemsToReduceInSingleBatch: number;
+    DatabaseId: string;
+    DatabaseTransactionVersionSizeInMB: number;
+    Errors: Array<any>;
+    Extensions: Array<any>;
+    InMemoryIndexingQueueSize: number;
+    Indexes: Array<any>;
+    LastAttachmentEtag: string;
+    LastDocEtag: string;
+    Prefetches: Array<any>;
+    StaleIndexes: Array<any>;
+    Triggers: Array<any>;
+}

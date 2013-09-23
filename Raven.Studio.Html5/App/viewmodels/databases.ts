@@ -33,6 +33,21 @@ class databases {
             .done((databaseName: string) => this.databases.push(new database(databaseName)));
         app.showDialog(createDatabaseViewModel);
     }
+
+    selectDatabase(db: database) {
+        this.databases().forEach(d => d.isSelected(d == db));
+        db.activate();
+
+        if (!db.statistics()) {
+            this.ravenDb
+                .databaseStats(db.name)
+                .done(result => db.statistics(result));
+        }
+    }
+
+    goToDocuments(db: database) {
+        router.navigate("#documents?database=" + db.name);
+    }
 }
 
 export = databases;

@@ -18,6 +18,10 @@ define(["require", "exports", "models/database", "models/collection", "models/co
             return this.fetch("/databases", { pageSize: 1024 }, null, resultsSelector);
         };
 
+        raven.prototype.databaseStats = function (databaseName) {
+            return this.fetch("/databases/" + databaseName + "/stats", null, null);
+        };
+
         raven.prototype.collections = function () {
             this.requireActiveDatabase();
 
