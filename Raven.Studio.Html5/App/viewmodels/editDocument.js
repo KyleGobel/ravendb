@@ -79,7 +79,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             if (navigationArgs && navigationArgs.list && navigationArgs.item) {
                 var itemIndex = parseInt(navigationArgs.item, 10);
                 if (!isNaN(itemIndex)) {
-                    var collectionName = navigationArgs.list === "All Documents" ? null : navigationArgs.list;
+                    var collectionName = decodeURIComponent(navigationArgs.list) === "All Documents" ? null : navigationArgs.list;
                     var fetcher = function (skip, take) {
                         return _this.ravenDb.documents(collectionName, skip, take);
                     };
@@ -105,15 +105,25 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
 
         editDocument.prototype.attached = function () {
             var _this = this;
-            jwerty.key("alt+s", function (e) {
+            jwerty.key("ctrl+alt+s", function (e) {
                 e.preventDefault();
                 _this.saveDocument();
             }, this, "#editDocumentContainer");
 
-            jwerty.key("alt+r", function (e) {
+            jwerty.key("ctrl+alt+r", function (e) {
                 e.preventDefault();
                 _this.refreshDocument();
             }, this, "#editDocumentContainer");
+
+            jwerty.key("ctrl+alt+d", function (e) {
+                e.preventDefault();
+                _this.isEditingMetadata(false);
+            });
+
+            jwerty.key("ctrl+alt+m", function (e) {
+                e.preventDefault();
+                _this.isEditingMetadata(true);
+            });
         };
 
         editDocument.prototype.deactivate = function () {
@@ -153,18 +163,8 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
 
         editDocument.prototype.attachReservedMetaProperties = function (id, target) {
             target['@etag'] = '00000000-0000-0000-0000-000000000000';
-            target['Raven-Entity-Name'] = this.getEntityNameFromId(id);
+            target['Raven-Entity-Name'] = raven.getEntityNameFromId(id);
             target['@id'] = id;
-        };
-
-        editDocument.prototype.getEntityNameFromId = function (id) {
-            // TODO: is there a better way to do this?
-            var slashIndex = id.indexOf('/');
-            if (slashIndex >= 1) {
-                return id.substring(0, slashIndex);
-            }
-
-            return id;
         };
 
         editDocument.prototype.stringify = function (obj) {
@@ -215,7 +215,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             if (doc) {
                 var viewModel = new deleteDocuments([doc]);
                 viewModel.deletionTask.done(function () {
-                    return _this.nextDocumentOrFirst();
+                    _this.nextDocumentOrFirst();
                 });
                 app.showDialog(viewModel);
             }

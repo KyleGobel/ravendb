@@ -19,15 +19,19 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
             this.selectedCollection = ko.observable().subscribeTo("ActivateCollection").distinctUntilChanged();
             this.collectionColors = [];
             this.currentCollectionPagedItems = ko.observable();
+            this.subscriptions = [];
             this.ravenDb = new raven();
             this.selectedCollection.subscribe(function (c) {
                 return _this.selectedCollectionChanged(c);
             });
-            ko.postbox.subscribe("ActivateDatabase", function (db) {
-                return _this.databaseChanged(db);
-            });
         }
         documents.prototype.activate = function (args) {
+            var _this = this;
+            var dbChangedSubscription = ko.postbox.subscribe("ActivateDatabase", function (db) {
+                return _this.databaseChanged(db);
+            });
+            this.subscriptions.push(dbChangedSubscription);
+
             // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123&database="blahDb"
             this.collectionToSelectName = args ? args.collection : null;
 
@@ -36,6 +40,14 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
             }
 
             return this.fetchCollections();
+        };
+
+        documents.prototype.deactivate = function () {
+            // Unsubscribe when we leave the page.
+            // This is necessary, otherwise our subscriptions will keep the page alive in memory and otherwise screw with us.
+            this.subscriptions.forEach(function (s) {
+                return s.dispose();
+            });
         };
 
         documents.prototype.attached = function (view, parent) {

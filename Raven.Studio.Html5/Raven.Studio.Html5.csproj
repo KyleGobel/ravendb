@@ -136,6 +136,10 @@
       <DependentUpon>createDatabaseCommand.ts</DependentUpon>
     </Content>
     <TypeScriptCompile Include="App\viewmodels\copyDocuments.ts" />
+    <TypeScriptCompile Include="App\common\appUrl.ts" />
+    <Content Include="App\common\nav.js">
+      <DependentUpon>appUrl.ts</DependentUpon>
+    </Content>
     <Content Include="App\viewmodels\copyDocuments.js">
       <DependentUpon>copyDocuments.ts</DependentUpon>
     </Content>
@@ -145,6 +149,7 @@
     <Content Include="App\views\copyDocuments.html" />
     <Content Include="App\views\createDatabase.html" />
     <Content Include="App\views\dialog.html" />
+    <Content Include="favicon.ico" />
     <Content Include="Scripts\jwerty-0.3.js" />
     <TypeScriptCompile Include="Scripts\typings\jwerty\jwerty.d.ts" />
     <Content Include="Scripts\typings\ace\ace.d.ts" />

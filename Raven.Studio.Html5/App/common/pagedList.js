@@ -33,9 +33,11 @@ define(["require", "exports", "common/pagedResultSet"], function(require, export
         };
 
         pagedList.prototype.getNthItem = function (nth) {
+            var _this = this;
             var deferred = $.Deferred();
             this.fetcher(nth, 1).done(function (result) {
-                return deferred.resolve(result.items[0]);
+                _this.totalResults(result.totalResultCount);
+                deferred.resolve(result.items[0]);
             }).fail(function (error) {
                 return deferred.reject(error);
             });

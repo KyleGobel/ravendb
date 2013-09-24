@@ -1,11 +1,14 @@
 /// <reference path="../../../Scripts/extensions.ts" />
 /// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../../../Scripts/typings/durandal/durandal.d.ts" />
-define(["require", "exports", "common/pagedList", "models/document", "models/collection", "common/pagedResultSet", "viewmodels/deleteDocuments", "viewmodels/copyDocuments", "durandal/app"], function(require, exports, __pagedList__, __document__, __collection__, __pagedResultSet__, __deleteDocuments__, __copyDocuments__, __app__) {
+define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl", "models/document", "models/collection", "models/database", "common/pagedResultSet", "viewmodels/deleteDocuments", "viewmodels/copyDocuments", "durandal/app"], function(require, exports, __pagedList__, __raven__, __appUrl__, __document__, __collection__, __database__, __pagedResultSet__, __deleteDocuments__, __copyDocuments__, __app__) {
     
     var pagedList = __pagedList__;
+    var raven = __raven__;
+    var appUrl = __appUrl__;
     var document = __document__;
     var collection = __collection__;
+    var database = __database__;
     var pagedResultSet = __pagedResultSet__;
     var deleteDocuments = __deleteDocuments__;
     var copyDocuments = __copyDocuments__;
@@ -20,9 +23,11 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             this.skip = 0;
             this.take = 100;
             this.totalRowsCount = 0;
+            this.currentDatabase = raven.activeDatabase();
             this.isContextMenuVisible = ko.observable(false);
             this.contextMenuX = ko.observable(0);
             this.contextMenuY = ko.observable(0);
+            this.subscriptions = [];
         }
         ctor.prototype.activate = function (settings) {
             var _this = this;
@@ -55,12 +60,16 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             });
 
             // Subscriptions
-            this.currentItemsCollection.subscribe(function () {
+            var currentCollectionSubscription = this.currentItemsCollection.distinctUntilChanged().subscribe(function () {
                 _this.rows.removeAll();
                 _this.columns.removeAll();
                 _this.fetchNextChunk();
                 _this.selectionStack.length = 0;
             });
+            var currentDatabaseSubscription = ko.postbox.subscribe("ActivateDatabase", function (db) {
+                return _this.currentDatabase = db;
+            });
+            this.subscriptions.pushAll([currentCollectionSubscription, currentDatabaseSubscription]);
 
             if (this.currentItemsCollection()) {
                 this.fetchNextChunk();
@@ -69,6 +78,12 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             // Initialize the context menu (using Bootstrap-ContextMenu library).
             // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
             ($('.datatable tbody')).contextmenu({ 'target': '#documents-grid-context-menu' });
+        };
+
+        ctor.prototype.deactivate = function () {
+            this.subscriptions.forEach(function (s) {
+                return s.dispose();
+            });
         };
 
         ctor.prototype.fetchNextChunk = function () {
@@ -90,9 +105,9 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
 
             this.createCellsForColumns(this.rows(), this.getPropertyNames(results.items));
 
-            var rows = results.items.map(function (row) {
+            var rows = results.items.map(function (row, rowIndex) {
                 var cells = _this.columns().map(function (c) {
-                    return _this.createCell(_this.getTemplateForCell(c, row), c, row, row[c]);
+                    return _this.createCell(_this.getTemplateForCell(c, row), c, row, rowIndex, row[c]);
                 });
 
                 return _this.createRow(row, ko.observableArray(cells));
@@ -136,7 +151,7 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             if (newColumns.length > 0) {
                 var createNewCells = function (row) {
                     return newColumns.map(function (c) {
-                        return _this.createCell("default-cell-template", c, row, "");
+                        return _this.createCell("default-cell-template", c, row, 0, "");
                     });
                 };
                 this.columns.pushAll(newColumns);
@@ -202,6 +217,7 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             if (columnName == "Id") {
                 return "colored-id-cell-template";
             }
+
             if (row[columnName]) {
                 var matches = row[columnName].toString().match(/\w+\/\d+/);
                 var looksLikeId = matches && matches[0] == row[columnName];
@@ -257,7 +273,7 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             };
         };
 
-        ctor.prototype.createCell = function (templateName, columnName, rowData, value) {
+        ctor.prototype.createCell = function (templateName, columnName, rowData, rowIndex, value) {
             if (columnName === "Id" && !value && rowData && !rowData["Id"] && rowData.__metadata) {
                 value = rowData.__metadata.id;
             }
@@ -269,11 +285,24 @@ define(["require", "exports", "common/pagedList", "models/document", "models/col
             var cell = {
                 colorClass: "",
                 templateName: templateName,
-                value: value
+                value: value,
+                href: undefined
             };
 
-            if (columnName === "Id") {
+            var isIdColumn = columnName === "Id";
+            if (isIdColumn) {
                 cell.colorClass = this.memoizedColorClassForEntityName(rowData.__metadata.ravenEntityName);
+            }
+
+            // If we've got an ID cell on our hands, try to figure out the href to use.
+            var isIdTemplate = templateName === "id-cell-template" || templateName === "colored-id-cell-template";
+            if (this.currentDatabase && isIdTemplate) {
+                var matches = value.match(/\w+\/\d+/);
+                if (matches && matches[0] === value) {
+                    var idValue = matches[0];
+                    var collectionName = isIdColumn ? rowData.__metadata.ravenEntityName : raven.getEntityNameFromId(idValue);
+                    cell.href = appUrl.forEditDoc(idValue, collectionName, rowIndex);
+                }
             }
 
             return cell;

@@ -118,4 +118,10 @@ arrayPrototype.last = function (filter) {
 
     return null;
 };
+
+// Array.pushAll
+arrayPrototype.pushAll = function (items) {
+    var self = this;
+    this.push.apply(this, items);
+};
 //# sourceMappingURL=extensions.js.map

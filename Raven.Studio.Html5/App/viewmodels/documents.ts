@@ -20,14 +20,17 @@ class documents {
     collectionColors = [];
     collectionToSelectName: string;
     private currentCollectionPagedItems = ko.observable<pagedList>();
+    subscriptions: Array<KnockoutSubscription> = [];
 
     constructor() {
         this.ravenDb = new raven();
         this.selectedCollection.subscribe(c => this.selectedCollectionChanged(c));
-        ko.postbox.subscribe("ActivateDatabase", db => this.databaseChanged(db));
     }
 
     activate(args) {
+
+        var dbChangedSubscription = ko.postbox.subscribe("ActivateDatabase", db => this.databaseChanged(db));
+        this.subscriptions.push(dbChangedSubscription);
 
         // We can optionally pass in a collection name to view's URL, e.g. #/documents?collection=Foo/123&database="blahDb"
         this.collectionToSelectName = args ? args.collection : null;
@@ -38,6 +41,12 @@ class documents {
         }
 
         return this.fetchCollections();
+    }
+
+    deactivate() {
+        // Unsubscribe when we leave the page.
+        // This is necessary, otherwise our subscriptions will keep the page alive in memory and otherwise screw with us.
+        this.subscriptions.forEach(s => s.dispose());
     }
 
     attached(view: HTMLElement, parent: HTMLElement) {

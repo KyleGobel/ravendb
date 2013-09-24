@@ -117,7 +117,12 @@ class raven {
             "Disabled": false
         };
 
-        return this.put("/admin/databases/" + databaseName, JSON.stringify(databaseDoc), null);
+        var createTask = this.put("/admin/databases/" + databaseName, JSON.stringify(databaseDoc), null);
+
+        // Forces creation of standard indexes? Looks like it.
+        createTask.done(() => this.fetch("/databases/" + databaseName + "/silverlight/ensureStartup", null, null)); 
+
+        return createTask;
     }
 
     public getBaseUrl() {
@@ -130,6 +135,21 @@ class raven {
         }
 
         return this.baseUrl;
+    }
+
+    // TODO: This doesn't really belong here.
+    public static getEntityNameFromId(id: string): string {
+        if (!id) {
+            return null;
+        }
+
+        // TODO: is there a better way to do this?
+        var slashIndex = id.lastIndexOf('/');
+        if (slashIndex >= 1) {
+            return id.substring(0, slashIndex);
+        }
+
+        return id;
     }
 
     private docsById<T>(idOrPartialId: string, start: number, pageSize: number, metadataOnly: boolean, resultsSelector): JQueryPromise<T> {

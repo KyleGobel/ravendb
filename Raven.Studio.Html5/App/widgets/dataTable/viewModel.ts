@@ -4,8 +4,11 @@
 
 import widget = require("plugins/widget");
 import pagedList = require("common/pagedList");
+import raven = require("common/raven");
+import appUrl = require("common/appUrl");
 import document = require("models/document");
 import collection = require("models/collection");
+import database = require("models/database");
 import pagedResultSet = require("common/pagedResultSet"); 
 import deleteDocuments = require("viewmodels/deleteDocuments");
 import copyDocuments = require("viewmodels/copyDocuments");
@@ -37,10 +40,12 @@ class ctor {
     private currentItemsCollection: KnockoutObservable<pagedList>;
     private collections: KnockoutObservableArray<collection>;
     private memoizedColorClassForEntityName: Function;
+    private currentDatabase = raven.activeDatabase(); // We deliberately store this as a plain value, rather than observable, for performance reasons: it is evaluated every time we create an ID cell. See createCell(...)
     isContextMenuVisible = ko.observable(false);
     contextMenuX = ko.observable(0);
     contextMenuY = ko.observable(0);
     settings: any;
+    subscriptions: Array<KnockoutSubscription> = [];
 
     constructor() {
     }
@@ -65,12 +70,14 @@ class ctor {
         this.isLoading = ko.computed(() => this.currentItemsCollection() && this.currentItemsCollection().isFetching());
 
         // Subscriptions
-        this.currentItemsCollection.subscribe(() => {
+        var currentCollectionSubscription = this.currentItemsCollection.distinctUntilChanged().subscribe(() => {
             this.rows.removeAll();
             this.columns.removeAll();
             this.fetchNextChunk();
             this.selectionStack.length = 0;
         });
+        var currentDatabaseSubscription = ko.postbox.subscribe("ActivateDatabase", db => this.currentDatabase = db);
+        this.subscriptions.pushAll([currentCollectionSubscription, currentDatabaseSubscription]);
 
         // Initialization
         if (this.currentItemsCollection()) {
@@ -80,6 +87,10 @@ class ctor {
         // Initialize the context menu (using Bootstrap-ContextMenu library).
         // TypeScript doesn't know about Bootstrap-Context menu, so we cast jQuery as any.
         (<any>$('.datatable tbody')).contextmenu({ 'target': '#documents-grid-context-menu' });
+    }
+
+    deactivate() {
+        this.subscriptions.forEach(s => s.dispose());
     }
     
     fetchNextChunk() {
@@ -98,10 +109,10 @@ class ctor {
         this.createCellsForColumns(this.rows(), this.getPropertyNames(results.items));
 
         var rows: row[] = results.items
-            .map(row => {
+            .map((row, rowIndex) => {
                 var cells = this
                     .columns()
-                    .map(c => this.createCell(this.getTemplateForCell(c, row), c, row, row[c]));
+                    .map(c => this.createCell(this.getTemplateForCell(c, row), c, row, rowIndex, row[c]));
 
                 return this.createRow(row, ko.observableArray(cells));
 			});
@@ -139,7 +150,7 @@ class ctor {
         }
 
         if (newColumns.length > 0) {
-            var createNewCells = row => newColumns.map(c => this.createCell("default-cell-template", c, row, ""));
+            var createNewCells = row => newColumns.map(c => this.createCell("default-cell-template", c, row, 0, ""));
             this.columns.pushAll(newColumns);
 
             rows.forEach(r => r.cells.pushAll(createNewCells(r)));
@@ -196,6 +207,8 @@ class ctor {
         if (columnName == "Id") {
             return "colored-id-cell-template";
         }
+
+        // TODO: better way to do this?
         if (row[columnName]) {
             var matches = row[columnName].toString().match(/\w+\/\d+/);
             var looksLikeId = matches && matches[0] == row[columnName];
@@ -245,7 +258,7 @@ class ctor {
         }
     }
 
-    private createCell(templateName: string, columnName: string, rowData: any, value: any): cell {
+    private createCell(templateName: string, columnName: string, rowData: document, rowIndex: number, value: any): cell {
         
         // If it's the ID column, and we don't have a value, pull the ID
         // from the document metadata.
@@ -257,15 +270,28 @@ class ctor {
         if (value && typeof (value) == "object") {
             value = ko.toJSON(value);
         }
-        
+
         var cell = {
             colorClass: "",
             templateName: templateName,
-            value: value
+            value: value,
+            href: undefined
         }
-        
-        if (columnName === "Id") {
+
+        var isIdColumn = columnName === "Id";
+        if (isIdColumn) {
             cell.colorClass = this.memoizedColorClassForEntityName(rowData.__metadata.ravenEntityName);
+        }
+
+        // If we've got an ID cell on our hands, try to figure out the href to use.
+        var isIdTemplate = templateName === "id-cell-template" || templateName === "colored-id-cell-template";
+        if (this.currentDatabase && isIdTemplate) {
+            var matches = value.match(/\w+\/\d+/);
+            if (matches && matches[0] === value) {
+                var idValue = matches[0];
+                var collectionName = isIdColumn ? rowData.__metadata.ravenEntityName : raven.getEntityNameFromId(idValue); // If this is the Id column, use the entity name from the metadata. Otherwise, pull the entity name from the ID itself.
+                cell.href = appUrl.forEditDoc(idValue, collectionName, rowIndex);
+            }
         }
 
         return cell;

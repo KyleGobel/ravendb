@@ -84,6 +84,7 @@ interface Array<T> {
     removeAll<T>(items: T[]): void;
     first<T>(filter?: (item: T) => boolean): T;
     last<T>(filter?: (item: T) => boolean): T;
+    pushAll<T>(items: T[]): void;
 }
 
 // Array.remove
@@ -140,4 +141,10 @@ arrayPrototype.last = function (filter?: (item) => boolean) {
     }
 
     return null;
+}
+
+// Array.pushAll
+arrayPrototype.pushAll = function (items: Array<any>) {
+    var self: any[] = this;
+    this.push.apply(this, items);
 }

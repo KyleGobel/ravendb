@@ -1,5 +1,5 @@
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType", "common/pagedList"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__, __pagedList__) {
+define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "common/appUrl", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType", "common/pagedList"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __appUrl__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__, __pagedList__) {
     var router = __router__;
     var app = __app__;
     var sys = __sys__;
@@ -7,6 +7,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
     var database = __database__;
     var raven = __raven__;
     var document = __document__;
+    var appUrl = __appUrl__;
     var collection = __collection__;
     var deleteDocuments = __deleteDocuments__;
     var dialogResult = __dialogResult__;
@@ -30,7 +31,10 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
                 return _this.showAlert(alert);
             });
             ko.postbox.subscribe("ActivateDatabaseWithName", function (databaseName) {
-                return _this.activateDatabase(databaseName);
+                return _this.activateDatabaseWithName(databaseName);
+            });
+            ko.postbox.subscribe("ActivateDatabase", function (db) {
+                return _this.databaseChanged(db);
             });
         }
         shell.prototype.databasesLoaded = function (databases) {
@@ -41,10 +45,8 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
         };
 
         shell.prototype.launchDocEditor = function (docId, docsList) {
-            var databaseUrlPart = this.activeDatabase() ? "&database=" + encodeURIComponent(this.activeDatabase().name) : "";
-            var docIdUrlPart = docId ? "&id=" + encodeURIComponent(docId) + databaseUrlPart : "";
-            var pagedListInfo = docsList && docsList.collectionName ? "&list=" + docsList.collectionName + "&item=" + docsList.currentItemIndex() : "";
-            router.navigate("edit?" + docIdUrlPart + databaseUrlPart + pagedListInfo);
+            var editDocUrl = appUrl.forEditDoc(docId, docsList ? docsList.collectionName : null, docsList ? docsList.currentItemIndex() : null);
+            router.navigate(editDocUrl);
         };
 
         shell.prototype.activate = function () {
@@ -65,7 +67,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
         // The view must be attached to the DOM before we can hook up keyboard shortcuts.
         shell.prototype.attached = function () {
             var _this = this;
-            jwerty.key("alt+n", function (e) {
+            jwerty.key("ctrl+alt+n", function (e) {
                 e.preventDefault();
                 _this.newDocument();
             });
@@ -129,7 +131,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             this.launchDocEditor(null);
         };
 
-        shell.prototype.activateDatabase = function (databaseName) {
+        shell.prototype.activateDatabaseWithName = function (databaseName) {
             var _this = this;
             if (this.databasesLoadedTask) {
                 this.databasesLoadedTask.done(function () {
@@ -139,6 +141,14 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
                     if (matchingDatabase && _this.activeDatabase() !== matchingDatabase) {
                         ko.postbox.publish("ActivateDatabase", matchingDatabase);
                     }
+                });
+            }
+        };
+
+        shell.prototype.databaseChanged = function (db) {
+            if (db && !db.statistics()) {
+                this.ravenDb.databaseStats(db.name).done(function (result) {
+                    return db.statistics(result);
                 });
             }
         };

@@ -35,7 +35,10 @@ class pagedList {
     getNthItem(nth: number): JQueryPromise<any> {
         var deferred = $.Deferred();
         this.fetcher(nth, 1)
-            .done((result: pagedResultSet) => deferred.resolve(result.items[0]))
+            .done((result: pagedResultSet) => {
+                this.totalResults(result.totalResultCount);
+                deferred.resolve(result.items[0]);
+            })
             .fail(error => deferred.reject(error));
         return deferred;
     }

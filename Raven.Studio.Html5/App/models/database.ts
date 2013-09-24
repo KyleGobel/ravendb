@@ -1,5 +1,3 @@
-/// <reference path="../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
-
 class database {
     isSystem = false;
     isSelected = ko.observable(false);
@@ -12,7 +10,7 @@ class database {
 
 	activate() {
 		ko.postbox.publish("ActivateDatabase", this);
-	}
+    }
 }
 
 export = database; 

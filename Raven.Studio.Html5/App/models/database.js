@@ -1,4 +1,3 @@
-/// <reference path="../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 define(["require", "exports"], function(require, exports) {
     var database = (function () {
         function database(name) {

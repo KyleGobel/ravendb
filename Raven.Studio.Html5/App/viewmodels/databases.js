@@ -47,21 +47,17 @@ define(["require", "exports", "durandal/app", "plugins/router", "common/raven", 
             app.showDialog(createDatabaseViewModel);
         };
 
-        databases.prototype.selectDatabase = function (db) {
-            this.databases().forEach(function (d) {
-                return d.isSelected(d == db);
-            });
-            db.activate();
-
-            if (!db.statistics()) {
-                this.fetchStats(db);
-            }
-        };
-
         databases.prototype.fetchStats = function (db) {
-            this.ravenDb.databaseStats(db.name).done(function (result) {
+            return this.ravenDb.databaseStats(db.name).done(function (result) {
                 return db.statistics(result);
             });
+        };
+
+        databases.prototype.selectDatabase = function (db) {
+            this.databases().forEach(function (d) {
+                return d.isSelected(d === db);
+            });
+            db.activate();
         };
 
         databases.prototype.goToDocuments = function (db) {

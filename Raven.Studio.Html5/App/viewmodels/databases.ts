@@ -45,19 +45,15 @@ class databases {
         app.showDialog(createDatabaseViewModel);
     }
 
-    selectDatabase(db: database) {
-        this.databases().forEach(d => d.isSelected(d == db));
-        db.activate();
-
-        if (!db.statistics()) {
-            this.fetchStats(db);
-        }
-    }
-
     fetchStats(db: database) {
-        this.ravenDb
+        return this.ravenDb
             .databaseStats(db.name)
             .done(result => db.statistics(result));
+    }
+
+    selectDatabase(db: database) {
+        this.databases().forEach(d => d.isSelected(d === db));
+        db.activate();
     }
 
     goToDocuments(db: database) {

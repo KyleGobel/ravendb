@@ -7,6 +7,7 @@ import sys = require("durandal/system");
 import database = require("models/database");
 import raven = require("common/raven");
 import document = require("models/document");
+import appUrl = require("common/appUrl");
 import collection = require("models/collection");
 import deleteDocuments = require("viewmodels/deleteDocuments");
 import dialogResult = require("common/dialogResult");
@@ -27,7 +28,8 @@ class shell {
 		this.ravenDb = new raven();
 		ko.postbox.subscribe("EditDocument", args => this.launchDocEditor(args.doc.getId(), args.docsList));
         ko.postbox.subscribe("Alert", (alert: alertArgs) => this.showAlert(alert));
-        ko.postbox.subscribe("ActivateDatabaseWithName", (databaseName: string) => this.activateDatabase(databaseName));
+        ko.postbox.subscribe("ActivateDatabaseWithName", (databaseName: string) => this.activateDatabaseWithName(databaseName));
+        ko.postbox.subscribe("ActivateDatabase", (db: database) => this.databaseChanged(db));
 	}
 
 	databasesLoaded(databases) {
@@ -38,17 +40,15 @@ class shell {
 	}
 
     launchDocEditor(docId?: string, docsList?: pagedList) {
-        var databaseUrlPart = this.activeDatabase() ? "&database=" + encodeURIComponent(this.activeDatabase().name) : "";
-        var docIdUrlPart = docId ? "&id=" + encodeURIComponent(docId) + databaseUrlPart : "";
-        var pagedListInfo = docsList && docsList.collectionName ? "&list=" + docsList.collectionName + "&item=" + docsList.currentItemIndex() : "";
-        router.navigate("edit?" + docIdUrlPart + databaseUrlPart + pagedListInfo);
+        var editDocUrl = appUrl.forEditDoc(docId, docsList ? docsList.collectionName : null, docsList ? docsList.currentItemIndex() : null);
+        router.navigate(editDocUrl);
 	}
 
 	activate() {
 
 		router.map([
 			{ route: '', title: 'Databases', moduleId: 'viewmodels/databases', nav: false },
-			{ route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
+            { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
 			{ route: 'indexes', title: 'Indexes', moduleId: 'viewmodels/indexes', nav: true },
 			{ route: 'query', title: 'Query', moduleId: 'viewmodels/query', nav: true },
 			{ route: 'tasks', title: 'Tasks', moduleId: 'viewmodels/tasks', nav: true },
@@ -62,7 +62,7 @@ class shell {
 
 	// The view must be attached to the DOM before we can hook up keyboard shortcuts.
 	attached() {
-		jwerty.key("alt+n", e => {
+		jwerty.key("ctrl+alt+n", e => {
 			e.preventDefault();
 			this.newDocument();
 		});
@@ -117,7 +117,7 @@ class shell {
 		this.launchDocEditor(null);
     }
 
-    activateDatabase(databaseName: string) {
+    activateDatabaseWithName(databaseName: string) {
         if (this.databasesLoadedTask) {
             this.databasesLoadedTask.done(() => {
                 var matchingDatabase = this.databases().first(d => d.name == databaseName);
@@ -125,6 +125,14 @@ class shell {
                     ko.postbox.publish("ActivateDatabase", matchingDatabase);
                 }
             });
+        }
+    }
+
+    databaseChanged(db: database) {
+        if (db && !db.statistics()) {
+            this.ravenDb
+                .databaseStats(db.name)
+                .done(result => db.statistics(result));
         }
     }
 }
