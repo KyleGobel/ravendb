@@ -51,14 +51,13 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
 
         shell.prototype.activate = function () {
             router.map([
-                { route: '', title: 'Databases', moduleId: 'viewmodels/databases', nav: false },
-                { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true },
+                { route: ['', 'databases'], title: 'Databases', moduleId: 'viewmodels/databases', nav: false },
+                { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true, hash: appUrl.forCurrentDatabase().documents },
                 { route: 'indexes', title: 'Indexes', moduleId: 'viewmodels/indexes', nav: true },
                 { route: 'query', title: 'Query', moduleId: 'viewmodels/query', nav: true },
                 { route: 'tasks', title: 'Tasks', moduleId: 'viewmodels/tasks', nav: true },
                 { route: 'settings', title: 'Settings', moduleId: 'viewmodels/settings', nav: true },
-                { route: 'status', title: 'Status', moduleId: 'viewmodels/status', nav: true },
-                { route: 'userInfo', title: 'User Info', moduleId: 'viewmodels/userInfo', nav: false },
+                { route: 'status*details', title: 'Status', moduleId: 'viewmodels/status', nav: true, hash: appUrl.forCurrentDatabase().status },
                 { route: 'edit', title: 'Edit Document', moduleId: 'viewmodels/editDocument', nav: false }
             ]).buildNavigationModel();
 

@@ -1,18 +1,14 @@
-﻿<div class="documents-page">
+﻿<div>
     <div class="row">
-        <div class="col-md-2">
-            <br />
-            <ul class="nav nav-pills nav-stacked affix">
-                <li><a href="#statistics">Statistics</a></li>
-                <li><a href="#logs">Logs</a></li>
-                <li><a href="#alerts">Alerts</a></li>
-                <li><a href="#indexErrors">Index Errors</a></li>
-                <li><a href="#replicationStatistics">Replication Statistics</a></li>
-                <li><a href="#userInfo">User Info</a></li>
-            </ul>
-        </div>
-        <div class="col-md-10">
-            <div data-part="content">Some default content goes here.</div>
-        </div>
+		<div class="col-md-2">
+			<ul class="nav nav-list" data-bind="foreach: router.navigationModel">
+				<li data-bind="css: { active: isActive }">
+					<a data-bind="attr: { href: hash }, text: title"></a>
+				</li>
+			</ul>
+		</div>
+		<div class="col-md-10">
+			<!--ko router: { transition:'entrance', cacheViews:true }--><!--/ko-->
+		</div>
     </div>
 </div>

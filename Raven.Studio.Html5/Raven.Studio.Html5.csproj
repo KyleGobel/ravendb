@@ -137,6 +137,7 @@
     </Content>
     <TypeScriptCompile Include="App\viewmodels\copyDocuments.ts" />
     <TypeScriptCompile Include="App\common\appUrl.ts" />
+    <TypeScriptCompile Include="App\common\computedAppUrls.ts" />
     <Content Include="App\common\nav.js">
       <DependentUpon>appUrl.ts</DependentUpon>
     </Content>
@@ -147,6 +148,7 @@
       <DependentUpon>createDatabase.ts</DependentUpon>
     </Content>
     <TypeScriptCompile Include="App\viewmodels\userInfo.ts" />
+    <TypeScriptCompile Include="App\viewmodels\statistics.ts" />
     <Content Include="App\views\copyDocuments.html" />
     <Content Include="App\views\createDatabase.html" />
     <Content Include="App\views\dialog.html" />
@@ -220,7 +222,7 @@
     <Content Include="App\views\editDocument.html" />
     <Content Include="App\views\indexes.html" />
     <Content Include="App\views\query.html" />
-    <Content Include="App\views\settings.html" />
+    <Content Include="App\views\statistics.html" />
     <Content Include="App\views\status.html" />
     <Content Include="App\views\tasks.html" />
     <TypeScriptCompile Include="App\widgets\dataTable\viewModel.ts" />
@@ -229,7 +231,6 @@
     <Content Include="Scripts\typings\knockout.postbox\knockout-postbox.d.ts" />
     <Content Include="App\views\detail.html" />
     <Content Include="App\views\shell.html" />
-    <Content Include="App\views\welcome.html" />
     <Content Include="Content\app.css">
       <DependentUpon>app.less</DependentUpon>
     </Content>
@@ -333,7 +334,7 @@
         <WebProjectProperties>
           <UseIIS>True</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerPort>20712</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>http://localhost:36402/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>

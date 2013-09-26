@@ -19,6 +19,8 @@ define(["require", "exports", "plugins/router", "models/collection", "models/dat
         }
         userInfo.prototype.activate = function (args) {
             var _this = this;
+            console.log("this is USERINFO!");
+
             if (args && args.database) {
                 ko.postbox.publish("ActivateDatabaseWithName", args.database);
             }
