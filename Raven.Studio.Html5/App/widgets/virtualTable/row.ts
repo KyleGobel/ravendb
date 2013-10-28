@@ -7,6 +7,7 @@ class row {
     cellMap = {};
     collectionClass = ko.observable("");
     editUrl = ko.observable("");
+    isChecked = ko.observable(false);
 
     constructor() {
         this.cellMap['Id'] = ko.observable<any>();
@@ -17,6 +18,7 @@ class row {
             this.cellMap[prop]('');
         }
         this.collectionClass('');
+        this.isChecked(false);
     }
 
     fillCells(rowData: document) {

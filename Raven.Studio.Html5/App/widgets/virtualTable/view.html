@@ -1,16 +1,26 @@
 ﻿<div class="ko-grid"> 
-    <div data-bind="foreach: columns"> 
+    <div data-bind="foreach: columns" class="ko-grid-column-container"> 
+        <!-- ko if: $index() === 0 -->
+        <div class="ko-grid-column-header" data-bind="style: { width: width() + 'px' }">
+            <img src="content/images/unchecked.png" />
+        </div>
+        <!-- /ko -->
+        <!-- ko if: $index() > 0 -->
         <div class="ko-grid-column-header" data-bind="style: { width: width() + 'px' }, text: name, attr: { title: name }"></div> 
+        <!-- /ko -->
     </div> 
     <div class="ko-grid-viewport-container" data-bind="style: { height: viewportHeight() + 'px' }"> 
         <div class="ko-grid-viewport" data-bind="foreach: recycleRows, style: { height: virtualHeight() + 'px' }"> 
-            <div class="ko-grid-row" data-bind="foreach: $parent.columns, visible: isInUse, style: { height: $parent.rowHeight + 'px', top: top() + 'px' }, css: { even: rowIndex() % 2 === 0 }"> 
+            <div class="ko-grid-row" data-bind="foreach: $parent.columns, visible: isInUse, style: { height: $parent.rowHeight + 'px', top: top() + 'px' }, css: { even: rowIndex() % 2 === 0, checked: isChecked }"> 
                 <div class="ko-grid-cell" data-bind="style: { width: width() + 'px' }, attr: { title: $parent.cellMap[name] }">
-                    <!-- ko if: name === 'Id' -->
+                    <!-- ko if: $index() === 0 -->
+                    <img data-bind="click: $parents[1].toggleRowChecked.bind($parents[1], $parent), attr: { src: $parent.isChecked() ? 'content/images/checked.png' : 'content/images/unchecked.png' }" />
+                    <!-- /ko -->
+                    <!-- ko if: $index() === 1 -->
                     <span class="collection-color-strip" data-bind="css: $parent.collectionClass"></span>
                     <a href="#" data-bind="attr: { href: $parent.editUrl }"><span data-bind="text: $parent.cellMap[name]"></span></a>
                     <!-- /ko -->
-                    <!-- ko if: name !== 'Id' -->
+                    <!-- ko if: $index() > 1 -->
                     <span data-bind="text: $parent.cellMap[name]"></span>
                     <!-- /ko -->
                 </div> 

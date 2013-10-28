@@ -17,6 +17,8 @@ import column = require("widgets/virtualTable/column");
 
 class ctor {
 
+    static idColumnWidth = 100;
+
     items: pagedList;
     visibleRowCount = 0;
     recycleRows = ko.observableArray<row>();
@@ -29,11 +31,13 @@ class ctor {
     gridSelector: string;
     collections: KnockoutObservableArray<collection>;
     columns = ko.observableArray<column>([
-        new column("Id", 200)
+        new column("__IsChecked", 32),
+        new column("Id", ctor.idColumnWidth)
     ]);
     gridViewport: JQuery;
     scrollThrottleTimeoutHandle = 0;
     firstVisibleRow: row = null;
+    selectedIndices = ko.observableArray();
 
     constructor() {
     }
@@ -46,7 +50,7 @@ class ctor {
                 r.isInUse(false);
             });
             this.items = list;
-            this.columns.splice(1, this.columns().length - 1); // Remove all but the first column (Id).
+            this.columns.splice(2, this.columns().length - 1); // Remove all but the first 2 column (checked and ID)
             this.onGridScrolled();
         });
         this.items = docsSource();
@@ -152,10 +156,16 @@ class ctor {
             var defaultColumnWidth = 150;
             var columnWidth = defaultColumnWidth;
             if (prop === "Id") {
-                columnWidth = 100;
+                columnWidth = ctor.idColumnWidth;
             }
-            
-            this.columns.push(new column(prop, columnWidth));
+
+            // Give priority to any Name column. Put it after the check column (0) and Id (1) columns.
+            var newColumn = new column(prop, columnWidth);
+            if (prop === "Name") {
+                this.columns.splice(2, 0, newColumn);
+            } else {
+                this.columns.push(newColumn);
+            }
         }
     }
 
@@ -179,6 +189,7 @@ class ctor {
                 rowAtPosition.top(desiredNewRowY);
                 rowAtPosition.rowIndex(rowIndex);
                 rowAtPosition.resetCells();
+                rowAtPosition.isChecked(this.selectedIndices.indexOf(rowIndex) !== -1);
             }
 
             if (!this.firstVisibleRow) {
@@ -219,6 +230,21 @@ class ctor {
         }
 
         return null;
+    }
+
+    toggleRowChecked(row: row) {
+        var rowIndex = row.rowIndex();
+        row.isChecked(!row.isChecked());
+        var isChecked = row.isChecked();
+        if (isChecked) {
+            // It's not checked and it needs to be.
+            if (this.selectedIndices.indexOf(rowIndex) === -1) {
+                this.selectedIndices.unshift(rowIndex);
+            }
+        } else {
+            // It's not unchecked. Remove it from the list.
+            this.selectedIndices.remove(rowIndex);
+        }
     }
 }
 

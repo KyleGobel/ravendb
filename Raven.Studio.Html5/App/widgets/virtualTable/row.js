@@ -9,6 +9,7 @@ define(["require", "exports", "models/document"], function(require, exports, __d
             this.cellMap = {};
             this.collectionClass = ko.observable("");
             this.editUrl = ko.observable("");
+            this.isChecked = ko.observable(false);
             this.cellMap['Id'] = ko.observable();
         }
         row.prototype.resetCells = function () {
@@ -16,6 +17,7 @@ define(["require", "exports", "models/document"], function(require, exports, __d
                 this.cellMap[prop]('');
             }
             this.collectionClass('');
+            this.isChecked(false);
         };
 
         row.prototype.fillCells = function (rowData) {

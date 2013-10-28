@@ -240,7 +240,11 @@ body {
   bottom: 0;
   top: 0;
 }
-.ko-grid .ko-grid-column-header {
+.ko-grid .ko-grid-column-container {
+  white-space: nowrap;
+  overflow: hidden;
+}
+.ko-grid .ko-grid-column-container .ko-grid-column-header {
   display: inline-block;
   font-weight: bold;
   padding: 8px;
@@ -265,6 +269,9 @@ body {
 }
 .ko-grid .ko-grid-row.even {
   background-color: white;
+}
+.ko-grid .ko-grid-row.checked {
+  background-color: #ffc;
 }
 .ko-grid .ko-grid-cell {
   -ms-text-overflow: ellipsis;

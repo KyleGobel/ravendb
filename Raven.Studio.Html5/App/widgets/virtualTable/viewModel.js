@@ -24,10 +24,12 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             this.viewportHeight = ko.observable(0);
             this.virtualRowCount = ko.observable(0);
             this.columns = ko.observableArray([
-                new column("Id", 200)
+                new column("__IsChecked", 32),
+                new column("Id", ctor.idColumnWidth)
             ]);
             this.scrollThrottleTimeoutHandle = 0;
             this.firstVisibleRow = null;
+            this.selectedIndices = ko.observableArray();
         }
         ctor.prototype.activate = function (settings) {
             var _this = this;
@@ -38,7 +40,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
                     r.isInUse(false);
                 });
                 _this.items = list;
-                _this.columns.splice(1, _this.columns().length - 1);
+                _this.columns.splice(2, _this.columns().length - 1);
                 _this.onGridScrolled();
             });
             this.items = docsSource();
@@ -158,10 +160,16 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
                 var defaultColumnWidth = 150;
                 var columnWidth = defaultColumnWidth;
                 if (prop === "Id") {
-                    columnWidth = 100;
+                    columnWidth = ctor.idColumnWidth;
                 }
 
-                this.columns.push(new column(prop, columnWidth));
+                // Give priority to any Name column. Put it after the check column (0) and Id (1) columns.
+                var newColumn = new column(prop, columnWidth);
+                if (prop === "Name") {
+                    this.columns.splice(2, 0, newColumn);
+                } else {
+                    this.columns.push(newColumn);
+                }
             }
         };
 
@@ -185,6 +193,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
                     rowAtPosition.top(desiredNewRowY);
                     rowAtPosition.rowIndex(rowIndex);
                     rowAtPosition.resetCells();
+                    rowAtPosition.isChecked(this.selectedIndices.indexOf(rowIndex) !== -1);
                 }
 
                 if (!this.firstVisibleRow) {
@@ -226,6 +235,21 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
 
             return null;
         };
+
+        ctor.prototype.toggleRowChecked = function (row) {
+            var rowIndex = row.rowIndex();
+            row.isChecked(!row.isChecked());
+            var isChecked = row.isChecked();
+            if (isChecked) {
+                if (this.selectedIndices.indexOf(rowIndex) === -1) {
+                    this.selectedIndices.unshift(rowIndex);
+                }
+            } else {
+                // It's not unchecked. Remove it from the list.
+                this.selectedIndices.remove(rowIndex);
+            }
+        };
+        ctor.idColumnWidth = 100;
         return ctor;
     })();
 
