@@ -110,7 +110,7 @@ define(["require", "exports", "durandal/app", "plugins/router", "models/collecti
                     return _this.ravenDb.documents(collectionName, skip, take);
                 };
 
-                var documentsList = new pagedList(fetcher, 30);
+                var documentsList = new pagedList(fetcher);
                 documentsList.collectionName = selected.name;
                 this.currentCollectionPagedItems(documentsList);
             }

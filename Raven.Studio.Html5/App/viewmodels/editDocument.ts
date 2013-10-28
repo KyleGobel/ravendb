@@ -82,10 +82,10 @@ class editDocument {
             if (!isNaN(itemIndex)) {
                 var collectionName = decodeURIComponent(navigationArgs.list) === "All Documents" ? null : navigationArgs.list;
                 var fetcher = (skip: number, take: number) => this.ravenDb.documents(collectionName, skip, take);
-                var list = new pagedList(fetcher, 1);
+                var list = new pagedList(fetcher);
                 list.collectionName = navigationArgs.list;
                 list.currentItemIndex(itemIndex);
-                list.loadNextChunk();
+                //list.loadNextChunk();
                 this.docsList(list);
             }
         }
@@ -215,7 +215,7 @@ class editDocument {
         var list = this.docsList(); 
         if (list) {
             var nextIndex = list.currentItemIndex() + 1;
-            if (nextIndex >= list.totalResults()) {
+            if (nextIndex >= list.totalResultCount()) {
                 nextIndex = 0;
             }
             this.pageToItem(nextIndex);
@@ -227,7 +227,7 @@ class editDocument {
         if (list) {
             var previousIndex = list.currentItemIndex() - 1;
             if (previousIndex < 0) {
-                previousIndex = list.totalResults() - 1;
+                previousIndex = list.totalResultCount() - 1;
             }
             this.pageToItem(previousIndex);
         }
@@ -236,7 +236,7 @@ class editDocument {
     lastDocument() {
         var list = this.docsList();
         if (list) {
-            this.pageToItem(list.totalResults() - 1);
+            this.pageToItem(list.totalResultCount() - 1);
         }
     }
 

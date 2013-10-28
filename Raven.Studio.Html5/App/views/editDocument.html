@@ -30,7 +30,7 @@
         <div class="btn-group" data-bind="with: docsList">
             <button type="button" class="btn btn-primary" data-bind="click: $root.firstDocument.bind($root)"><i class="icon-step-backward"></i></button>
             <button type="button" class="btn btn-primary" data-bind="click: $root.previousDocumentOrLast.bind($root)"><i class="icon-caret-left"></i></button>
-            <button type="button" class="btn btn-primary" data-bind="text: 'Doc ' + (currentItemIndex() + 1) + ' of ' + totalResults()"></button>
+            <button type="button" class="btn btn-primary" data-bind="text: 'Doc ' + (currentItemIndex() + 1) + ' of ' + totalResultCount()"></button>
             <button type="button" class="btn btn-primary" data-bind="click: $root.nextDocumentOrFirst.bind($root)"><i class="icon-caret-right"></i></button>
             <button type="button" class="btn btn-primary" data-bind="click: $root.lastDocument.bind($root)"><i class="icon-fast-forward"></i></button>
         </div>

@@ -99,7 +99,7 @@ class documents {
                 return this.ravenDb.documents(collectionName, skip, take);
             };
 
-            var documentsList = new pagedList(fetcher, 30);
+            var documentsList = new pagedList(fetcher);
             documentsList.collectionName = selected.name;
 			this.currentCollectionPagedItems(documentsList);
         }

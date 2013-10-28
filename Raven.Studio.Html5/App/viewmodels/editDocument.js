@@ -83,10 +83,11 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
                     var fetcher = function (skip, take) {
                         return _this.ravenDb.documents(collectionName, skip, take);
                     };
-                    var list = new pagedList(fetcher, 1);
+                    var list = new pagedList(fetcher);
                     list.collectionName = navigationArgs.list;
                     list.currentItemIndex(itemIndex);
-                    list.loadNextChunk();
+
+                    //list.loadNextChunk();
                     this.docsList(list);
                 }
             }
@@ -225,7 +226,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             var list = this.docsList();
             if (list) {
                 var nextIndex = list.currentItemIndex() + 1;
-                if (nextIndex >= list.totalResults()) {
+                if (nextIndex >= list.totalResultCount()) {
                     nextIndex = 0;
                 }
                 this.pageToItem(nextIndex);
@@ -237,7 +238,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             if (list) {
                 var previousIndex = list.currentItemIndex() - 1;
                 if (previousIndex < 0) {
-                    previousIndex = list.totalResults() - 1;
+                    previousIndex = list.totalResultCount() - 1;
                 }
                 this.pageToItem(previousIndex);
             }
@@ -246,7 +247,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
         editDocument.prototype.lastDocument = function () {
             var list = this.docsList();
             if (list) {
-                this.pageToItem(list.totalResults() - 1);
+                this.pageToItem(list.totalResultCount() - 1);
             }
         };
 

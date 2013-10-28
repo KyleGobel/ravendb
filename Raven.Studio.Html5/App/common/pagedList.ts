@@ -4,43 +4,86 @@
 
 import pagedResultSet = require("common/pagedResultSet");
 
-class pagedList { 
-	
-	items = ko.observableArray<any>();
-    currentItemIndex = ko.observable(0);
+class pagedList {
+
+    totalResultCount = ko.observable(0);
+    private items = [];
+    isFetching = false;
+    queuedFetch: { skip: number; take: number; task: JQueryDeferred<pagedResultSet> } = null;
     collectionName = "";
-    totalResults = ko.observable(0);
-    isFetching = ko.observable(false);
+    currentItemIndex = ko.observable(0);
 
-    private hasMoreItems = true;
+    constructor(private fetcher: (skip: number, take: number) => JQueryPromise<pagedResultSet>) {
+        if (!fetcher) {
+            throw new Error("Fetcher must be specified.");
+        }
+    }
 
-	constructor(private fetcher: (skip: number, take: number) => JQueryPromise<pagedResultSet>, private take = 30) {
-	}
+    fetch(skip: number, take: number): JQueryPromise<pagedResultSet> {
+        if (this.isFetching) {
+            this.queuedFetch = { skip: skip, take: take, task: $.Deferred() };
+            return this.queuedFetch.task;
+        }
 
-	loadNextChunk(): JQueryPromise<any> {
-		if (!this.isFetching()) {
-			this.isFetching(true);
-			return this.fetcher(this.items().length, this.take)
-				.always(() => this.isFetching(false))
-				.done(resultSet => {
-					this.items.pushAll(resultSet.items);
-                    this.hasMoreItems = this.items().length < resultSet.totalResultCount;
-                    this.totalResults(resultSet.totalResultCount);
-				});
-		}
+        var cachedItemsSlice = this.getCachedSliceOrNull(skip, take);
+        if (cachedItemsSlice) {
+            // We've already fetched these items. Just return them immediately.
+            var deferred = $.Deferred<pagedResultSet>();
+            var results = new pagedResultSet(cachedItemsSlice, this.totalResultCount());
+            deferred.resolve(results);
+            return deferred;
+        }
+        else {
+            // We haven't fetched some of the items. Fetch them now from remote.
+            this.isFetching = true;
+            var remoteFetch = this.fetcher(skip, take)
+                .done((resultSet: pagedResultSet) => {
+                    this.totalResultCount(resultSet.totalResultCount);
+                    resultSet.items.forEach((r, i) => this.items[i + skip] = r);
+                })
+                .always(() => {
+                    this.isFetching = false;
+                    this.runQueuedFetch();
+                });
+            return remoteFetch;
+        }
+    }
 
-		return null;
+    getCachedSliceOrNull(skip: number, take: number): Array<any> {
+        for (var i = skip; i < skip + take; i++) {
+            if (!this.items[i]) {
+                return null;
+            }
+        }
+
+        return this.items.slice(skip, skip + take)
     }
 
     getNthItem(nth: number): JQueryPromise<any> {
         var deferred = $.Deferred();
-        this.fetcher(nth, 1)
-            .done((result: pagedResultSet) => {
-                this.totalResults(result.totalResultCount);
-                deferred.resolve(result.items[0]);
-            })
-            .fail(error => deferred.reject(error));
+        var cachedItemArray = this.getCachedSliceOrNull(nth, 1);
+        if (cachedItemArray) {
+            deferred.resolve(cachedItemArray[0]);
+        } else {
+            this.fetch(nth, 1)
+                .done((result: pagedResultSet) => {
+                    deferred.resolve(result.items[0]);
+                })
+                .fail(error => deferred.reject(error));
+        }
         return deferred;
+    }
+
+    runQueuedFetch() {
+        if (this.queuedFetch) {
+            var queuedSkip = this.queuedFetch.skip;
+            var queuedTake = this.queuedFetch.take;
+            var queuedTask = this.queuedFetch.task;
+            this.queuedFetch = null;
+            var fetchTask = this.fetch(queuedSkip, queuedTake);
+            fetchTask.done(results => queuedTask.resolve(results));
+            fetchTask.fail(error => queuedTask.reject(error));
+        }
     }
 }
 

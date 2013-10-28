@@ -1,0 +1,235 @@
+/// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
+/// <reference path="../../../Scripts/typings/durandal/durandal.d.ts" />
+define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl", "models/document", "models/collection", "models/database", "common/pagedResultSet", "viewmodels/deleteDocuments", "viewmodels/copyDocuments", "widgets/virtualTable/row", "widgets/virtualTable/column"], function(require, exports, __pagedList__, __raven__, __appUrl__, __document__, __collection__, __database__, __pagedResultSet__, __deleteDocuments__, __copyDocuments__, __row__, __column__) {
+    
+    var pagedList = __pagedList__;
+    var raven = __raven__;
+    var appUrl = __appUrl__;
+    var document = __document__;
+    var collection = __collection__;
+    var database = __database__;
+    var pagedResultSet = __pagedResultSet__;
+    var deleteDocuments = __deleteDocuments__;
+    var copyDocuments = __copyDocuments__;
+    
+    var row = __row__;
+    var column = __column__;
+
+    var ctor = (function () {
+        function ctor() {
+            this.visibleRowCount = 0;
+            this.recycleRows = ko.observableArray();
+            this.rowHeight = 38;
+            this.borderHeight = 2;
+            this.viewportHeight = ko.observable(0);
+            this.virtualRowCount = ko.observable(0);
+            this.columns = ko.observableArray([
+                new column("Id", 200)
+            ]);
+            this.scrollThrottleTimeoutHandle = 0;
+            this.firstVisibleRow = null;
+        }
+        ctor.prototype.activate = function (settings) {
+            var _this = this;
+            var docsSource = settings.documentsSource;
+            docsSource.subscribe(function (list) {
+                _this.recycleRows().forEach(function (r) {
+                    r.resetCells();
+                    r.isInUse(false);
+                });
+                _this.items = list;
+                _this.columns.splice(1, _this.columns().length - 1);
+                _this.onGridScrolled();
+            });
+            this.items = docsSource();
+            this.collections = settings.collections;
+            this.viewportHeight(settings.height);
+            this.gridSelector = settings.gridSelector;
+            this.virtualHeight = ko.computed(function () {
+                return _this.rowHeight * _this.virtualRowCount();
+            });
+        };
+
+        ctor.prototype.attached = function () {
+            var _this = this;
+            this.grid = $(this.gridSelector);
+            if (this.grid.length !== 1) {
+                throw new Error("There should be 1 " + this.gridSelector + " on the page, but found " + this.grid.length.toString());
+            }
+
+            this.gridViewport = this.grid.find(".ko-grid-viewport-container");
+            this.gridViewport.scroll(function () {
+                return _this.onGridScrolled();
+            });
+            var desiredRowCount = this.calculateRecycleRowCount();
+            this.recycleRows(this.createRecycleRows(desiredRowCount));
+            this.ensureRowsCoverViewport();
+            this.loadRowData();
+        };
+
+        ctor.prototype.calculateRecycleRowCount = function () {
+            var requiredRowCount = Math.ceil(this.viewportHeight() / this.rowHeight);
+            var rowCountWithPadding = requiredRowCount + 10;
+            return rowCountWithPadding;
+        };
+
+        ctor.prototype.createRecycleRows = function (rowCount) {
+            var rows = [];
+            for (var i = 0; i < rowCount; i++) {
+                var newRow = new row();
+                newRow.rowIndex(i);
+                var desiredTop = i * this.rowHeight;
+                newRow.top(desiredTop);
+                rows.push(newRow);
+            }
+
+            return rows;
+        };
+
+        ctor.prototype.onGridScrolled = function () {
+            var _this = this;
+            this.ensureRowsCoverViewport();
+
+            window.clearTimeout(this.scrollThrottleTimeoutHandle);
+            this.scrollThrottleTimeoutHandle = setTimeout(function () {
+                return _this.loadRowData();
+            });
+        };
+
+        ctor.prototype.loadRowData = function () {
+            var _this = this;
+            // The scrolling has paused for a minute. See if we have all the data needed.
+            var firstVisibleIndex = this.firstVisibleRow.rowIndex();
+            var fetchTask = this.items.fetch(firstVisibleIndex, this.recycleRows().length);
+            fetchTask.done(function (resultSet) {
+                var firstVisibleRowIndexHasChanged = firstVisibleIndex !== _this.firstVisibleRow.rowIndex();
+                if (!firstVisibleRowIndexHasChanged) {
+                    _this.virtualRowCount(resultSet.totalResultCount);
+                    resultSet.items.forEach(function (r, i) {
+                        return _this.fillRow(r, i + firstVisibleIndex);
+                    });
+                    _this.ensureColumnsForRows(resultSet.items);
+                }
+            });
+        };
+
+        ctor.prototype.fillRow = function (rowData, rowIndex) {
+            var rowAtIndex = ko.utils.arrayFirst(this.recycleRows(), function (r) {
+                return r.rowIndex() === rowIndex;
+            });
+            if (rowAtIndex) {
+                rowAtIndex.fillCells(rowData);
+                rowAtIndex.collectionClass(this.getCollectionClassFromDocument(rowData));
+                rowAtIndex.editUrl(appUrl.forEditDoc(rowData.getId(), rowData.__metadata.ravenEntityName, rowIndex));
+            }
+        };
+
+        ctor.prototype.getCollectionClassFromDocument = function (doc) {
+            var collectionName = doc.__metadata.ravenEntityName;
+            var collection = this.collections().first(function (c) {
+                return c.name === collectionName;
+            });
+            if (collection) {
+                return collection.colorClass;
+            }
+
+            return null;
+        };
+
+        ctor.prototype.ensureColumnsForRows = function (rows) {
+            // This is called when items finish loading and are ready for display.
+            // Keep allocations to a minimum.
+            var columnsNeeded = {};
+            for (var i = 0; i < rows.length; i++) {
+                var currentRow = rows[i];
+                var rowProperties = currentRow.getDocumentPropertyNames();
+                for (var j = 0; j < rowProperties.length; j++) {
+                    var property = rowProperties[j];
+                    columnsNeeded[property] = null;
+                }
+            }
+
+            for (var i = 0; i < this.columns().length; i++) {
+                var colName = this.columns()[i].name;
+                delete columnsNeeded[colName];
+            }
+
+            for (var prop in columnsNeeded) {
+                var defaultColumnWidth = 150;
+                var columnWidth = defaultColumnWidth;
+                if (prop === "Id") {
+                    columnWidth = 100;
+                }
+
+                this.columns.push(new column(prop, columnWidth));
+            }
+        };
+
+        ctor.prototype.ensureRowsCoverViewport = function () {
+            // This is hot path, called multiple times when scrolling.
+            // Keep allocations to a minimum.
+            var viewportTop = this.gridViewport.scrollTop();
+            var viewportBottom = viewportTop + this.viewportHeight();
+            var positionCheck = viewportTop;
+
+            this.firstVisibleRow = null;
+            while (positionCheck < viewportBottom) {
+                var rowAtPosition = this.findRowAtY(positionCheck);
+                if (!rowAtPosition) {
+                    // If there's no row at this position, recycle one.
+                    rowAtPosition = this.getOffscreenRow(viewportTop, viewportBottom);
+
+                    // Find out what the new top of the row should be.
+                    var rowIndex = Math.floor(positionCheck / this.rowHeight);
+                    var desiredNewRowY = rowIndex * this.rowHeight;
+                    rowAtPosition.top(desiredNewRowY);
+                    rowAtPosition.rowIndex(rowIndex);
+                    rowAtPosition.resetCells();
+                }
+
+                if (!this.firstVisibleRow) {
+                    this.firstVisibleRow = rowAtPosition;
+                }
+
+                positionCheck = rowAtPosition.top() + this.rowHeight;
+            }
+        };
+
+        ctor.prototype.getOffscreenRow = function (viewportTop, viewportBottom) {
+            // This is hot path, called multiple times when scrolling.
+            // Keep allocations to a minimum.
+            var rows = this.recycleRows();
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var rowTop = row.top();
+                var rowBottom = rowTop + this.rowHeight;
+                if (rowTop > viewportBottom || rowBottom < viewportTop) {
+                    return row;
+                }
+            }
+
+            throw new Error("Bug: couldn't find an offscreen row to recycle. viewportTop = " + viewportTop.toString() + ", viewportBottom = " + viewportBottom.toString() + ", recycle row count = " + rows.length.toString());
+        };
+
+        ctor.prototype.findRowAtY = function (y) {
+            // This is hot path, called multiple times when scrolling.
+            // Keep allocations to a minimum.
+            var rows = this.recycleRows();
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var rowTop = row.top();
+                var rowBottom = rowTop + this.rowHeight;
+                if (rowTop <= y && rowBottom > y) {
+                    return row;
+                }
+            }
+
+            return null;
+        };
+        return ctor;
+    })();
+
+    
+    return ctor;
+});
+//# sourceMappingURL=viewModel.js.map

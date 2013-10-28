@@ -160,45 +160,123 @@ body {
 .documents-progress {
   height: 10px;
 }
+.documents-page {
+  /*.datatable
+    {
+        outline: 0;
+        display: block;
+        width: 100%;
+        overflow: auto;
+
+        thead
+        {
+            th:last-child
+            {
+                width: 99%;
+            }
+        }
+
+        tbody
+        {
+            tr
+            {
+                &.checked
+                {
+                    td
+                    {
+                        background-color: #ffc;
+
+                        .row-check
+                        {
+                            visibility: visible;
+                        }
+                    }
+                }
+
+                td
+                {
+                    white-space: nowrap;
+                    max-width: 200px;
+                    -ms-text-overflow: ellipsis;
+                    -o-text-overflow: ellipsis;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                }
+
+                .row-check
+                {
+                    visibility: hidden;
+                }
+
+                &:hover
+                {
+                    .row-check
+                    {
+                        visibility: visible;
+                    }
+                }
+            }
+        }
+    }
+
+    .datatable-progress
+    {
+        position: fixed;
+        height: 10px;
+        bottom: 50px;
+    }*/
+
+}
 .documents-page .collection-color-strip {
   height: 20px;
   width: 4px;
   display: inline-block;
   vertical-align: middle;
 }
-.documents-page .datatable {
-  outline: 0;
-  display: block;
-  width: 100%;
-  overflow: auto;
+.ko-grid {
+  position: absolute;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  top: 0;
 }
-.documents-page .datatable thead th:last-child {
-  width: 99%;
-}
-.documents-page .datatable tbody tr.checked td {
-  background-color: #ffc;
-}
-.documents-page .datatable tbody tr.checked td .row-check {
-  visibility: visible;
-}
-.documents-page .datatable tbody tr td {
+.ko-grid .ko-grid-column-header {
+  display: inline-block;
+  font-weight: bold;
+  padding: 8px;
+  overflow: hidden;
   white-space: nowrap;
-  max-width: 200px;
   -ms-text-overflow: ellipsis;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
+}
+.ko-grid .ko-grid-viewport-container {
+  position: relative;
+  overflow-y: auto;
+}
+.ko-grid .ko-grid-row {
+  position: absolute;
+  background-color: #f9f9f9;
+  border-top: 1px solid #dddddd;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
   overflow: hidden;
 }
-.documents-page .datatable tbody tr .row-check {
-  visibility: hidden;
+.ko-grid .ko-grid-row.even {
+  background-color: white;
 }
-.documents-page .datatable tbody tr:hover .row-check {
-  visibility: visible;
-}
-.documents-page .datatable-progress {
-  position: fixed;
-  height: 10px;
-  bottom: 50px;
+.ko-grid .ko-grid-cell {
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  padding: 8px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: normal;
 }
 .breadcrumb {
   padding: 0 10px 0 10px;

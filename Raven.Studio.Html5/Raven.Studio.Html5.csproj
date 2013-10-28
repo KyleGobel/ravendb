@@ -153,6 +153,14 @@
     <Content Include="App\views\createDatabase.html" />
     <Content Include="App\views\dialog.html" />
     <Content Include="App\views\userInfo.html" />
+    <TypeScriptCompile Include="App\widgets\virtualTable\row.ts" />
+    <TypeScriptCompile Include="App\widgets\virtualTable\column.ts" />
+    <Content Include="App\widgets\virtualTable\column.js">
+      <DependentUpon>column.ts</DependentUpon>
+    </Content>
+    <Content Include="App\widgets\virtualTable\virtualRow.js">
+      <DependentUpon>row.ts</DependentUpon>
+    </Content>
     <Content Include="favicon.ico" />
     <Content Include="Scripts\jwerty-0.3.js" />
     <TypeScriptCompile Include="Scripts\typings\jwerty\jwerty.d.ts" />
@@ -225,8 +233,8 @@
     <Content Include="App\views\statistics.html" />
     <Content Include="App\views\status.html" />
     <Content Include="App\views\tasks.html" />
-    <TypeScriptCompile Include="App\widgets\dataTable\viewModel.ts" />
-    <Content Include="App\widgets\dataTable\view.html" />
+    <TypeScriptCompile Include="App\widgets\virtualTable\viewModel.ts" />
+    <Content Include="App\widgets\virtualTable\view.html" />
     <TypeScriptCompile Include="Scripts\extensions.ts" />
     <Content Include="Scripts\typings\knockout.postbox\knockout-postbox.d.ts" />
     <Content Include="App\views\detail.html" />

@@ -15,14 +15,25 @@ class document {
         return this.__metadata.id;
     }
 
-    toDto(includeMeta: boolean = false): documentDto {
-        var dto = { '@metadata': undefined };
+    getDocumentPropertyNames(): Array<string> {
+        var propertyNames = [];
         for (var property in this) {
             var isMeta = property === '__metadata' || property === '__moduleId__';
             var isFunction = typeof this[property] === 'function';
             if (!isMeta && !isFunction) {
-                dto[property] = this[property];
+                propertyNames.push(property);
             }
+        }
+
+        return propertyNames;
+    }
+
+    toDto(includeMeta: boolean = false): documentDto {
+        var dto = { '@metadata': undefined };
+        var properties = this.getDocumentPropertyNames();
+        for (var i = 0; i < properties.length; i++) {
+            var property = properties[i];
+            dto[property] = this[property];
         }
 
         if (includeMeta && this.__metadata) {
