@@ -39,4 +39,4 @@ The application code is written in <a href="http://typescriptlang.org">TypeScrip
 ## Debugging
 To debug the TypeScript inside Visual Studio, set a breakpoint as usual and start debugging in Internet Explorer.
 
-To debug TypeScript in the browser, run the app in Google Chrome and debug using the built-in tools (CTRL+J). Thanks to <a href="http://www.aaron-powell.com/posts/2012-10-03-typescript-source-maps.html">source maps</a>, you'll be able to debug TypeScript code inside Google Chrome, just like you would with normal JavaScript. This will work with any browser that supports source maps.
+To debug TypeScript in the browser, run the app in Google Chrome and debug using the built-in tools (CTRL+Shift+J). Thanks to <a href="http://www.aaron-powell.com/posts/2012-10-03-typescript-source-maps.html">source maps</a>, you'll be able to debug TypeScript code inside Google Chrome, just like you would with normal JavaScript. This will work with any browser that supports source maps.
