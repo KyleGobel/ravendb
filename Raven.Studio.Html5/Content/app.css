@@ -299,6 +299,9 @@ body {
 #editDocumentContainer:focus {
   outline: 0;
 }
+#editDocumentContainer #docEditor {
+  height: 500px;
+}
 .keyboard-shortcut {
   margin-left: 20px;
 }

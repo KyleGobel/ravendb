@@ -1,7 +1,9 @@
-define(["require", "exports", "durandal/app", "durandal/system", "plugins/router", "models/document", "models/documentMetadata", "commands/saveDocumentCommand", "common/raven", "viewmodels/deleteDocuments", "common/pagedList"], function(require, exports, __app__, __sys__, __router__, __document__, __documentMetadata__, __saveDocumentCommand__, __raven__, __deleteDocuments__, __pagedList__) {
+/// <reference path="../../Scripts/typings/ace/ace.amd.d.ts" />
+define(["require", "exports", "durandal/app", "durandal/system", "plugins/router", "ace/ace", "models/document", "models/documentMetadata", "commands/saveDocumentCommand", "common/raven", "viewmodels/deleteDocuments", "common/pagedList", "common/appUrl"], function(require, exports, __app__, __sys__, __router__, __ace__, __document__, __documentMetadata__, __saveDocumentCommand__, __raven__, __deleteDocuments__, __pagedList__, __appUrl__) {
     var app = __app__;
     var sys = __sys__;
     var router = __router__;
+    var ace = __ace__;
 
     var document = __document__;
     var documentMetadata = __documentMetadata__;
@@ -9,6 +11,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
     var raven = __raven__;
     var deleteDocuments = __deleteDocuments__;
     var pagedList = __pagedList__;
+    var appUrl = __appUrl__;
 
     var editDocument = (function () {
         function editDocument() {
@@ -25,18 +28,6 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             this.ravenDb = new raven();
             this.metadata = ko.computed(function () {
                 return _this.document() ? _this.document().__metadata : null;
-            });
-            this.documentTextOrMetaText = ko.computed({
-                read: function () {
-                    return _this.isEditingMetadata() ? _this.metadataText() : _this.documentText();
-                },
-                write: function (val) {
-                    if (_this.isEditingMetadata()) {
-                        _this.metadataText(val);
-                    } else {
-                        _this.documentText(val);
-                    }
-                }
             });
 
             this.document.subscribe(function (doc) {
@@ -69,6 +60,17 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             this.editedDocId = ko.computed(function () {
                 return _this.metadata() ? _this.metadata().id : '';
             });
+
+            // When we programmatically change the document text or meta text, push it into the editor.
+            this.metadataText.subscribe(function () {
+                return _this.updateDocEditorText();
+            });
+            this.documentText.subscribe(function () {
+                return _this.updateDocEditorText();
+            });
+            this.isEditingMetadata.subscribe(function () {
+                return _this.updateDocEditorText();
+            });
         }
         editDocument.prototype.activate = function (navigationArgs) {
             var _this = this;
@@ -86,8 +88,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
                     var list = new pagedList(fetcher);
                     list.collectionName = navigationArgs.list;
                     list.currentItemIndex(itemIndex);
-
-                    //list.loadNextChunk();
+                    list.getNthItem(0);
                     this.docsList(list);
                 }
             }
@@ -99,12 +100,30 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             }
         };
 
-        editDocument.prototype.editNewDocument = function () {
-            this.isCreatingNewDocument(true);
-            this.document(document.empty());
+        // Called when the view is attached to the DOM.
+        editDocument.prototype.attached = function () {
+            this.initializeDocEditor();
+            this.setupKeyboardShortcuts();
         };
 
-        editDocument.prototype.attached = function () {
+        editDocument.prototype.deactivate = function () {
+            $("#editDocumentContainer").unbind('keydown.jwerty');
+        };
+
+        editDocument.prototype.initializeDocEditor = function () {
+            var _this = this;
+            // Startup the Ace editor with JSON syntax highlighting.
+            this.docEditor = ace.edit("docEditor");
+            this.docEditor.setTheme("ace/theme/github");
+            this.docEditor.setFontSize("16px");
+            this.docEditor.getSession().setMode("ace/mode/json");
+            $("#docEditor").on('blur', ".ace_text-input", function () {
+                return _this.storeDocEditorTextIntoObservable();
+            });
+            this.updateDocEditorText();
+        };
+
+        editDocument.prototype.setupKeyboardShortcuts = function () {
             var _this = this;
             jwerty.key("ctrl+alt+s", function (e) {
                 e.preventDefault();
@@ -127,8 +146,9 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             });
         };
 
-        editDocument.prototype.deactivate = function () {
-            $("#editDocumentContainer").unbind('keydown.jwerty');
+        editDocument.prototype.editNewDocument = function () {
+            this.isCreatingNewDocument(true);
+            this.document(document.empty());
         };
 
         editDocument.prototype.failedToLoadDoc = function (docId, errorResponse) {
@@ -141,6 +161,7 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             var updatedDto = JSON.parse(this.documentText());
             var meta = JSON.parse(this.metadataText());
             updatedDto['@metadata'] = meta;
+            console.log(this.documentText());
 
             if (this.isCreatingNewDocument()) {
                 this.attachReservedMetaProperties(this.userSpecifiedId(), meta);
@@ -260,7 +281,6 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
             var list = this.docsList();
             if (list) {
                 list.getNthItem(index).done(function (doc) {
-                    console.log("fetched item at index", index, doc);
                     _this.loadDocument(doc.getId());
                     list.currentItemIndex(index);
                     _this.updateUrl(doc.getId());
@@ -279,10 +299,25 @@ define(["require", "exports", "durandal/app", "durandal/system", "plugins/router
         };
 
         editDocument.prototype.updateUrl = function (docId) {
-            var docIdPart = "&id=" + encodeURI(docId);
-            var databasePart = raven.activeDatabase() ? "&database=" + raven.activeDatabase().name : "";
-            var listPart = this.docsList() ? "&list=" + this.docsList().collectionName + "&item=" + this.docsList().currentItemIndex() : "";
-            router.navigate("#editDocument" + docIdPart + databasePart + listPart, false);
+            var collectionName = this.docsList() ? this.docsList().collectionName : null;
+            var currentItemIndex = this.docsList() ? this.docsList().currentItemIndex() : null;
+            var editDocUrl = appUrl.forEditDoc(docId, collectionName, currentItemIndex);
+            router.navigate(editDocUrl, false);
+        };
+
+        editDocument.prototype.updateDocEditorText = function () {
+            if (this.docEditor) {
+                var text = this.isEditingMetadata() ? this.metadataText() : this.documentText();
+                this.docEditor.getSession().setValue(text);
+            }
+        };
+
+        editDocument.prototype.storeDocEditorTextIntoObservable = function () {
+            if (this.docEditor) {
+                var docEditorText = this.docEditor.getSession().getValue();
+                var observableToUpdate = this.isEditingMetadata() ? this.metadataText : this.documentText;
+                observableToUpdate(docEditorText);
+            }
         };
         return editDocument;
     })();

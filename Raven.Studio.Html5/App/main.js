@@ -1,10 +1,10 @@
 ﻿requirejs.config({
     paths: {
-        'text': '../Scripts/text',
-        'durandal': '../Scripts/durandal',
-        'plugins': '../Scripts/durandal/plugins',
-        'transitions': '../Scripts/durandal/transitions'
-        //'ace': "../Scripts/ace" // 'ace': 'lib/ace'
+        text: '../Scripts/text',
+        durandal: '../Scripts/durandal',
+        plugins: '../Scripts/durandal/plugins',
+        transitions: '../Scripts/durandal/transitions',
+        ace: '../Scripts/ace'
     }
 });
 

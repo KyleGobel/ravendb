@@ -50,7 +50,7 @@
                         <li data-bind="click: activateDoc, css: { active: isEditingMetadata() === false }"><a style="cursor: pointer;">Data</a></li>
                         <li data-bind="click: activateMeta, css: { active: isEditingMetadata }"><a style="cursor: pointer;">Metadata</a></li>
                     </ul>
-                    <textarea id="documentTextInput" rows="20" class="form-control" accesskey="c" data-bind="value: documentTextOrMetaText, valueUpdate: 'afterkeyup', attr: { disabled: isBusy }" />
+                    <pre id="docEditor" class="form-control" accesskey="c" data-bind="attr: { disabled: isBusy }"></pre>
                 </div>
             </div>
         </div>

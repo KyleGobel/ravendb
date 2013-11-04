@@ -1,6 +1,9 @@
+/// <reference path="../../Scripts/typings/ace/ace.amd.d.ts" />
+
 import app = require("durandal/app");
 import sys = require("durandal/system");
 import router = require("plugins/router"); 
+import ace = require("ace/ace");
 
 import document = require("models/document");
 import documentMetadata = require("models/documentMetadata");
@@ -8,6 +11,7 @@ import saveDocumentCommand = require("commands/saveDocumentCommand");
 import raven = require("common/raven");
 import deleteDocuments = require("viewmodels/deleteDocuments");
 import pagedList = require("common/pagedList");
+import appUrl = require("common/appUrl");
 
 class editDocument {
 
@@ -16,7 +20,6 @@ class editDocument {
     metadata: KnockoutComputed<documentMetadata>;
     documentText = ko.observable('');
     metadataText = ko.observable('');
-    documentTextOrMetaText: KnockoutComputed<string>;
     isEditingMetadata = ko.observable(false);
     isBusy = ko.observable(false);
     metaPropsToRestoreOnSave = [];
@@ -24,20 +27,11 @@ class editDocument {
     userSpecifiedId = ko.observable('');
     isCreatingNewDocument = ko.observable(false);
     docsList = ko.observable<pagedList>();
+    docEditor: AceAjax.Editor;
 
     constructor() {
         this.ravenDb = new raven();
         this.metadata = ko.computed(() => this.document() ? this.document().__metadata : null);
-        this.documentTextOrMetaText = ko.computed({
-            read: () => this.isEditingMetadata() ? this.metadataText() : this.documentText(),
-            write: (val) => {
-                if (this.isEditingMetadata()) {
-                    this.metadataText(val);
-                } else {
-                    this.documentText(val);
-                }
-            }
-        });
 
         this.document.subscribe(doc => {
             if (doc) {
@@ -67,6 +61,11 @@ class editDocument {
         });
 
         this.editedDocId = ko.computed(() => this.metadata() ? this.metadata().id : '');
+
+        // When we programmatically change the document text or meta text, push it into the editor.
+        this.metadataText.subscribe(() => this.updateDocEditorText());
+        this.documentText.subscribe(() => this.updateDocEditorText());
+        this.isEditingMetadata.subscribe(() => this.updateDocEditorText());
     }
 
     activate(navigationArgs) {
@@ -85,7 +84,7 @@ class editDocument {
                 var list = new pagedList(fetcher);
                 list.collectionName = navigationArgs.list;
                 list.currentItemIndex(itemIndex);
-                //list.loadNextChunk();
+                list.getNthItem(0); // Force us to get the total items count.
                 this.docsList(list);
             }
         }
@@ -97,12 +96,27 @@ class editDocument {
         }
     }
 
-    editNewDocument() {
-        this.isCreatingNewDocument(true);
-        this.document(document.empty());
+    // Called when the view is attached to the DOM.
+    attached() {
+        this.initializeDocEditor();
+        this.setupKeyboardShortcuts();
     }
 
-    attached() {
+    deactivate() {
+        $("#editDocumentContainer").unbind('keydown.jwerty');
+    }
+
+    initializeDocEditor() {
+        // Startup the Ace editor with JSON syntax highlighting.
+        this.docEditor = ace.edit("docEditor");
+        this.docEditor.setTheme("ace/theme/github");
+        this.docEditor.setFontSize("16px");
+        this.docEditor.getSession().setMode("ace/mode/json");
+        $("#docEditor").on('blur', ".ace_text-input", () => this.storeDocEditorTextIntoObservable());
+        this.updateDocEditorText();
+    }
+
+    setupKeyboardShortcuts() {
         jwerty.key("ctrl+alt+s", e => {
             e.preventDefault();
             this.saveDocument();
@@ -124,8 +138,9 @@ class editDocument {
         });
     }
 
-    deactivate() {
-        $("#editDocumentContainer").unbind('keydown.jwerty');
+    editNewDocument() {
+        this.isCreatingNewDocument(true);
+        this.document(document.empty());
     }
 
     failedToLoadDoc(docId, errorResponse) {
@@ -137,6 +152,7 @@ class editDocument {
         var updatedDto = JSON.parse(this.documentText());
         var meta = JSON.parse(this.metadataText());
         updatedDto['@metadata'] = meta;
+        console.log(this.documentText());
 
         // Fix up the metadata: if we're a new doc, attach the expected reserved properties like ID, ETag, and RavenEntityName.
         // AFAICT, Raven requires these reserved meta properties in order for the doc to be seen as a member of a collection.
@@ -250,7 +266,6 @@ class editDocument {
             list
                 .getNthItem(index)
                 .done((doc: document) => {
-                    console.log("fetched item at index", index, doc);
                     this.loadDocument(doc.getId());
                     list.currentItemIndex(index);
                     this.updateUrl(doc.getId());
@@ -269,10 +284,25 @@ class editDocument {
     }
 
     updateUrl(docId: string) {
-        var docIdPart = "&id=" + encodeURI(docId);
-        var databasePart = raven.activeDatabase() ? "&database=" + raven.activeDatabase().name : "";
-        var listPart = this.docsList() ? "&list=" + this.docsList().collectionName + "&item=" + this.docsList().currentItemIndex() : "";
-        router.navigate("#editDocument" + docIdPart + databasePart + listPart, false);
+        var collectionName = this.docsList() ? this.docsList().collectionName : null;
+        var currentItemIndex = this.docsList() ? this.docsList().currentItemIndex() : null;
+        var editDocUrl = appUrl.forEditDoc(docId, collectionName, currentItemIndex);
+        router.navigate(editDocUrl, false);
+    }
+
+    updateDocEditorText() {
+        if (this.docEditor) {
+            var text = this.isEditingMetadata() ? this.metadataText() : this.documentText();
+            this.docEditor.getSession().setValue(text);
+        }
+    }
+
+    storeDocEditorTextIntoObservable() {
+        if (this.docEditor) {
+            var docEditorText = this.docEditor.getSession().getValue();
+            var observableToUpdate = this.isEditingMetadata() ? this.metadataText : this.documentText;
+            observableToUpdate(docEditorText);
+        }
     }
 }
 

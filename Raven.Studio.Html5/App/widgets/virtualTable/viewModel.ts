@@ -17,7 +17,7 @@ import column = require("widgets/virtualTable/column");
 
 class ctor {
 
-    static idColumnWidth = 100;
+    static idColumnWidth = 200;
 
     items: pagedList;
     visibleRowCount = 0;
@@ -153,7 +153,7 @@ class ctor {
         }
 
         for (var prop in columnsNeeded) {
-            var defaultColumnWidth = 150;
+            var defaultColumnWidth = 200;
             var columnWidth = defaultColumnWidth;
             if (prop === "Id") {
                 columnWidth = ctor.idColumnWidth;

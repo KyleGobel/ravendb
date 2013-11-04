@@ -1,6 +1,7 @@
-define(["require", "exports", "models/database", "common/raven"], function(require, exports, __database__, __raven__) {
+define(["require", "exports", "models/database", "common/raven", "common/pagedList"], function(require, exports, __database__, __raven__, __pagedList__) {
     var database = __database__;
     var raven = __raven__;
+    var pagedList = __pagedList__;
 
     // Helper class with static methods for generating app URLs.
     var appUrl = (function () {

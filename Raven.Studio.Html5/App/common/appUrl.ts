@@ -1,5 +1,6 @@
 import database = require("models/database");
 import raven = require("common/raven");
+import pagedList = require("common/pagedList");
 
 // Helper class with static methods for generating app URLs.
 class appUrl {
@@ -17,12 +18,12 @@ class appUrl {
 	* @param docIndexInCollection The 0-based index of the doc to edit inside the paged collection, or null if paging will be disabled.
 	* @param database The database to use in the URL. If null, the current database will be used.
 	*/
-    static forEditDoc(id?: string, collectionName?: string, docIndexInCollection?: number, db: database = raven.activeDatabase()): string {
+    static forEditDoc(id: string, collectionName?: string, docIndexInCollection?: number, db: database = raven.activeDatabase()): string {
 		var databaseUrlPart = appUrl.getEncodedDbPart(db);
 		var docIdUrlPart = id ? "&id=" + encodeURIComponent(id) : "";
 		var pagedListInfo = collectionName && docIndexInCollection != null ? "&list=" + encodeURIComponent(collectionName) + "&item=" + docIndexInCollection : "";
 		return "#edit?" + docIdUrlPart + databaseUrlPart + pagedListInfo;
-	} 
+    }
 
 	/**
 	* Gets the URL for status page.

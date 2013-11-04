@@ -157,7 +157,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             }
 
             for (var prop in columnsNeeded) {
-                var defaultColumnWidth = 150;
+                var defaultColumnWidth = 200;
                 var columnWidth = defaultColumnWidth;
                 if (prop === "Id") {
                     columnWidth = ctor.idColumnWidth;
@@ -249,7 +249,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
                 this.selectedIndices.remove(rowIndex);
             }
         };
-        ctor.idColumnWidth = 100;
+        ctor.idColumnWidth = 200;
         return ctor;
     })();
 
