@@ -163,6 +163,7 @@
     <Content Include="App\widgets\virtualTable\virtualRow.js">
       <DependentUpon>row.ts</DependentUpon>
     </Content>
+    <Content Include="Content\nprogress.css" />
     <Content Include="favicon.ico" />
     <Content Include="Scripts\ace\ace.js" />
     <Content Include="Scripts\ace\anchor.js" />
@@ -761,6 +762,7 @@
     <Content Include="Scripts\jwerty-0.3.js" />
     <TypeScriptCompile Include="Scripts\typings\ace\ace.amd.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jwerty\jwerty.d.ts" />
+    <Content Include="Scripts\nprogress.js" />
     <Content Include="Scripts\typings\ace\ace.d.ts" />
     <Content Include="Scripts\typings\jwerty\jwerty.d.js">
       <DependentUpon>jwerty.d.ts</DependentUpon>
@@ -1108,6 +1110,7 @@
     <Content Include="Scripts\typings\knockout\knockout.d.ts" />
     <Content Include="weyland-config.js" />
     <Content Include="Scripts\jquery-2.0.3.min.map" />
+    <TypeScriptCompile Include="Scripts\typings\nprogress\nprogress.d.ts" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

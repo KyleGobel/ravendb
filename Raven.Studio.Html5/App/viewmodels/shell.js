@@ -1,5 +1,6 @@
+/// <reference path="../../Scripts/typings/nprogress/nprogress.d.ts" />
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "common/appUrl", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType", "common/pagedList"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __appUrl__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__, __pagedList__) {
+define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "common/appUrl", "models/collection", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __appUrl__, __collection__, __alertType__) {
     var router = __router__;
     var app = __app__;
     var sys = __sys__;
@@ -9,11 +10,11 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
     var document = __document__;
     var appUrl = __appUrl__;
     var collection = __collection__;
-    var deleteDocuments = __deleteDocuments__;
-    var dialogResult = __dialogResult__;
-    var alertArgs = __alertArgs__;
+    
+    
+    
     var alertType = __alertType__;
-    var pagedList = __pagedList__;
+    
 
     var shell = (function () {
         function shell() {
@@ -36,6 +37,7 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
             ko.postbox.subscribe("ActivateDatabase", function (db) {
                 return _this.databaseChanged(db);
             });
+            NProgress.set(.5);
         }
         shell.prototype.databasesLoaded = function (databases) {
             var systemDatabase = new database("<system>");
@@ -50,6 +52,8 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
         };
 
         shell.prototype.activate = function () {
+            NProgress.set(.8);
+
             router.map([
                 { route: ['', 'databases'], title: 'Databases', moduleId: 'viewmodels/databases', nav: false },
                 { route: 'documents', title: 'Documents', moduleId: 'viewmodels/documents', nav: true, hash: appUrl.forCurrentDatabase().documents },
@@ -61,12 +65,20 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
                 { route: 'edit', title: 'Edit Document', moduleId: 'viewmodels/editDocument', nav: false }
             ]).buildNavigationModel();
 
+            router.isNavigating.subscribe(function (isNavigating) {
+                if (isNavigating)
+                    NProgress.start();
+else
+                    NProgress.done();
+            });
+
             this.connectToRavenServer();
         };
 
         // The view must be attached to the DOM before we can hook up keyboard shortcuts.
         shell.prototype.attached = function () {
             var _this = this;
+            NProgress.remove();
             jwerty.key("ctrl+alt+n", function (e) {
                 e.preventDefault();
                 _this.newDocument();

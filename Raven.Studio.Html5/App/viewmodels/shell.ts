@@ -1,3 +1,4 @@
+/// <reference path="../../Scripts/typings/nprogress/nprogress.d.ts" />
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
 
 import router = require("plugins/router");
@@ -30,6 +31,7 @@ class shell {
         ko.postbox.subscribe("Alert", (alert: alertArgs) => this.showAlert(alert));
         ko.postbox.subscribe("ActivateDatabaseWithName", (databaseName: string) => this.activateDatabaseWithName(databaseName));
         ko.postbox.subscribe("ActivateDatabase", (db: database) => this.databaseChanged(db));
+        NProgress.set(.5);
 	}
 
 	databasesLoaded(databases) {
@@ -44,7 +46,9 @@ class shell {
         router.navigate(editDocUrl);
 	}
 
-	activate() {
+    activate() {
+
+        NProgress.set(.8);
 
 		router.map([
 			{ route: ['', 'databases'],	title: 'Databases',		moduleId: 'viewmodels/databases',		nav: false },
@@ -55,13 +59,19 @@ class shell {
 			{ route: 'settings',		title: 'Settings',		moduleId: 'viewmodels/settings',		nav: true },
             { route: 'status*details',	title: 'Status',		moduleId: 'viewmodels/status',			nav: true,	hash: appUrl.forCurrentDatabase().status },
 			{ route: 'edit',			title: 'Edit Document', moduleId: 'viewmodels/editDocument',	nav: false }
-		]).buildNavigationModel();
+        ]).buildNavigationModel();
+
+        router.isNavigating.subscribe(isNavigating => {
+            if (isNavigating) NProgress.start();
+            else NProgress.done();
+        });
 
 		this.connectToRavenServer();
 	}
 
 	// The view must be attached to the DOM before we can hook up keyboard shortcuts.
-	attached() {
+    attached() {
+        NProgress.remove();
 		jwerty.key("ctrl+alt+n", e => {
 			e.preventDefault();
 			this.newDocument();
