@@ -72,6 +72,7 @@ class ctor {
         this.recycleRows(this.createRecycleRows(desiredRowCount));
         this.ensureRowsCoverViewport();
         this.loadRowData();
+        this.setupContextMenu();
     }
 
     calculateRecycleRowCount() {
@@ -98,6 +99,20 @@ class ctor {
 
         window.clearTimeout(this.scrollThrottleTimeoutHandle);
         this.scrollThrottleTimeoutHandle = setTimeout(() => this.loadRowData());
+    }
+
+    setupContextMenu() {
+        var untypedGrid: any = this.grid;
+        untypedGrid.contextmenu({
+            target: '#gridContextMenu',
+            before: (e: MouseEvent) => {
+                var parentRow = $(e.target).parent(".ko-grid-row");
+                var rightClickedElement: row = parentRow.length ? ko.dataFor(parentRow[0]) : null;
+                if (rightClickedElement && rightClickedElement.isChecked != null && !rightClickedElement.isChecked()) {
+                    this.toggleRowChecked(rightClickedElement);
+                }
+            }
+        });
     }
 
     loadRowData() {
@@ -245,6 +260,27 @@ class ctor {
             // It's not unchecked. Remove it from the list.
             this.selectedIndices.remove(rowIndex);
         }
+    }
+
+    copySelectedDocs() {
+        var selectedDocs = this.getSelectedDocs();
+        var copyDocumentsVm = new copyDocuments(selectedDocs);
+        app.showDialog(copyDocumentsVm);
+    }
+
+    getSelectedDocs(max?: number): Array<document> {
+        if (!this.items || this.selectedIndices().length === 0) {
+            return [];
+        }
+
+        var maxSelectedIndices: Array<number> = max ? this.selectedIndices.slice(0, max) : this.selectedIndices();
+        return this.items.getCachedItemsAt(maxSelectedIndices);
+    }
+
+    copySelectedDocIds() {
+    }
+
+    deleteSelectedDocs() {
     }
 }
 

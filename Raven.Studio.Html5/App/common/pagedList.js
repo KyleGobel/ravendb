@@ -72,6 +72,15 @@ define(["require", "exports", "common/pagedResultSet"], function(require, export
             return deferred;
         };
 
+        pagedList.prototype.getCachedItemsAt = function (indices) {
+            var _this = this;
+            return indices.filter(function (index) {
+                return _this.items[index];
+            }).map(function (validIndex) {
+                return _this.items[validIndex];
+            });
+        };
+
         pagedList.prototype.runQueuedFetch = function () {
             if (this.queuedFetch) {
                 var queuedSkip = this.queuedFetch.skip;

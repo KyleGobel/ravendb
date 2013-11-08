@@ -1,6 +1,6 @@
 /// <reference path="../../Scripts/typings/nprogress/nprogress.d.ts" />
 /// <reference path="../../Scripts/typings/bootstrap/bootstrap.d.ts" />
-define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "common/appUrl", "models/collection", "common/alertType"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __appUrl__, __collection__, __alertType__) {
+define(["require", "exports", "plugins/router", "durandal/app", "durandal/system", "models/database", "common/raven", "models/document", "common/appUrl", "models/collection", "viewmodels/deleteDocuments", "common/dialogResult", "common/alertArgs", "common/alertType", "common/pagedList"], function(require, exports, __router__, __app__, __sys__, __database__, __raven__, __document__, __appUrl__, __collection__, __deleteDocuments__, __dialogResult__, __alertArgs__, __alertType__, __pagedList__) {
     var router = __router__;
     var app = __app__;
     var sys = __sys__;
@@ -10,11 +10,11 @@ define(["require", "exports", "plugins/router", "durandal/app", "durandal/system
     var document = __document__;
     var appUrl = __appUrl__;
     var collection = __collection__;
-    
-    
-    
+    var deleteDocuments = __deleteDocuments__;
+    var dialogResult = __dialogResult__;
+    var alertArgs = __alertArgs__;
     var alertType = __alertType__;
-    
+    var pagedList = __pagedList__;
 
     var shell = (function () {
         function shell() {

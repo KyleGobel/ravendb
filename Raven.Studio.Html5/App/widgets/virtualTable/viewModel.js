@@ -1,6 +1,6 @@
 /// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../../../Scripts/typings/durandal/durandal.d.ts" />
-define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl", "models/document", "models/collection", "models/database", "common/pagedResultSet", "viewmodels/deleteDocuments", "viewmodels/copyDocuments", "widgets/virtualTable/row", "widgets/virtualTable/column"], function(require, exports, __pagedList__, __raven__, __appUrl__, __document__, __collection__, __database__, __pagedResultSet__, __deleteDocuments__, __copyDocuments__, __row__, __column__) {
+define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl", "models/document", "models/collection", "models/database", "common/pagedResultSet", "viewmodels/deleteDocuments", "viewmodels/copyDocuments", "durandal/app", "widgets/virtualTable/row", "widgets/virtualTable/column"], function(require, exports, __pagedList__, __raven__, __appUrl__, __document__, __collection__, __database__, __pagedResultSet__, __deleteDocuments__, __copyDocuments__, __app__, __row__, __column__) {
     
     var pagedList = __pagedList__;
     var raven = __raven__;
@@ -11,7 +11,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
     var pagedResultSet = __pagedResultSet__;
     var deleteDocuments = __deleteDocuments__;
     var copyDocuments = __copyDocuments__;
-    
+    var app = __app__;
     var row = __row__;
     var column = __column__;
 
@@ -67,6 +67,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             this.recycleRows(this.createRecycleRows(desiredRowCount));
             this.ensureRowsCoverViewport();
             this.loadRowData();
+            this.setupContextMenu();
         };
 
         ctor.prototype.calculateRecycleRowCount = function () {
@@ -95,6 +96,21 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             window.clearTimeout(this.scrollThrottleTimeoutHandle);
             this.scrollThrottleTimeoutHandle = setTimeout(function () {
                 return _this.loadRowData();
+            });
+        };
+
+        ctor.prototype.setupContextMenu = function () {
+            var _this = this;
+            var untypedGrid = this.grid;
+            untypedGrid.contextmenu({
+                target: '#gridContextMenu',
+                before: function (e) {
+                    var parentRow = $(e.target).parent(".ko-grid-row");
+                    var rightClickedElement = parentRow.length ? ko.dataFor(parentRow[0]) : null;
+                    if (rightClickedElement && rightClickedElement.isChecked != null && !rightClickedElement.isChecked()) {
+                        _this.toggleRowChecked(rightClickedElement);
+                    }
+                }
             });
         };
 
@@ -248,6 +264,27 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
                 // It's not unchecked. Remove it from the list.
                 this.selectedIndices.remove(rowIndex);
             }
+        };
+
+        ctor.prototype.copySelectedDocs = function () {
+            var selectedDocs = this.getSelectedDocs();
+            var copyDocumentsVm = new copyDocuments(selectedDocs);
+            app.showDialog(copyDocumentsVm);
+        };
+
+        ctor.prototype.getSelectedDocs = function (max) {
+            if (!this.items || this.selectedIndices().length === 0) {
+                return [];
+            }
+
+            var maxSelectedIndices = max ? this.selectedIndices.slice(0, max) : this.selectedIndices();
+            return this.items.getCachedItemsAt(maxSelectedIndices);
+        };
+
+        ctor.prototype.copySelectedDocIds = function () {
+        };
+
+        ctor.prototype.deleteSelectedDocs = function () {
         };
         ctor.idColumnWidth = 200;
         return ctor;
