@@ -262,10 +262,15 @@ class ctor {
         }
     }
 
-    copySelectedDocs() {
+    copySelectedDocs(idsOnly = false) {
         var selectedDocs = this.getSelectedDocs();
         var copyDocumentsVm = new copyDocuments(selectedDocs);
+        copyDocumentsVm.isCopyingDocs(!idsOnly);
         app.showDialog(copyDocumentsVm);
+    }
+
+    copySelectedDocIds() {
+        this.copySelectedDocIds(true);
     }
 
     getSelectedDocs(max?: number): Array<document> {
@@ -275,9 +280,6 @@ class ctor {
 
         var maxSelectedIndices: Array<number> = max ? this.selectedIndices.slice(0, max) : this.selectedIndices();
         return this.items.getCachedItemsAt(maxSelectedIndices);
-    }
-
-    copySelectedDocIds() {
     }
 
     deleteSelectedDocs() {
