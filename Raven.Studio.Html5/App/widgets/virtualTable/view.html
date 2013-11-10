@@ -14,7 +14,7 @@
             <div class="ko-grid-row" data-bind="foreach: $parent.columns, visible: isInUse, style: { height: $parent.rowHeight + 'px', top: top() + 'px' }, css: { even: rowIndex() % 2 === 0, checked: isChecked }">
                 <div class="ko-grid-cell" data-bind="style: { width: width() + 'px' }, attr: { title: $parent.cellMap[name] }">
                     <!-- ko if: $index() === 0 -->
-                    <img data-bind="click: $parents[1].toggleRowChecked.bind($parents[1], $parent), attr: { src: $parent.isChecked() ? 'content/images/checked.png' : 'content/images/unchecked.png' }" />
+                    <img data-bind="click: function(sender, e) { $parents[1].toggleRowChecked($parent, event.shiftKey) }, attr: { src: $parent.isChecked() ? 'content/images/checked.png' : 'content/images/unchecked.png' }" />
                     <!-- /ko -->
                     <!-- ko if: $index() === 1 -->
                     <span class="collection-color-strip" data-bind="css: $parent.collectionClass"></span>
@@ -31,8 +31,8 @@
 
 <div id="gridContextMenu">
     <ul class="dropdown-menu" role="menu">
-        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: copySelectedDocs, text: selectedIndices().length === 0 ? 'Copy Document' : 'Copy Documents'"></a></li>
-        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: copySelectedDocIds, text: selectedIndices().length === 0 ? 'Copy ID' : 'Copy IDs'"></a></li>
+        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: copySelectedDocs, text: selectedIndices().length === 1 ? 'Copy Document' : 'Copy Documents'"></a></li>
+        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: copySelectedDocIds, text: selectedIndices().length === 1 ? 'Copy ID' : 'Copy IDs'"></a></li>
         <li class="divider"></li>
         <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: deleteSelectedDocs">Delete</a></li>
     </ul>

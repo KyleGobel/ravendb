@@ -105,11 +105,14 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             untypedGrid.contextmenu({
                 target: '#gridContextMenu',
                 before: function (e) {
+                    // Select any right-clicked row.
                     var parentRow = $(e.target).parent(".ko-grid-row");
                     var rightClickedElement = parentRow.length ? ko.dataFor(parentRow[0]) : null;
                     if (rightClickedElement && rightClickedElement.isChecked != null && !rightClickedElement.isChecked()) {
-                        _this.toggleRowChecked(rightClickedElement);
+                        _this.toggleRowChecked(rightClickedElement, e.shiftKey);
                     }
+
+                    return true;
                 }
             });
         };
@@ -252,23 +255,67 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             return null;
         };
 
-        ctor.prototype.toggleRowChecked = function (row) {
+        ctor.prototype.toggleRowChecked = function (row, isShiftSelect) {
+            if (typeof isShiftSelect === "undefined") { isShiftSelect = false; }
+            var _this = this;
             var rowIndex = row.rowIndex();
-            row.isChecked(!row.isChecked());
             var isChecked = row.isChecked();
-            if (isChecked) {
+            if (!isChecked) {
                 if (this.selectedIndices.indexOf(rowIndex) === -1) {
-                    this.selectedIndices.unshift(rowIndex);
+                    if (isShiftSelect && this.selectedIndices().length > 0) {
+                        var lastSelectedIndex = this.selectedIndices.first();
+                        var rowIndices = this.getRowIndicesRange(lastSelectedIndex, rowIndex);
+                        rowIndices.filter(function (i) {
+                            return !_this.selectedIndices.contains(i);
+                        }).reverse().forEach(function (i) {
+                            return _this.selectedIndices.unshift(i);
+                        });
+                    } else {
+                        this.selectedIndices.unshift(rowIndex);
+                    }
                 }
             } else {
-                // It's not unchecked. Remove it from the list.
-                this.selectedIndices.remove(rowIndex);
+                if (isShiftSelect && this.selectedIndices().length > 0) {
+                    var lastSelectedIndex = this.selectedIndices.first();
+                    var rowIndices = this.getRowIndicesRange(lastSelectedIndex, rowIndex);
+                    this.selectedIndices.removeAll(rowIndices);
+                } else {
+                    this.selectedIndices.remove(rowIndex);
+                }
             }
+
+            // Update the physical checked state of the rows.
+            this.recycleRows().forEach(function (r) {
+                return r.isChecked(_this.selectedIndices().indexOf(r.rowIndex()) !== -1);
+            });
+        };
+
+        ctor.prototype.getRowIndicesRange = function (firstRowIndex, secondRowIndex) {
+            var isCountingDown = firstRowIndex > secondRowIndex;
+            var indices = [];
+            if (isCountingDown) {
+                for (var i = firstRowIndex; i >= secondRowIndex; i--)
+                    indices.unshift(i);
+            } else {
+                for (var i = firstRowIndex; i <= secondRowIndex; i++)
+                    indices.unshift(i);
+            }
+
+            return indices;
         };
 
         ctor.prototype.copySelectedDocs = function () {
+            this.showCopyDocDialog(false);
+        };
+
+        ctor.prototype.copySelectedDocIds = function () {
+            this.showCopyDocDialog(true);
+        };
+
+        ctor.prototype.showCopyDocDialog = function (idsOnly) {
             var selectedDocs = this.getSelectedDocs();
             var copyDocumentsVm = new copyDocuments(selectedDocs);
+            copyDocumentsVm.isCopyingDocs(idsOnly === false);
             app.showDialog(copyDocumentsVm);
         };
 
@@ -281,10 +328,10 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             return this.items.getCachedItemsAt(maxSelectedIndices);
         };
 
-        ctor.prototype.copySelectedDocIds = function () {
-        };
-
         ctor.prototype.deleteSelectedDocs = function () {
+            var documents = this.getSelectedDocs();
+            var deleteDocsVm = new deleteDocuments(documents);
+            app.showDialog(deleteDocsVm);
         };
         ctor.idColumnWidth = 200;
         return ctor;

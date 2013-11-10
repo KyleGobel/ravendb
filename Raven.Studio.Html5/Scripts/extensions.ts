@@ -9,6 +9,9 @@ interface KnockoutObservable<T> {
 
 interface KnockoutObservableArray<T> {
     pushAll(items: T[]): number;
+    contains(item: T): boolean;
+    first(filter?: (item) => boolean): T;
+    last(filter?: (item) => boolean): T;
 }
 
 interface Function {
@@ -16,7 +19,7 @@ interface Function {
 }
 
 var subscribableFn: any = ko.subscribable.fn;
-var observabelArrayFn: any = ko.observableArray.fn;
+var observableArrayFn: any = ko.observableArray.fn;
 
 // observable.where
 subscribableFn.where = function (predicate: (item) => boolean) {
@@ -58,9 +61,24 @@ subscribableFn.select = function (selector: (any) => any) {
     return selectedResults;
 }
 
-// observable.pushAll
-observabelArrayFn.pushAll = function (items: Array<any>) {
+// observableArray.pushAll
+observableArrayFn.pushAll = function (items: Array<any>) {
     this.push.apply(this, items);
+}
+
+// observableArray.contains
+observableArrayFn.contains = function (item: any) {
+    return this.indexOf(item) !== -1;
+}
+
+// observableArray.first
+observableArrayFn.first = function (filter?: (item) => boolean) {
+    return this().first(filter);
+}
+
+// observableArray.last
+observableArrayFn.last = function (filter?: (item) => boolean) {
+    return this().last(filter);
 }
 
 // Function.memoize
@@ -85,6 +103,8 @@ interface Array<T> {
     first<T>(filter?: (item: T) => boolean): T;
     last<T>(filter?: (item: T) => boolean): T;
     pushAll<T>(items: T[]): void;
+    contains<T>(item: T): boolean;
+    binaryIndexOf<T>(item: T): number;
 }
 
 // Array.remove
@@ -145,6 +165,44 @@ arrayPrototype.last = function (filter?: (item) => boolean) {
 
 // Array.pushAll
 arrayPrototype.pushAll = function (items: Array<any>) {
-    var self: any[] = this;
     this.push.apply(this, items);
+}
+
+// Array.contains
+arrayPrototype.contains = function (item: any) {
+    var self: any[] = this;
+    return self.indexOf(item) !== -1;
+}
+
+/**
+ * Performs a binary search on the host array.
+ *
+ * @param {*} searchElement The item to search for within the array.
+ * @return {Number} The index of the element which defaults to -1 when not found.
+ */
+arrayPrototype.binaryIndexOf = function (searchElement: any): number {
+    'use strict';
+
+    var minIndex = 0;
+    var maxIndex = this.length - 1;
+    var currentIndex;
+    var currentElement;
+    var resultIndex;
+
+    while (minIndex <= maxIndex) {
+        resultIndex = currentIndex = (minIndex + maxIndex) / 2 | 0;
+        currentElement = this[currentIndex];
+
+        if (currentElement < searchElement) {
+            minIndex = currentIndex + 1;
+        }
+        else if (currentElement > searchElement) {
+            maxIndex = currentIndex - 1;
+        }
+        else {
+            return currentIndex;
+        }
+    }
+
+    return ~maxIndex;
 }

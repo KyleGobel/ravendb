@@ -105,12 +105,16 @@ class ctor {
         var untypedGrid: any = this.grid;
         untypedGrid.contextmenu({
             target: '#gridContextMenu',
-            before: (e: MouseEvent) => {
+            before: (e: MouseEvent) => { 
+
+                // Select any right-clicked row.
                 var parentRow = $(e.target).parent(".ko-grid-row");
                 var rightClickedElement: row = parentRow.length ? ko.dataFor(parentRow[0]) : null;
                 if (rightClickedElement && rightClickedElement.isChecked != null && !rightClickedElement.isChecked()) {
-                    this.toggleRowChecked(rightClickedElement);
+                    this.toggleRowChecked(rightClickedElement, e.shiftKey);
                 }
+
+                return true;
             }
         });
     }
@@ -247,30 +251,52 @@ class ctor {
         return null;
     }
 
-    toggleRowChecked(row: row) {
+    toggleRowChecked(row: row, isShiftSelect = false) {
         var rowIndex = row.rowIndex();
-        row.isChecked(!row.isChecked());
         var isChecked = row.isChecked();
-        if (isChecked) {
-            // It's not checked and it needs to be.
+        var toggledIndices: Array<number> = isShiftSelect && this.selectedIndices().length > 0 ? this.getRowIndicesRange(this.selectedIndices.first(), rowIndex) : [rowIndex];
+        if (!isChecked) {
+            // Going from unchecked to checked.
             if (this.selectedIndices.indexOf(rowIndex) === -1) {
-                this.selectedIndices.unshift(rowIndex);
+                toggledIndices
+                    .filter(i => !this.selectedIndices.contains(i))
+                    .reverse()
+                    .forEach(i => this.selectedIndices.unshift(i));
             }
         } else {
-            // It's not unchecked. Remove it from the list.
-            this.selectedIndices.remove(rowIndex);
+            // Going from checked to unchecked.
+            this.selectedIndices.removeAll(toggledIndices);
         }
+
+        // Update the physical checked state of the rows.
+        this.recycleRows().forEach(r => r.isChecked(this.selectedIndices().indexOf(r.rowIndex()) !== -1));
     }
 
-    copySelectedDocs(idsOnly = false) {
-        var selectedDocs = this.getSelectedDocs();
-        var copyDocumentsVm = new copyDocuments(selectedDocs);
-        copyDocumentsVm.isCopyingDocs(!idsOnly);
-        app.showDialog(copyDocumentsVm);
+    getRowIndicesRange(firstRowIndex: number, secondRowIndex: number): Array<number> {
+        var isCountingDown = firstRowIndex > secondRowIndex;
+        var indices: Array<number> = [];
+        if (isCountingDown) {
+            for (var i = firstRowIndex; i >= secondRowIndex; i--) indices.unshift(i);
+        } else {
+            for (var i = firstRowIndex; i <= secondRowIndex; i++) indices.unshift(i);
+        }
+
+        return indices;
+    }
+
+    copySelectedDocs() {
+        this.showCopyDocDialog(false);
     }
 
     copySelectedDocIds() {
-        this.copySelectedDocIds(true);
+        this.showCopyDocDialog(true);
+    }
+
+    showCopyDocDialog(idsOnly: boolean) {
+        var selectedDocs = this.getSelectedDocs();
+        var copyDocumentsVm = new copyDocuments(selectedDocs);
+        copyDocumentsVm.isCopyingDocs(idsOnly === false);
+        app.showDialog(copyDocumentsVm);
     }
 
     getSelectedDocs(max?: number): Array<document> {
@@ -283,6 +309,9 @@ class ctor {
     }
 
     deleteSelectedDocs() {
+        var documents = this.getSelectedDocs();
+        var deleteDocsVm = new deleteDocuments(documents);
+        app.showDialog(deleteDocsVm);
     }
 }
 

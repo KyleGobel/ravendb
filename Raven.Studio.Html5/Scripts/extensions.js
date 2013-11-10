@@ -1,6 +1,6 @@
 /// <reference path="./typings/knockout/knockout.d.ts" />
 var subscribableFn = ko.subscribable.fn;
-var observabelArrayFn = ko.observableArray.fn;
+var observableArrayFn = ko.observableArray.fn;
 
 // observable.where
 subscribableFn.where = function (predicate) {
@@ -46,9 +46,24 @@ subscribableFn.select = function (selector) {
     return selectedResults;
 };
 
-// observable.pushAll
-observabelArrayFn.pushAll = function (items) {
+// observableArray.pushAll
+observableArrayFn.pushAll = function (items) {
     this.push.apply(this, items);
+};
+
+// observableArray.contains
+observableArrayFn.contains = function (item) {
+    return this.indexOf(item) !== -1;
+};
+
+// observableArray.first
+observableArrayFn.first = function (filter) {
+    return this().first(filter);
+};
+
+// observableArray.last
+observableArrayFn.last = function (filter) {
+    return this().last(filter);
 };
 
 // Function.memoize
@@ -121,7 +136,43 @@ arrayPrototype.last = function (filter) {
 
 // Array.pushAll
 arrayPrototype.pushAll = function (items) {
-    var self = this;
     this.push.apply(this, items);
+};
+
+// Array.contains
+arrayPrototype.contains = function (item) {
+    var self = this;
+    return self.indexOf(item) !== -1;
+};
+
+/**
+* Performs a binary search on the host array.
+*
+* @param {*} searchElement The item to search for within the array.
+* @return {Number} The index of the element which defaults to -1 when not found.
+*/
+arrayPrototype.binaryIndexOf = function (searchElement) {
+    'use strict';
+
+    var minIndex = 0;
+    var maxIndex = this.length - 1;
+    var currentIndex;
+    var currentElement;
+    var resultIndex;
+
+    while (minIndex <= maxIndex) {
+        resultIndex = currentIndex = (minIndex + maxIndex) / 2 | 0;
+        currentElement = this[currentIndex];
+
+        if (currentElement < searchElement) {
+            minIndex = currentIndex + 1;
+        } else if (currentElement > searchElement) {
+            maxIndex = currentIndex - 1;
+        } else {
+            return currentIndex;
+        }
+    }
+
+    return ~maxIndex;
 };
 //# sourceMappingURL=extensions.js.map
