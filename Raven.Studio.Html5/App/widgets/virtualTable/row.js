@@ -25,7 +25,11 @@ define(["require", "exports", "models/document"], function(require, exports, __d
             var rowProperties = rowData.getDocumentPropertyNames();
             for (var i = 0; i < rowProperties.length; i++) {
                 var prop = rowProperties[i];
-                this.addOrUpdateCellMap(prop, rowData[prop]);
+                var cellValue = rowData[prop];
+                if (typeof cellValue === "object") {
+                    cellValue = JSON.stringify(cellValue, null, 4);
+                }
+                this.addOrUpdateCellMap(prop, cellValue);
             }
 
             if (rowData.__metadata && rowData.__metadata.id) {

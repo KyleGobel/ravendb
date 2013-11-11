@@ -50,9 +50,11 @@ class ctor {
                 r.isInUse(false);
             });
             this.items = list;
+            this.selectedIndices.removeAll();
             this.columns.splice(2, this.columns().length - 1); // Remove all but the first 2 column (checked and ID)
             this.onGridScrolled();
         });
+
         this.items = docsSource();
         this.collections = settings.collections;
         this.viewportHeight(settings.height);
@@ -155,6 +157,13 @@ class ctor {
     ensureColumnsForRows(rows: Array<document>) {
         // This is called when items finish loading and are ready for display.
         // Keep allocations to a minimum.
+
+        // Enforce a max number of columns. Having many columns is unweildy to the user
+        // and greatly slows down scroll speed.
+        var maxColumns = 5;
+        if (this.columns().length >= maxColumns) {
+            return;
+        }
 
         var columnsNeeded = {};
         for (var i = 0; i < rows.length; i++) {

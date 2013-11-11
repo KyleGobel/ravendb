@@ -40,9 +40,11 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
                     r.isInUse(false);
                 });
                 _this.items = list;
+                _this.selectedIndices.removeAll();
                 _this.columns.splice(2, _this.columns().length - 1);
                 _this.onGridScrolled();
             });
+
             this.items = docsSource();
             this.collections = settings.collections;
             this.viewportHeight(settings.height);
@@ -160,6 +162,13 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
         ctor.prototype.ensureColumnsForRows = function (rows) {
             // This is called when items finish loading and are ready for display.
             // Keep allocations to a minimum.
+            // Enforce a max number of columns. Having many columns is unweildy to the user
+            // and greatly slows down scroll speed.
+            var maxColumns = 5;
+            if (this.columns().length >= maxColumns) {
+                return;
+            }
+
             var columnsNeeded = {};
             for (var i = 0; i < rows.length; i++) {
                 var currentRow = rows[i];
@@ -260,28 +269,18 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             var _this = this;
             var rowIndex = row.rowIndex();
             var isChecked = row.isChecked();
+            var toggledIndices = isShiftSelect && this.selectedIndices().length > 0 ? this.getRowIndicesRange(this.selectedIndices.first(), rowIndex) : [rowIndex];
             if (!isChecked) {
                 if (this.selectedIndices.indexOf(rowIndex) === -1) {
-                    if (isShiftSelect && this.selectedIndices().length > 0) {
-                        var lastSelectedIndex = this.selectedIndices.first();
-                        var rowIndices = this.getRowIndicesRange(lastSelectedIndex, rowIndex);
-                        rowIndices.filter(function (i) {
-                            return !_this.selectedIndices.contains(i);
-                        }).reverse().forEach(function (i) {
-                            return _this.selectedIndices.unshift(i);
-                        });
-                    } else {
-                        this.selectedIndices.unshift(rowIndex);
-                    }
+                    toggledIndices.filter(function (i) {
+                        return !_this.selectedIndices.contains(i);
+                    }).reverse().forEach(function (i) {
+                        return _this.selectedIndices.unshift(i);
+                    });
                 }
             } else {
-                if (isShiftSelect && this.selectedIndices().length > 0) {
-                    var lastSelectedIndex = this.selectedIndices.first();
-                    var rowIndices = this.getRowIndicesRange(lastSelectedIndex, rowIndex);
-                    this.selectedIndices.removeAll(rowIndices);
-                } else {
-                    this.selectedIndices.remove(rowIndex);
-                }
+                // Going from checked to unchecked.
+                this.selectedIndices.removeAll(toggledIndices);
             }
 
             // Update the physical checked state of the rows.

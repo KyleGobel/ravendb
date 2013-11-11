@@ -144,35 +144,4 @@ arrayPrototype.contains = function (item) {
     var self = this;
     return self.indexOf(item) !== -1;
 };
-
-/**
-* Performs a binary search on the host array.
-*
-* @param {*} searchElement The item to search for within the array.
-* @return {Number} The index of the element which defaults to -1 when not found.
-*/
-arrayPrototype.binaryIndexOf = function (searchElement) {
-    'use strict';
-
-    var minIndex = 0;
-    var maxIndex = this.length - 1;
-    var currentIndex;
-    var currentElement;
-    var resultIndex;
-
-    while (minIndex <= maxIndex) {
-        resultIndex = currentIndex = (minIndex + maxIndex) / 2 | 0;
-        currentElement = this[currentIndex];
-
-        if (currentElement < searchElement) {
-            minIndex = currentIndex + 1;
-        } else if (currentElement > searchElement) {
-            maxIndex = currentIndex - 1;
-        } else {
-            return currentIndex;
-        }
-    }
-
-    return ~maxIndex;
-};
 //# sourceMappingURL=extensions.js.map
