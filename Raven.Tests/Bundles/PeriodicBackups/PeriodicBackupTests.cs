@@ -25,10 +25,10 @@ namespace Raven.Tests.Bundles.PeriodicBackups
 			public string Name { get; set; }
 		}
 
-		[Fact]
+		[Fact(Skip = "not yet impleented at Voron")]
 		public void CanBackupToDirectory()
 		{
-			var backupPath = GetPath("BackupFolder");
+			var backupPath = NewDataPath("BackupFolder");
 			using (var store = NewDocumentStore())
 			{
 				using (var session = store.OpenSession())
@@ -53,10 +53,11 @@ namespace Raven.Tests.Bundles.PeriodicBackups
 			{
 				var smugglerOptions = new SmugglerOptions
 				{
-					BackupPath = backupPath
+					BackupPath = backupPath,
+                    Incremental = true,
 				};
-				var dataDumper = new DataDumper(store.DocumentDatabase, smugglerOptions);
-				dataDumper.ImportData(smugglerOptions, true).Wait();
+				var dataDumper = new DataDumper(store.DocumentDatabase);
+				dataDumper.ImportData(smugglerOptions).Wait();
 
 				using (var session = store.OpenSession())
 				{
@@ -66,10 +67,10 @@ namespace Raven.Tests.Bundles.PeriodicBackups
 			IOExtensions.DeleteDirectory(backupPath);
 		}
 
-		[Fact]
+		[Fact(Skip = "not yet implemented in Voron")]
 		public void CanBackupToDirectory_MultipleBackups()
 		{
-			var backupPath = GetPath("BackupFolder");
+			var backupPath = NewDataPath("BackupFolder");
 			using (var store = NewDocumentStore())
 			{
 				using (var session = store.OpenSession())
@@ -107,12 +108,12 @@ namespace Raven.Tests.Bundles.PeriodicBackups
 
 			using (var store = NewDocumentStore())
 			{
-				var smugglerOptions = new SmugglerOptions
+			    var dataDumper = new DataDumper(store.DocumentDatabase);
+				dataDumper.ImportData(new SmugglerOptions
 				{
-					BackupPath = backupPath
-				};
-				var dataDumper = new DataDumper(store.DocumentDatabase, smugglerOptions);
-				dataDumper.ImportData(smugglerOptions, true).Wait();
+				    BackupPath = backupPath,
+                    Incremental = true,
+				}).Wait();
 
 				using (var session = store.OpenSession())
 				{

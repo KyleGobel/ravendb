@@ -4,14 +4,17 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using System;
+using System.Globalization;
 using System.Web;
 using Raven.Abstractions;
 using Raven.Abstractions.Data;
 using Raven.Database.Data;
 using Raven.Database.Extensions;
 using Raven.Database.Server.Abstractions;
+using Raven.Tests.Spatial;
 using Rhino.Mocks;
 using Xunit;
+using Xunit.Extensions;
 
 namespace Raven.Tests
 {
@@ -73,7 +76,7 @@ namespace Raven.Tests
 			Assert.Equal(expected, result.Query);
 		}
 
-		[Fact(Skip = "Is PageSize always to be reloaded from configuration on the server?  That's what is happening.")]
+		[Fact]
 		public void can_encode_and_decode_IndexQuery_PageSize()
 		{
 			var expected = Some.Integer();
@@ -142,6 +145,25 @@ namespace Raven.Tests
 			IndexQuery result = EncodeAndDecodeIndexQuery(indexQuery);
 
 			Assert.Equal(expected, result.Cutoff);
+		}
+
+		[Theory]
+		[CriticalCultures]
+		public void does_culture_invariant_parameter_parsing_for_spatial_queries(CultureInfo cultureInfo)
+		{
+			using (new TemporaryCulture(cultureInfo))
+			{
+				var indexQuery = new SpatialIndexQuery
+				{
+					DistanceErrorPercentage = 0.25,
+					QueryShape =
+						SpatialIndexQuery.GetQueryShapeFromLatLon(12.461334, 130.841904, 4.9)
+				};
+				var result = (SpatialIndexQuery) EncodeAndDecodeIndexQuery(indexQuery);
+
+				Assert.Equal(indexQuery.DistanceErrorPercentage, result.DistanceErrorPercentage);
+				Assert.Equal(indexQuery.QueryShape, result.QueryShape);
+			}
 		}
 
 		private static IndexQuery EncodeAndDecodeIndexQuery(IndexQuery query)

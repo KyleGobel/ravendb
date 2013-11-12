@@ -45,7 +45,7 @@ namespace Raven.Tests.Storage
 			db.Put("Raven/Databases/Db", null, new RavenJObject { { "a", "b" } }, new RavenJObject(), null);
 			db.Put("Raven/Database", null, new RavenJObject { { "a", "b" } }, new RavenJObject(), null);
 
-			var dbs = db.GetDocumentsWithIdStartingWith("Raven/Databases/", null, 0, 10);
+			var dbs = db.GetDocumentsWithIdStartingWith("Raven/Databases/", null, null, 0, 10);
 
 			Assert.Equal(4, dbs.Length);
 		}
@@ -137,7 +137,7 @@ namespace Raven.Tests.Storage
 				{
 					actions.Tasks.AddTask(new RemoveFromIndexTask
 					{
-						Index = "foo",
+						Index = 100,
 						Keys = { "tasks/" + i },
 					}, SystemTime.UtcNow);
 				}
@@ -148,7 +148,7 @@ namespace Raven.Tests.Storage
 
 			db.TransactionalStorage.Batch(actions =>
 			{
-				var isIndexStale = actions.Staleness.IsIndexStale("foo", null, null);
+				var isIndexStale = actions.Staleness.IsIndexStale(100, null, null);
 				Assert.False(isIndexStale);
 			});
 		}

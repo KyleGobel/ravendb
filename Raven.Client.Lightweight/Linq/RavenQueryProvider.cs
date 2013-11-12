@@ -249,7 +249,12 @@ namespace Raven.Client.Linq
 		public IAsyncDocumentQuery<TResult> ToAsyncLuceneQuery<TResult>(Expression expression)
 		{
 			var processor = GetQueryProviderProcessor<T>();
-			return (IAsyncDocumentQuery<TResult>)processor.GetAsyncLuceneQueryFor(expression);
+			var luceneQuery = (IAsyncDocumentQuery<TResult>)processor.GetAsyncLuceneQueryFor(expression);
+
+			if (FieldsToRename.Count > 0)
+				luceneQuery.AfterQueryExecuted(processor.RenameResults);
+
+			return luceneQuery;
 		}
 
 		/// <summary>
@@ -294,7 +299,9 @@ namespace Raven.Client.Linq
 		public IDocumentQuery<TResult> ToLuceneQuery<TResult>(Expression expression)
 		{
 			var processor = GetQueryProviderProcessor<T>();
-			return (IDocumentQuery<TResult>)processor.GetLuceneQueryFor(expression);
+			var result = (IDocumentQuery<TResult>)processor.GetLuceneQueryFor(expression);
+			result.SetResultTransformer(ResultTransformer);
+			return result;
 		}
 	}
 }

@@ -22,9 +22,18 @@ namespace Raven.Client.Linq
 			AndAggregateOn(path, displayName);
 		}
 
+
+		public DynamicAggregationQuery(IQueryable<T> queryable, string path, string displayName = null)
+		{
+			facets = new List<AggregationQuery<T>>();
+			this.queryable = queryable;
+			facets.Add(new AggregationQuery<T> { Name = path, DisplayName = displayName });
+
+		}
+
 		public DynamicAggregationQuery<T> AndAggregateOn(Expression<Func<T, object>> path, string displayName = null)
 		{
-			var propertyPath = path.ToPropertyPath();
+			var propertyPath = path.ToPropertyPath('_');
 			if (IsNumeric(path))
 			{
 				var tmp = propertyPath + "_Range";
@@ -33,6 +42,13 @@ namespace Raven.Client.Linq
 			}
 
 			facets.Add(new AggregationQuery<T> { Name = propertyPath, DisplayName = displayName});
+
+			return this;
+		}
+
+		public DynamicAggregationQuery<T> AndAggregateOn(string path, string displayName = null)
+		{
+			facets.Add(new AggregationQuery<T> { Name = path, DisplayName = displayName });
 
 			return this;
 		}
@@ -72,6 +88,7 @@ namespace Raven.Client.Linq
 		{
 			var last = facets.Last();
 			last.AggregationField = path.ToPropertyPath();
+		    last.AggregationType = path.ExtractTypeFromPath().FullName;
 			last.Aggregation |= facetAggregation;
 		}
 

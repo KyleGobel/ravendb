@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Raven.Abstractions.Connection;
 using Raven.Abstractions.Data;
 using Raven.Abstractions.Extensions;
@@ -28,12 +29,12 @@ namespace Raven.Smuggler
 	{
 		const int RetriesCount = 5;
 
-		protected override Task<RavenJArray> GetIndexes(int totalCount)
+		protected async override Task<RavenJArray> GetIndexes(int totalCount)
 		{
 			RavenJArray indexes = null;
 			var request = CreateRequest("/indexes?pageSize=" + SmugglerOptions.BatchSize + "&start=" + totalCount);
 			request.ExecuteRequest(reader => indexes = RavenJArray.Load(new JsonTextReader(reader)));
-			return new CompletedTask<RavenJArray>(indexes);
+			return indexes;
 		}
 
 		private static string StripQuotesIfNeeded(RavenJToken value)
@@ -58,19 +59,18 @@ namespace Raven.Smuggler
 			}
 		}
 
-		public SmugglerApi(SmugglerOptions smugglerOptions, RavenConnectionStringOptions connectionStringOptions)
-			: base(smugglerOptions)
+		public SmugglerApi(RavenConnectionStringOptions connectionStringOptions)
 		{
 			ConnectionStringOptions = connectionStringOptions;
 		}
 
-		public override async Task ImportData(Stream stream, SmugglerOptions options)
+        public override async Task ImportData(SmugglerOptions options, Stream stream)
 		{
-			SmugglerJintHelper.Initialize(options ?? SmugglerOptions);
+            SetSmugglerOptions(options);
 
-			var batchSize = options != null ? options.BatchSize : SmugglerOptions.BatchSize;
+			SmugglerJintHelper.Initialize(options);
 
-			using (store = CreateStore())
+            using (store = CreateStore())
 			{
 				Task disposeTask = null;
 
@@ -78,17 +78,17 @@ namespace Raven.Smuggler
 				{
 					operation = store.BulkInsert(options: new BulkInsertOptions
 					{
-						BatchSize = batchSize,
+                        BatchSize = options.BatchSize,
 						CheckForUpdates = true
 					});
 
 					operation.Report += text => ShowProgress(text);
 
-					await base.ImportData(stream, options);
+                    await base.ImportData(options, stream);
 				}
 				finally
 				{
-					disposeTask = operation.DisposeAsync();
+					 disposeTask = operation.DisposeAsync();
 				}
 
 				if (disposeTask != null)
@@ -98,19 +98,19 @@ namespace Raven.Smuggler
 			}
 		}
 
-		public override async Task<string> ExportData(Stream stream, SmugglerOptions options, bool incremental, PeriodicBackupStatus backupStatus = null)
+		public override async Task<ExportDataResult> ExportData(SmugglerOptions options, PeriodicBackupStatus backupStatus = null)
 		{
 			using (store = CreateStore())
 			{
-				return await base.ExportData(stream, options, incremental, backupStatus);
+				return await base.ExportData(options, backupStatus);
 			}
 		}
 
-		public override async Task<string> ExportData(Stream stream, SmugglerOptions options, bool incremental, bool lastEtagsFromFile, PeriodicBackupStatus lastEtag)
+        public override async Task<ExportDataResult> ExportData(SmugglerOptions options, Stream stream, PeriodicBackupStatus lastEtag)
 		{
 			using (store = CreateStore())
 			{
-				return await base.ExportData(stream, options, incremental, lastEtagsFromFile, lastEtag);
+				return await base.ExportData(options, null, lastEtag);
 			}
 		}
 
@@ -128,27 +128,26 @@ namespace Raven.Smuggler
 			return new CompletedTask();
 		}
 
-		protected override Task PutTransformer(string transformerName, RavenJToken transformer)
+		protected async override Task PutTransformer(string transformerName, RavenJToken transformer)
 		{
-			if (Mode == SmugglerMode.Legacy)
-				return new CompletedTask();
+			if (IsTransformersSupported == false)
+				return;
 
 			if (transformer != null)
 			{
 				var transformerDefinition = JsonConvert.DeserializeObject<TransformerDefinition>(transformer.Value<RavenJObject>("definition").ToString());
-
-				return Commands.PutTransformerAsync(transformerName, transformerDefinition);
+				await Commands.PutTransformerAsync(transformerName, transformerDefinition);
 			}
 
-			return FlushBatch();
+			await FlushBatch();
 		}
 
-		protected override Task<string> GetVersion()
+		protected async override Task<string> GetVersion()
 		{
 			var request = CreateRequest("/build/version");
 			var version = request.ExecuteRequest<RavenJObject>();
 
-			return new CompletedTask<string>(version["ProductVersion"].ToString());
+			return version["ProductVersion"].ToString();
 		}
 
 		protected HttpRavenRequest CreateRequest(string url, string method = "GET")
@@ -168,7 +167,7 @@ namespace Raven.Smuggler
 			}
 			builder.Append(url);
 			var httpRavenRequest = httpRavenRequestFactory.Create(builder.ToString(), method, ConnectionStringOptions);
-			httpRavenRequest.WebRequest.Timeout = SmugglerOptions.Timeout;
+			httpRavenRequest.WebRequest.Timeout = SmugglerOptions.Timeout.Milliseconds;
 			if (LastRequestErrored)
 			{
 				httpRavenRequest.WebRequest.KeepAlive = false;
@@ -193,32 +192,35 @@ namespace Raven.Smuggler
 			return s;
 		}
 
-		protected override Task<IAsyncEnumerator<RavenJObject>> GetDocuments(Etag lastEtag)
+		protected async override Task<IAsyncEnumerator<RavenJObject>> GetDocuments(Etag lastEtag)
 		{
-			if (Mode == SmugglerMode.Legacy)
+			if (IsDocsStreamingSupported)
 			{
-				int retries = RetriesCount;
-				while (true)
+				ShowProgress("Streaming documents from " + lastEtag);
+				return await Commands.StreamDocsAsync(lastEtag);
+			}
+			
+			int retries = RetriesCount;
+			while (true)
+			{
+				try
 				{
-					try
-					{
-						RavenJArray documents = null;
-						var request = CreateRequest("/docs?pageSize=" + SmugglerOptions.BatchSize + "&etag=" + lastEtag);
-						request.ExecuteRequest(reader => documents = RavenJArray.Load(new JsonTextReader(reader)));
+					RavenJArray documents = null;
+					var url = "/docs?pageSize=" + SmugglerOptions.BatchSize + "&etag=" + lastEtag;
+					ShowProgress("GET " + url);
+					var request = CreateRequest(url);
+					request.ExecuteRequest(reader => documents = RavenJArray.Load(new JsonTextReader(reader)));
 
-						return new CompletedTask<IAsyncEnumerator<RavenJObject>>(new AsyncEnumeratorBridge<RavenJObject>(documents.Values<RavenJObject>().GetEnumerator()));
-					}
-					catch (Exception e)
-					{
-						if (retries-- == 0)
-							throw;
-						LastRequestErrored = true;
-						ShowProgress("Error reading from database, remaining attempts {0}, will retry. Error: {1}", retries, e, RetriesCount);
-					}
+					return new AsyncEnumeratorBridge<RavenJObject>(documents.Values<RavenJObject>().GetEnumerator());
+				}
+				catch (Exception e)
+				{
+					if (retries-- == 0)
+						throw;
+					LastRequestErrored = true;
+					ShowProgress("Error reading from database, remaining attempts {0}, will retry. Error: {1}", retries, e);
 				}
 			}
-
-			return Commands.StreamDocsAsync(lastEtag);
 		}
 
 		protected override async Task<Etag> ExportAttachments(JsonTextWriter jsonWriter, Etag lastEtag)
@@ -267,15 +269,15 @@ namespace Raven.Smuggler
 			}
 		}
 
-		protected override Task<RavenJArray> GetTransformers(int totalCount)
+		protected async override Task<RavenJArray> GetTransformers(int start)
 		{
-			if (Mode == SmugglerMode.Legacy)
-				return new CompletedTask<RavenJArray>(new RavenJArray());
+			if (IsTransformersSupported == false)
+				return new RavenJArray();
 
 			RavenJArray transformers = null;
-			var request = CreateRequest("/transformers?pageSize=" + SmugglerOptions.BatchSize + "&start=" + totalCount);
+			var request = CreateRequest("/transformers?pageSize=" + SmugglerOptions.BatchSize + "&start=" + start);
 			request.ExecuteRequest(reader => transformers = RavenJArray.Load(new JsonTextReader(reader)));
-			return new CompletedTask<RavenJArray>(transformers);
+			return transformers;
 		}
 
 		protected override Task PutAttachment(AttachmentExportInfo attachmentExportInfo)
@@ -323,9 +325,9 @@ namespace Raven.Smuggler
 			return Commands.GetStatisticsAsync();
 		}
 
-		protected override Task<RavenJObject> TransformDocument(RavenJObject document, string transformScript)
+		protected async override Task<RavenJObject> TransformDocument(RavenJObject document, string transformScript)
 		{
-			return new CompletedTask<RavenJObject>(SmugglerJintHelper.Transform(transformScript, document));
+			return SmugglerJintHelper.Transform(transformScript, document);
 		}
 
 		private Task FlushBatch()
@@ -333,6 +335,7 @@ namespace Raven.Smuggler
 			return new CompletedTask();
 		}
 
+        [StringFormatMethod("format")]
 		protected override void ShowProgress(string format, params object[] args)
 		{
 			Console.WriteLine(format, args);
@@ -340,11 +343,11 @@ namespace Raven.Smuggler
 
 		public bool LastRequestErrored { get; set; }
 
-		protected override Task EnsureDatabaseExists()
+		protected async override Task EnsureDatabaseExists()
 		{
 			if (EnsuredDatabaseExists ||
 				string.IsNullOrWhiteSpace(ConnectionStringOptions.DefaultDatabase))
-				return new CompletedTask();
+				return;
 
 			EnsuredDatabaseExists = true;
 
@@ -354,7 +357,7 @@ namespace Raven.Smuggler
 			try
 			{
 				httpRavenRequestFactory.Create(docUrl, "GET", ConnectionStringOptions).ExecuteRequest();
-				return new CompletedTask();
+				return;
 			}
 			catch (WebException e)
 			{
@@ -364,11 +367,10 @@ namespace Raven.Smuggler
 			}
 
 			var request = CreateRequest(docUrl, "PUT");
-			var document = MultiDatabase.CreateDatabaseDocument(ConnectionStringOptions.DefaultDatabase);
+			var document = RavenJObject.FromObject(MultiDatabase.CreateDatabaseDocument(ConnectionStringOptions.DefaultDatabase));
+			document.Remove("Id");
 			request.Write(document);
 			request.ExecuteRequest();
-
-			return new CompletedTask();
 		}
 	}
 }

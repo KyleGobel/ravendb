@@ -95,14 +95,15 @@ namespace Raven.Storage.Esent
 				case JET_err.WriteConflict:
 				case JET_err.SessionWriteConflict:
 				case JET_err.WriteConflictPrimaryIndex:
+				case JET_err.KeyDuplicate:
 					return true;
 				default:
 					return false;
 			}
 		}
-		private readonly List<Task> tasks = new List<Task>();
+		private readonly List<DatabaseTask> tasks = new List<DatabaseTask>();
 
-		public T GetTask<T>(Func<T, bool> predicate, T newTask) where T : Task
+		public T GetTask<T>(Func<T, bool> predicate, T newTask) where T : DatabaseTask
 		{
 			T task = tasks.OfType<T>().FirstOrDefault(predicate);
 			if (task == null)

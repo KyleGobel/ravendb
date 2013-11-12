@@ -4,49 +4,31 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using NLog;
 using Raven.Abstractions;
+using Raven.Abstractions.Logging;
 using Raven.Database.Util;
-using Raven.Tests.Document;
 using Raven.Tests.Helpers;
 using System.Diagnostics;
 
 namespace Raven.Tests
 {
+	using Raven.Abstractions.Util.Encryptors;
+
 	public class RavenTest : RavenTestBase
 	{
 		static RavenTest()
 		{
-			File.Delete("test.log");
+			LogManager.RegisterTarget<DatabaseMemoryTarget>();
 		}
 
 		public RavenTest()
 		{
-			DatabaseMemoryTarget databaseMemoryTarget = null;
-			if (LogManager.Configuration != null && LogManager.Configuration.AllTargets != null)
-			{
-				databaseMemoryTarget = LogManager.Configuration.AllTargets.OfType<DatabaseMemoryTarget>().FirstOrDefault();
-			}
-			if (databaseMemoryTarget != null)
-			{
-				databaseMemoryTarget.ClearAll();
-			}
-
 			SystemTime.UtcDateTime = () => DateTime.UtcNow;
 		}
 
 		protected void Consume(object o)
 		{
 			
-		}
-
-		public string GetPath(string subFolderName)
-		{
-			string retPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(DocumentStoreServerTests)).CodeBase);
-			return Path.Combine(retPath, subFolderName).Substring(6); // remove leading file://
 		}
 
 		public double Timer(Action action)

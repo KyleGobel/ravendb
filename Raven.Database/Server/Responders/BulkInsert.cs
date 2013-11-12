@@ -34,19 +34,6 @@ namespace Raven.Database.Server.Responders
 				// only used for legacy clients
 				return; 
 			}
-			if("generate-single-use-auth-token".Equals(context.Request.QueryString["op"],StringComparison.InvariantCultureIgnoreCase))
-			{
-				// using windows auth with anonymous access = none sometimes generate a 401 even though we made two requests
-				// instead of relying on windows auth, which require request buffering, we generate a one time token and return it.
-				// we KNOW that the user have access to this db for writing, since they got here, so there is no issue in generating 
-				// a single use token for them.
-				var token = server.RequestAuthorizer.GenerateSingleUseAuthToken(Database, context.User);
-				context.WriteJson(new
-				{
-					Token = token
-				});
-				return;
-			}
 
 			if (HttpContext.Current != null)
 			{
@@ -61,11 +48,7 @@ namespace Raven.Database.Server.Responders
 			var operationId = ExtractOperationId(context);
 			var sp = Stopwatch.StartNew();
 
-			var status = new RavenJObject
-			{
-				{"Documents", 0},
-				{"Completed", false}
-			};
+			var status = new BulkInsertStatus();
 
 			int documents = 0;
 			var mre = new ManualResetEventSlim(false);
@@ -74,8 +57,8 @@ namespace Raven.Database.Server.Responders
 			var task = Task.Factory.StartNew(() =>
 			{
 				currentDatbase.BulkInsert(options, YieldBatches(context, mre, batchSize => documents += batchSize), operationId);
-				status["Documents"] = documents;
-				status["Completed"] = true;
+			    status.Documents = documents;
+			    status.Completed = true;
 			});
 
 			long id;
@@ -162,5 +145,12 @@ namespace Raven.Database.Server.Responders
 				increaseDocumentsCount(count);
 			}
 		}
+
+        public class BulkInsertStatus
+        {
+            public int Documents { get; set; }
+            public bool Completed { get; set; }
+        }
 	}
+
 }

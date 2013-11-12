@@ -57,6 +57,11 @@ namespace Raven.Client.Indexes
 			store.ExecuteTransformer(this);
 		}
 
+        public Task ExecuteAsync(IDocumentStore store)
+        {
+            return store.ExecuteTransformerAsync(this);
+        }
+
 		/// <summary>
 		/// Executes the index creation against the specified document database using the specified conventions
 		/// </summary>
@@ -70,7 +75,7 @@ namespace Raven.Client.Indexes
 			databaseCommands.PutTransformer(TransformerName, transformerDefinition);
 
 			UpdateIndexInReplication(databaseCommands, documentConvention, (commands, url) =>
-				commands.DirectPutTransformer(TransformerName, url, transformerDefinition));
+				commands.PutTransformer(TransformerName, transformerDefinition));
 		}
 #endif
 

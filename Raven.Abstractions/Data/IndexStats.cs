@@ -4,13 +4,15 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 using Raven.Abstractions.Indexing;
 
 namespace Raven.Abstractions.Data
 {
 	public class IndexStats
 	{
-		public string Name { get; set; }
+		public int Id { get; set; }
+        public string PublicName { get; set; }
 		public int IndexingAttempts { get; set; }
 		public int IndexingSuccesses { get; set; }
 		public int IndexingErrors { get; set; }
@@ -28,12 +30,14 @@ namespace Raven.Abstractions.Data
 		public DateTime LastIndexingTime { get; set; }
 		public string IsOnRam { get; set; }
 		public IndexLockMode LockMode { get; set; }
+		public List<string> ForEntityName { get; set; } 
 
 		public IndexingPerformanceStats[] Performance { get; set; }
+		public int DocsCount { get; set; }
 
 		public override string ToString()
 		{
-			return Name;
+		    return Id.ToString();
 		}
 	}
 
@@ -49,6 +53,8 @@ namespace Raven.Abstractions.Data
 		Idle = 4,
 		
 		Abandoned = 8,
+
+        Error = 16,
 
         Forced = 512,
     }

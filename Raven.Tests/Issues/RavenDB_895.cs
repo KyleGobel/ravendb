@@ -4,8 +4,10 @@
 //  </copyright>
 // -----------------------------------------------------------------------
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Raven.Abstractions.Data;
 using Raven.Abstractions.Smuggler;
 using Raven.Smuggler;
@@ -23,7 +25,7 @@ namespace Raven.Tests.Issues
 		}
 
 		[Fact]
-		public void TransformScriptFiltering()
+		public async Task TransformScriptFiltering()
 		{
 			var options = new SmugglerOptions
 			{
@@ -38,39 +40,41 @@ namespace Raven.Tests.Issues
 
 			try
 			{
-				using (var documentStore = NewRemoteDocumentStore())
+				using (var store = NewRemoteDocumentStore())
 				{
-					using (var session = documentStore.OpenSession())
+					using (var session = store.OpenSession())
 					{
-						session.Store(new Foo { Name = "N1" });
-						session.Store(new Foo { Name = "N2" });
+						session.Store(new Foo {Name = "N1"});
+						session.Store(new Foo {Name = "N2"});
 
 						session.SaveChanges();
 					}
-					var smugglerApi = new SmugglerApi(options, new RavenConnectionStringOptions
+					var smugglerApi = new SmugglerApi(new RavenConnectionStringOptions
 					{
-						Url = documentStore.Url
+						Url = store.Url
 					});
-					smugglerApi.ExportData(null, options, false).Wait(TimeSpan.FromSeconds(15));
+					await smugglerApi.ExportData(options);
 				}
 
 				using (var documentStore = NewRemoteDocumentStore())
 				{
-					var smugglerApi = new SmugglerApi(options, new RavenConnectionStringOptions
+					var smugglerApi = new SmugglerApi(new RavenConnectionStringOptions
 					{
 						Url = documentStore.Url
 					});
-					smugglerApi.ImportData(options).Wait(TimeSpan.FromSeconds(15));
+					await smugglerApi.ImportData(options);
 
 					using (var session = documentStore.OpenSession())
 					{
-						var foos = session
-							.Query<Foo>()
-							.ToList();
+						var foos = session.Query<Foo>()
+						                  .Customize(customization => customization.WaitForNonStaleResultsAsOfNow())
+						                  .ToList();
 
 						Assert.Equal(1, foos.Count);
 						Assert.Equal("foos/2", foos[0].Id);
 						Assert.Equal("N2", foos[0].Name);
+
+                        Assert.Null(session.Load<Foo>(1));
 					}
 				}
 			}
@@ -84,7 +88,7 @@ namespace Raven.Tests.Issues
 		}
 
 		[Fact]
-		public void TransformScriptModifying()
+		public async Task TransformScriptModifying()
 		{
 			var options = new SmugglerOptions
 			{
@@ -97,34 +101,34 @@ namespace Raven.Tests.Issues
 
 			try
 			{
-				using (var documentStore = NewRemoteDocumentStore())
+				using (var store = NewRemoteDocumentStore())
 				{
-					using (var session = documentStore.OpenSession())
+					using (var session = store.OpenSession())
 					{
 						session.Store(new Foo { Name = "N1" });
 						session.Store(new Foo { Name = "N2" });
 
 						session.SaveChanges();
 					}
-					var smugglerApi = new SmugglerApi(options, new RavenConnectionStringOptions
+					var smugglerApi = new SmugglerApi(new RavenConnectionStringOptions
 					{
-						Url = documentStore.Url
+						Url = store.Url
 					});
-					smugglerApi.ExportData(null, options, false).Wait(TimeSpan.FromSeconds(15));
+					await smugglerApi.ExportData(options);
 				}
 
-				using (var documentStore = NewRemoteDocumentStore())
+				using (var store = NewRemoteDocumentStore())
 				{
-					var smugglerApi = new SmugglerApi(options, new RavenConnectionStringOptions
+					var smugglerApi = new SmugglerApi(new RavenConnectionStringOptions
 					{
-						Url = documentStore.Url
+						Url = store.Url
 					});
-					smugglerApi.ImportData(options).Wait(TimeSpan.FromSeconds(15));
+					await smugglerApi.ImportData(options);
 
-					using (var session = documentStore.OpenSession())
+					using (var session = store.OpenSession())
 					{
-						var foos = session
-							.Query<Foo>()
+						var foos = session.Query<Foo>()
+							.Customize(customization => customization.WaitForNonStaleResultsAsOfNow())
 							.ToList();
 
 						Assert.Equal(2, foos.Count);

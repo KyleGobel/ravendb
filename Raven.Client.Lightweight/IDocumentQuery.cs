@@ -51,6 +51,7 @@ namespace Raven.Client
 		/// </summary>
 		/// <value>The query result.</value>
 		QueryResult QueryResult { get; }
+		bool IsDistinct { get; }
 #endif
 
 		/// <summary>

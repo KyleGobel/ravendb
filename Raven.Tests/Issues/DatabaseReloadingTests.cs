@@ -27,15 +27,15 @@ namespace Raven.Tests.Issues
                 Url = "http://localhost:8079"
             }.Initialize())
             {
-                store.DatabaseCommands.CreateDatabase(new DatabaseDocument { Id = TenantName, Settings = { {"Raven/DataDir", @"~\Databases\Mine"} }, });
+                store.DatabaseCommands.GlobalAdmin.CreateDatabase(new DatabaseDocument { Id = TenantName, Settings = { {"Raven/DataDir", @"~\Databases\Mine"} }, });
 
                 var tx1 = new TransactionInformation {Id = Guid.NewGuid().ToString()};
                 var tx2 = new TransactionInformation { Id = Guid.NewGuid().ToString() };
 
                 var tenantDatabaseDocument = store.DatabaseCommands.Get("Raven/Databases/" + TenantName);
-                server.Database.Put("Raven/Databases/" + TenantName, null, tenantDatabaseDocument.DataAsJson, tenantDatabaseDocument.Metadata, tx1);
-                server.Database.PrepareTransaction(tx1.Id);
-				server.Database.Commit(tx1.Id);
+                server.SystemDatabase.Put("Raven/Databases/" + TenantName, null, tenantDatabaseDocument.DataAsJson, tenantDatabaseDocument.Metadata, tx1);
+                server.SystemDatabase.PrepareTransaction(tx1.Id);
+				server.SystemDatabase.Commit(tx1.Id);
 
                 var tenantDb = GetDocumentDatabaseForTenant(server, TenantName);
                 tenantDb.Put("Foo/1", null, new RavenJObject { { "Test", "123" } }, new RavenJObject(), tx2);
@@ -56,19 +56,19 @@ namespace Raven.Tests.Issues
                 Url = "http://localhost:8079"
             }.Initialize())
             {
-                store.DatabaseCommands.CreateDatabase(new DatabaseDocument { Id = TenantName, Settings = { { "Raven/DataDir", @"~\Databases\Mine" } }, });
+                store.DatabaseCommands.GlobalAdmin.CreateDatabase(new DatabaseDocument { Id = TenantName, Settings = { { "Raven/DataDir", @"~\Databases\Mine" } }, });
 
                 var tx1 = new TransactionInformation { Id = Guid.NewGuid().ToString() };
                 var tx2 = new TransactionInformation { Id = Guid.NewGuid().ToString() };
 
                 var tenantDatabaseDocument = store.DatabaseCommands.Get("Raven/Databases/" + TenantName);
-                server.Database.Put("Raven/Databases/mydb", null, tenantDatabaseDocument.DataAsJson, tenantDatabaseDocument.Metadata, tx1);
+                server.SystemDatabase.Put("Raven/Databases/mydb", null, tenantDatabaseDocument.DataAsJson, tenantDatabaseDocument.Metadata, tx1);
 
                 var tenantDb = GetDocumentDatabaseForTenant(server, TenantName);
                 tenantDb.Put("Foo/1", null, new RavenJObject { { "Test", "123" } }, new RavenJObject(), tx2);
 
-				server.Database.PrepareTransaction(tx1.Id);
-                server.Database.Commit(tx1.Id);
+				server.SystemDatabase.PrepareTransaction(tx1.Id);
+                server.SystemDatabase.Commit(tx1.Id);
 
                 tenantDb = GetDocumentDatabaseForTenant(server, TenantName);
 				tenantDb.PrepareTransaction(tx2.Id);
@@ -88,7 +88,7 @@ namespace Raven.Tests.Issues
                 Url = "http://localhost:8079"
             }.Initialize())
             {
-                store.DatabaseCommands.CreateDatabase(new DatabaseDocument { Id = TenantName, Settings = { { "Raven/DataDir", @"~\Databases\Mine" } }, });
+                store.DatabaseCommands.GlobalAdmin.CreateDatabase(new DatabaseDocument { Id = TenantName, Settings = { { "Raven/DataDir", @"~\Databases\Mine" } }, });
 
                 var tx1 = new TransactionInformation { Id = Guid.NewGuid().ToString() };
                 var tx2 = new TransactionInformation { Id = Guid.NewGuid().ToString() };
@@ -97,9 +97,9 @@ namespace Raven.Tests.Issues
 				tenantDb.Put("Foo/1", null, new RavenJObject { { "Test", "123" } }, new RavenJObject(), tx2);
 				
 				var tenantDatabaseDocument = store.DatabaseCommands.Get("Raven/Databases/" + TenantName);
-                server.Database.Put("Raven/Databases/" + TenantName, null, tenantDatabaseDocument.DataAsJson, tenantDatabaseDocument.Metadata, tx1);
-				server.Database.PrepareTransaction(tx1.Id);
-				server.Database.Commit(tx1.Id);
+                server.SystemDatabase.Put("Raven/Databases/" + TenantName, null, tenantDatabaseDocument.DataAsJson, tenantDatabaseDocument.Metadata, tx1);
+				server.SystemDatabase.PrepareTransaction(tx1.Id);
+				server.SystemDatabase.Commit(tx1.Id);
 
 				tenantDb = GetDocumentDatabaseForTenant(server, TenantName);
 

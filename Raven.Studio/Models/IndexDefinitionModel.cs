@@ -11,9 +11,11 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using DrWPF.Windows.Data;
 using Raven.Abstractions.Exceptions;
+using Raven.Client.Connection;
 using Raven.Imports.Newtonsoft.Json;
 using Raven.Abstractions.Data;
 using Raven.Abstractions.Indexing;
+using Raven.Json.Linq;
 using Raven.Studio.Behaviors;
 using Raven.Studio.Commands;
 using Raven.Studio.Features.Input;
@@ -39,6 +41,8 @@ namespace Raven.Studio.Models
 		public IndexingPriority Priority { get; set; }
 		public List<string> Priorities { get; set; }
 
+		public static string MapQuery { get; private set; }
+
         public ObservableCollection<IndexDefinitionError> Errors { get; private set; }
 		public IndexDefinitionModel()
 		{
@@ -54,7 +58,10 @@ namespace Raven.Studio.Models
 				new MapItem()
 			};
 
+
+
 			Maps.CollectionChanged += HandleChildCollectionChanged;
+			Maps[0].PropertyChanged += (sender, args) => { MapQuery = Maps[0].Text; };
 
 			Fields = new BindableCollection<FieldProperties>(field => field.Name);
 			Fields.CollectionChanged += HandleChildCollectionChanged;
@@ -77,7 +84,7 @@ namespace Raven.Studio.Models
 	    {
 	        bool hadIndexingErrors = Errors.Any(e => e.Stage == "Indexing");
 
-	        var serverErrors = Database.Value.Statistics.Value.Errors.Where(s => s.Index == Name).Select(se => new IndexDefinitionError()
+	        var serverErrors = Database.Value.Statistics.Value.Errors.Where(s => s.Index == index.IndexId).Select(se => new IndexDefinitionError()
 	        {
 	            DocumentId = se.Document,
                 Message = se.Error,
@@ -124,7 +131,7 @@ namespace Raven.Studio.Models
 		{
 			MarkAsDirty();
 
-			if (e.Action == NotifyCollectionChangedAction.Add)
+		    if (e.Action == NotifyCollectionChangedAction.Add)
 			{
 				var newItem = e.NewItems[0] as INotifyPropertyChanged;
 				if (newItem != null)
@@ -139,14 +146,15 @@ namespace Raven.Studio.Models
 
 		private void UpdateFromIndex(IndexDefinition indexDefinition)
 		{
-			UpdatePriority(indexDefinition.Name);
+			UpdatePriority(indexDefinition.IndexId);
 			index = indexDefinition;
 
 			if (index.Maps.Count == 0)
 				index.Maps.Add("");
 
 			Maps.Set(index.Maps.Select(x => new MapItem { Text = x }));
-
+			Maps[0].PropertyChanged += (sender, args) => { MapQuery = Maps[0].Text; };
+			MapQuery = Maps[0].Text;
 			ShowReduce = Reduce != null;
 			ShowTransformResults = TransformResults != null;
 
@@ -180,13 +188,13 @@ namespace Raven.Studio.Models
 			OnEverythingChanged();
 		}
 
-		private void UpdatePriority(string name)
+		private void UpdatePriority(int id)
 		{
 			DatabaseCommands
 				.GetStatisticsAsync()
 				.ContinueOnSuccessInTheUIThread(databaseStatistics =>
 				{
-					var indexStats = databaseStatistics.Indexes.FirstOrDefault(stats => stats.Name == name);
+					var indexStats = databaseStatistics.Indexes.FirstOrDefault(stats => stats.Id == id);
 					if (indexStats == null)
 						return;
 					Priority = indexStats.Priority;
@@ -207,13 +215,10 @@ namespace Raven.Studio.Models
 
 		private void RestoreDefaults(IndexDefinition indexDefinition)
 		{
-			if (indexDefinition.IsMapReduce == false)
-				return;
-
 			foreach (var field in Fields)
 			{
 				if(indexDefinition.Stores.ContainsKey(field.Name) == false)
-					field.Storage = FieldStorage.Yes;
+					field.Storage = FieldStorage.No;
 			}
 		}
 
@@ -521,7 +526,7 @@ namespace Raven.Studio.Models
 			get
 			{
 				var databaseStatistics = statistics.Value;
-				return databaseStatistics == null ? 0 : databaseStatistics.Errors.Count(e => e.Index == Name);
+				return databaseStatistics == null ? 0 : databaseStatistics.Errors.Count(e => e.Index == index.IndexId);
 			}
 		}
 
@@ -920,139 +925,6 @@ namespace Raven.Studio.Models
 					if (len < 12)
 						return 230;
 					return 300;
-				}
-			}
-		}
-
-		public class FieldProperties : NotifyPropertyChangedBase
-		{
-			private string name;
-			public string Name
-			{
-				get { return name; }
-				set
-				{
-					if (name != value)
-					{
-						name = value;
-						OnPropertyChanged(() => Name);
-					}
-				}
-			}
-
-			private FieldStorage storage;
-			public FieldStorage Storage
-			{
-				get { return storage; }
-				set
-				{
-					if (storage != value)
-					{
-						storage = value;
-						OnPropertyChanged(() => Storage);
-					}
-				}
-			}
-
-			private FieldIndexing indexing;
-			public FieldIndexing Indexing
-			{
-				get { return indexing; }
-				set
-				{
-					if (indexing != value)
-					{
-						indexing = value;
-						OnPropertyChanged(() => Indexing);
-					}
-				}
-			}
-
-			private FieldTermVector termVector;
-			public FieldTermVector TermVector
-			{
-				get { return termVector; }
-				set
-				{
-					if (termVector != value)
-					{
-						termVector = value;
-						OnPropertyChanged(() => TermVector);
-					}
-				}
-			}
-
-
-			private SortOptions sort;
-			public SortOptions Sort
-			{
-				get { return sort; }
-				set
-				{
-					if (sort != value)
-					{
-						sort = value;
-						OnPropertyChanged(() => Sort);
-					}
-				}
-			}
-
-			private string analyzer;
-			public string Analyzer
-			{
-				get { return analyzer; }
-				set
-				{
-					if (analyzer != value)
-					{
-						analyzer = value;
-						OnPropertyChanged(() => Analyzer);
-					}
-				}
-			}
-
-			public static FieldProperties Default
-			{
-				get
-				{
-					return new FieldProperties
-					{
-						Storage = FieldStorage.No,
-						Indexing = FieldIndexing.Default,
-						TermVector = FieldTermVector.No,
-						Sort = SortOptions.None,
-						Analyzer = string.Empty,
-						SuggestionAccuracy = 0.5f,
-						SuggestionDistance = StringDistanceTypes.None,
-					};
-				}
-			}
-
-			private float suggestionAccuracy;
-			public float SuggestionAccuracy
-			{
-				get { return suggestionAccuracy; }
-				set
-				{
-					if (suggestionAccuracy != value)
-					{
-						suggestionAccuracy = value;
-						OnPropertyChanged(() => suggestionAccuracy);
-					}
-				}
-			}
-
-			private StringDistanceTypes suggestionDistance;
-			public StringDistanceTypes SuggestionDistance
-			{
-				get { return suggestionDistance; }
-				set
-				{
-					if (suggestionDistance != value)
-					{
-						suggestionDistance = value;
-						OnPropertyChanged(() => suggestionDistance);
-					}
 				}
 			}
 		}
@@ -1456,4 +1328,163 @@ namespace Raven.Studio.Models
 
         public string DocumentId { get; set; }
     }
+
+	public class FieldProperties : NotifyPropertyChangedBase, IAutoCompleteSuggestionProvider
+	{
+		static private List<string> AvailableFields { get; set; }
+
+		public FieldProperties()
+		{
+			AvailableFields = new List<string>();
+		}
+		static private string LastMap { get; set; }
+		private string name;
+		public string Name
+		{
+			get { return name; }
+			set
+			{
+				if (name != value)
+				{
+					name = value;
+					OnPropertyChanged(() => Name);
+				}
+			}
+		}
+
+		private FieldStorage storage;
+		public FieldStorage Storage
+		{
+			get { return storage; }
+			set
+			{
+				if (storage != value)
+				{
+					storage = value;
+					OnPropertyChanged(() => Storage);
+				}
+			}
+		}
+
+		private FieldIndexing indexing;
+		public FieldIndexing Indexing
+		{
+			get { return indexing; }
+			set
+			{
+				if (indexing != value)
+				{
+					indexing = value;
+					OnPropertyChanged(() => Indexing);
+				}
+			}
+		}
+
+		private FieldTermVector termVector;
+		public FieldTermVector TermVector
+		{
+			get { return termVector; }
+			set
+			{
+				if (termVector != value)
+				{
+					termVector = value;
+					OnPropertyChanged(() => TermVector);
+				}
+			}
+		}
+
+
+		private SortOptions sort;
+		public SortOptions Sort
+		{
+			get { return sort; }
+			set
+			{
+				if (sort != value)
+				{
+					sort = value;
+					OnPropertyChanged(() => Sort);
+				}
+			}
+		}
+
+		private string analyzer;
+		public string Analyzer
+		{
+			get { return analyzer; }
+			set
+			{
+				if (analyzer != value)
+				{
+					analyzer = value;
+					OnPropertyChanged(() => Analyzer);
+				}
+			}
+		}
+
+		public static FieldProperties Default
+		{
+			get
+			{
+				return new FieldProperties
+				{
+					Storage = FieldStorage.No,
+					Indexing = FieldIndexing.Default,
+					TermVector = FieldTermVector.No,
+					Sort = SortOptions.None,
+					Analyzer = string.Empty,
+					SuggestionAccuracy = 0.5f,
+					SuggestionDistance = StringDistanceTypes.None,
+				};
+			}
+		}
+
+		private float suggestionAccuracy;
+		public float SuggestionAccuracy
+		{
+			get { return suggestionAccuracy; }
+			set
+			{
+				if (suggestionAccuracy != value)
+				{
+					suggestionAccuracy = value;
+					OnPropertyChanged(() => suggestionAccuracy);
+				}
+			}
+		}
+
+		private StringDistanceTypes suggestionDistance;
+		public StringDistanceTypes SuggestionDistance
+		{
+			get { return suggestionDistance; }
+			set
+			{
+				if (suggestionDistance != value)
+				{
+					suggestionDistance = value;
+					OnPropertyChanged(() => suggestionDistance);
+				}
+			}
+		}
+
+		public async Task<IList<object>> ProvideSuggestions(string enteredText)
+		{
+			if (LastMap != IndexDefinitionModel.MapQuery)
+			{
+				LastMap = IndexDefinitionModel.MapQuery;
+				var request = ApplicationModel.Current.Server.Value.SelectedDatabase.Value
+							.AsyncDatabaseCommands
+							.CreateRequest(string.Format("/debug/index-fields").NoCache(), "POST");
+				await request.WriteAsync(LastMap);
+			var item = await request.ReadResponseJsonAsync();
+				if (item != null)
+				{
+					AvailableFields = item.SelectToken("FieldNames").Values().Select(token => token.ToString()).ToList();
+				}
+			}
+
+			return AvailableFields.Cast<object>().ToList();
+		}
+	}
 }

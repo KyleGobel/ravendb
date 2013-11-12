@@ -75,7 +75,7 @@ namespace Raven.Bundles.Replication.Tasks
 		public void Execute(DocumentDatabase database)
 		{
 			etagSynchronizer = database.EtagSynchronizer.GetSynchronizer(EtagSynchronizerType.Replicator);
-			prefetchingBehavior = database.Prefetcher.GetPrefetchingBehavior(PrefetchingUser.Replicator);
+			prefetchingBehavior = database.Prefetcher.GetPrefetchingBehavior(PrefetchingUser.Replicator, null);
 
 			docDb = database;
 			var replicationRequestTimeoutInMs =
@@ -169,12 +169,7 @@ namespace Raven.Bundles.Replication.Tasks
 									});
 								}
 
-#if NET45
-								Task
-#else
-								TaskEx
-#endif								
-									.WhenAll(startedTasks.ToArray()).ContinueWith(t =>
+								Task.WhenAll(startedTasks.ToArray()).ContinueWith(t =>
 								{
 									if (destinationStats.Count != 0)
 									{
@@ -217,7 +212,7 @@ namespace Raven.Bundles.Replication.Tasks
 
 			while (true)
 			{
-				var docs = docDb.GetDocumentsWithIdStartingWith(Constants.RavenReplicationSourcesBasePath, null, skip, 128);
+				var docs = docDb.GetDocumentsWithIdStartingWith(Constants.RavenReplicationSourcesBasePath, null, null, skip, 128);
 				if (docs.Length == 0)
 				{
 					notifications.TryAdd(null, 15 * 1000); // marker to stop notify this
@@ -687,7 +682,10 @@ namespace Raven.Bundles.Replication.Tasks
 									if (info != null)
 									{
 										if (info.PreTouchEtag.CompareTo(result.LastEtag) <= 0)
+										{
+										    log.Debug("Will not replicate document '{0}' to '{1}' because the updates after etag {2} are related document touches", document.Key, destinationId, info.PreTouchEtag);
 											return false;
+										}
 									}
 
 									return destination.FilterDocuments(destinationId, document.Key, document.Metadata) && prefetchingBehavior.FilterDocuments(document);

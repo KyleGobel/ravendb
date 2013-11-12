@@ -1,18 +1,16 @@
 ﻿using System;
+using System.Threading.Tasks;
 #if !SILVERLIGHT
 using System.Collections.Specialized;
 #endif
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.Linq;
-using System.Net;
 using Raven.Abstractions.Data;
-using Raven.Abstractions.Extensions;
 using Raven.Client.Changes;
 using Raven.Client.Connection;
 using Raven.Client.Connection.Profiling;
 using Raven.Client.Document.DTC;
-using Raven.Client.Extensions;
 using Raven.Client.Indexes;
 using Raven.Client.Listeners;
 using Raven.Client.Document;
@@ -20,12 +18,18 @@ using Raven.Client.Document;
 using Raven.Client.Silverlight.Connection;
 #elif NETFX_CORE
 using Raven.Client.WinRT.Connection;
+#else
+using Raven.Abstractions.Util.Encryptors;
 #endif
 using Raven.Client.Connection.Async;
 using Raven.Client.Util;
 
 namespace Raven.Client
 {
+	using System.Collections.Generic;
+
+	using Raven.Abstractions.Util.Encryptors;
+
 	/// <summary>
 	/// Contains implementation of some IDocumentStore operations shared by DocumentStore implementations
 	/// </summary>
@@ -33,6 +37,8 @@ namespace Raven.Client
 	{
 		protected DocumentStoreBase()
 		{
+			InitializeEncryptor();
+
 			LastEtagHolder = new GlobalLastEtagHolder();
 			TransactionRecoveryStorage = new VolatileOnlyTransactionRecoveryStorage();
 		}
@@ -58,6 +64,8 @@ namespace Raven.Client
 		public abstract IDatabaseChanges Changes(string database = null);
 
 		public abstract IDisposable DisableAggressiveCaching();
+
+		public abstract IDisposable SetRequestsTimeoutFor(TimeSpan timeout);
 
 #if !SILVERLIGHT && !NETFX_CORE
 		/// <summary>
@@ -91,13 +99,23 @@ namespace Raven.Client
 			indexCreationTask.Execute(DatabaseCommands, Conventions);
 		}
 
-		/// <summary>
+	    public Task ExecuteIndexAsync(AbstractIndexCreationTask indexCreationTask)
+	    {
+	        return indexCreationTask.ExecuteAsync(AsyncDatabaseCommands, Conventions);
+	    }
+
+	    /// <summary>
 		/// Executes the transformer creation
 		/// </summary>
 		public virtual void ExecuteTransformer(AbstractTransformerCreationTask transformerCreationTask)
 		{
 			transformerCreationTask.Execute(DatabaseCommands, Conventions);
 		}
+
+	    public Task ExecuteTransformerAsync(AbstractTransformerCreationTask transformerCreationTask)
+	    {
+	        return transformerCreationTask.ExecuteAsync(AsyncDatabaseCommands, Conventions);
+	    }
 #endif
 
 		private DocumentConvention conventions;
@@ -122,6 +140,17 @@ namespace Raven.Client
 			get { return url; }
 			set { url = value.EndsWith("/") ? value.Substring(0, value.Length - 1) : value; }
 		}
+
+		/// <summary>
+		/// Failover servers used by replication informers when cannot fetch the list of replication 
+		/// destinations if a master server is down.
+		/// </summary>
+		public FailoverServers FailoverServers { get; set; }
+
+		/// <summary>
+		/// Whenever or not we will use FIPS compliant encryption algorithms (must match server settings).
+		/// </summary>
+		public bool UseFipsEncryptionAlgorithms { get; set; }
 
 		///<summary>
 		/// Whatever or not we will automatically enlist in distributed transactions
@@ -298,5 +327,23 @@ namespace Raven.Client
 		{
 			return AggressivelyCacheFor(TimeSpan.FromDays(1));
 		}
+
+#if !SILVERLIGHT && !NETFX_CORE
+		protected void InitializeEncryptor()
+		{
+			var setting = ConfigurationManager.AppSettings["Raven/Encryption/FIPS"];
+
+			bool fips;
+			if (string.IsNullOrEmpty(setting) || !bool.TryParse(setting, out fips))
+				fips = UseFipsEncryptionAlgorithms;
+
+			Encryptor.Initialize(fips);
+		}
+#else
+		protected void InitializeEncryptor()
+		{
+			Encryptor.Initialize(UseFipsEncryptionAlgorithms);
+		}
+#endif
 	}
 }

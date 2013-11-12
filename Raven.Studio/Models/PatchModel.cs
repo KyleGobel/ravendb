@@ -454,10 +454,8 @@ namespace Raven.Studio.Models
 
         public void HandlePatchError(AggregateException exception)
         {
-            var actualException = exception.ExtractSingleInnerException();
-
-            var message = actualException.TryReadResponseIfWebException().TryReadErrorPropertyFromJson();
-            PatchScriptErrorMessage.Value = string.IsNullOrEmpty(message) ? actualException.Message : message;
+			var message = exception.TryReadResponseIfWebException().Result.TryReadErrorPropertyFromJson();
+			PatchScriptErrorMessage.Value = string.IsNullOrEmpty(message) ? exception.ExtractSingleInnerException().Message : message;
             IsErrorVisible.Value = true;
         }
         
@@ -575,7 +573,7 @@ namespace Raven.Studio.Models
 
 		public override void Execute(object parameter)
 		{
-			AskUser.QuestionAsync("Save", "Please enter a name").ContinueOnSuccessInTheUIThread(name =>
+			AskUser.QuestionAsync("Save", "Please enter a name").ContinueOnSuccessInTheUIThread(async name =>
 			{
 				var doc = new PatchDocument
 				{
@@ -591,8 +589,8 @@ namespace Raven.Studio.Models
 					dbName = null;
 
 				var session = ApplicationModel.Current.Server.Value.DocumentStore.OpenAsyncSession(dbName);
-				session.Store(doc);
-				session.SaveChangesAsync().ContinueOnSuccessInTheUIThread(() => patchModel.UpdateDoc(name));
+				await session.StoreAsync(doc);
+				await session.SaveChangesAsync().ContinueOnSuccessInTheUIThread(() => patchModel.UpdateDoc(name));
 			});
 		}
 	}
@@ -770,21 +768,21 @@ namespace Raven.Studio.Models
 			                    .Finally(() => patchModel.InProcess.Value = false);
                             break;
 
-                        case PatchOnOptions.Collection:
-                            ApplicationModel.Database.Value.AsyncDatabaseCommands.UpdateByIndex(PatchModel.CollectionsIndex,
-                                                                                                new IndexQuery { Query = "Tag:" + patchModel.SelectedItem }, request)
+						case PatchOnOptions.Collection:
+							ApplicationModel.Database.Value.AsyncDatabaseCommands.UpdateByIndex(PatchModel.CollectionsIndex,
+																								new IndexQuery { Query = "Tag:" + patchModel.SelectedItem }, request)
 																								.ContinueOnSuccessInTheUIThread(() => patchModel.UpdateCollectionSource())
-                                                                                                 .ContinueOnUIThread(t => { if (t.IsFaulted) patchModel.HandlePatchError(t.Exception); })
+																								 .ContinueOnUIThread(t => { if (t.IsFaulted) patchModel.HandlePatchError(t.Exception); })
 																								 .Finally(() => patchModel.InProcess.Value = false);
-                            break;
+							break;
 
-                        case PatchOnOptions.Index:
-                            ApplicationModel.Database.Value.AsyncDatabaseCommands.UpdateByIndex(patchModel.SelectedItem, new IndexQuery { Query = patchModel.QueryDoc.CurrentSnapshot.Text },
-                                                                                                request)
+						case PatchOnOptions.Index:
+							ApplicationModel.Database.Value.AsyncDatabaseCommands.UpdateByIndex(patchModel.SelectedItem, new IndexQuery { Query = patchModel.QueryDoc.CurrentSnapshot.Text },
+																								request)
 																								.ContinueOnSuccessInTheUIThread(() => patchModel.UpdateCollectionSource())
-                                                                                                 .ContinueOnUIThread(t => { if (t.IsFaulted) patchModel.HandlePatchError(t.Exception); })
+																								 .ContinueOnUIThread(t => { if (t.IsFaulted) patchModel.HandlePatchError(t.Exception); })
 																								 .Finally(() => patchModel.InProcess.Value = false);
-                            break;
+							break;
                     }
 
 					

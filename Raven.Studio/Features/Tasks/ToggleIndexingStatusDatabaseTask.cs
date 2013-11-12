@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using Raven.Abstractions.Util;
 using Raven.Client.Connection.Async;
 
 namespace Raven.Studio.Features.Tasks
@@ -35,7 +36,7 @@ namespace Raven.Studio.Features.Tasks
             {
                 Report("Disabling Indexing ... (will wait for current indexing batch to complete)");
 
-                await DatabaseCommands.StopIndexingAsync();
+                await DatabaseCommands.Admin.StopIndexingAsync();
 
                 Report("Indexing Disabled");
             }
@@ -43,12 +44,17 @@ namespace Raven.Studio.Features.Tasks
             {
                 Report("Enabling Indexing");
 
-                await DatabaseCommands.StartIndexingAsync();
+                await DatabaseCommands.Admin.StartIndexingAsync();
 
                 Report("Indexing Enabled");
             }
 
             return DatabaseTaskOutcome.Succesful;
         }
+
+		public override void OnError()
+		{
+			
+		}
     }
 }

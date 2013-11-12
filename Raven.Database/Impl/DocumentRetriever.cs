@@ -36,6 +36,9 @@ namespace Raven.Database.Impl
 		private readonly InFlightTransactionalState inFlightTransactionalState;
 		private readonly Dictionary<string, RavenJToken> queryInputs;
 	    private readonly HashSet<string> itemsToInclude;
+		private bool disableCache;
+
+	    public Etag Etag = Etag.Empty;
 
 		public DocumentRetriever(IStorageActionsAccessor actions, OrderedPartCollection<AbstractReadTrigger> triggers, 
 			InFlightTransactionalState inFlightTransactionalState,
@@ -49,10 +52,10 @@ namespace Raven.Database.Impl
 		    this.itemsToInclude = itemsToInclude ?? new HashSet<string>();
 		}
 
-		public JsonDocument RetrieveDocumentForQuery(IndexQueryResult queryResult, IndexDefinition indexDefinition, FieldsToFetch fieldsToFetch)
+		public JsonDocument RetrieveDocumentForQuery(IndexQueryResult queryResult, IndexDefinition indexDefinition, FieldsToFetch fieldsToFetch, bool skipDuplicateCheck)
 		{
 			return ExecuteReadTriggers(ProcessReadVetoes(
-				RetrieveDocumentInternal(queryResult, loadedIdsForRetrieval, fieldsToFetch, indexDefinition),
+				RetrieveDocumentInternal(queryResult, loadedIdsForRetrieval, fieldsToFetch, indexDefinition, skipDuplicateCheck),
 				null, ReadOperation.Query), null, ReadOperation.Query);
 		}
 
@@ -99,7 +102,8 @@ namespace Raven.Database.Impl
 			IndexQueryResult queryResult,
 			HashSet<string> loadedIds,
 			FieldsToFetch fieldsToFetch,
-			IndexDefinition indexDefinition)
+			IndexDefinition indexDefinition,
+			bool skipDuplicateCheck)
 		{
 			var queryScore = queryResult.Score;
 
@@ -109,12 +113,13 @@ namespace Raven.Database.Impl
 			if (queryResult.Projection == null)
 			{
 				// duplicate document, filter it out
-				if (loadedIds.Add(queryResult.Key) == false)
+				if (skipDuplicateCheck == false && loadedIds.Add(queryResult.Key) == false)
 					return null;
 				var document = GetDocumentWithCaching(queryResult.Key);
 				if (document != null)
 				{
-					document.Metadata[Constants.TemporaryScoreValue] = queryScore;
+					if(skipDuplicateCheck == false)
+						document.Metadata[Constants.TemporaryScoreValue] = queryScore;
 				}
 				return document;
 			}
@@ -202,14 +207,22 @@ namespace Raven.Database.Impl
 			if (key == null)
 				return null;
 			JsonDocument doc;
-			if (cache.TryGetValue(key, out doc))
+			if (disableCache == false && cache.TryGetValue(key, out doc))
 				return doc;
 			doc = actions.Documents.DocumentByKey(key, null);
 			EnsureIdInMetadata(doc);
 			var nonAuthoritativeInformationBehavior = inFlightTransactionalState.GetNonAuthoritativeInformationBehavior<JsonDocument>(null, key);
 			if (nonAuthoritativeInformationBehavior != null)
 				doc = nonAuthoritativeInformationBehavior(doc);
-			cache[key] = doc;
+			if(disableCache == false)
+				cache[key] = doc;
+			if (cache.Count > 2048)
+			{
+				// we are probably doing a stream here, no point in trying to cache things, we might be
+				// going through the entire db here!
+				disableCache = true;
+				cache.Clear();
+			}
 			return doc;
 		}
 
@@ -226,9 +239,9 @@ namespace Raven.Database.Impl
 			doc.Metadata["@id"] = doc.Key;
 		}
 
-		public bool ShouldIncludeResultInQuery(IndexQueryResult arg, IndexDefinition indexDefinition, FieldsToFetch fieldsToFetch)
+		public bool ShouldIncludeResultInQuery(IndexQueryResult arg, IndexDefinition indexDefinition, FieldsToFetch fieldsToFetch, bool skipDuplicateCheck)
 		{
-			var doc = RetrieveDocumentInternal(arg, loadedIdsForFilter, fieldsToFetch, indexDefinition);
+			var doc = RetrieveDocumentInternal(arg, loadedIdsForFilter, fieldsToFetch, indexDefinition, skipDuplicateCheck);
 			if (doc == null)
 				return false;
 			doc = ProcessReadVetoes(doc, null, ReadOperation.Query);
@@ -313,14 +326,21 @@ namespace Raven.Database.Impl
 		{
 			var document = GetDocumentWithCaching(id);
 			if (document == null)
-				return new DynamicNullObject();
+			{
+			    Etag = Etag.HashWith(Etag.Empty);
+			    return new DynamicNullObject();
+			}
+		    Etag = Etag.HashWith(document.Etag);
 			return new DynamicJsonObject(document.ToJson());
 		}
 
 		public dynamic Load(object maybeId)
 		{
 			if (maybeId == null || maybeId is DynamicNullObject)
-				return new DynamicNullObject();
+			{
+			    Etag = Etag.HashWith(Etag.Empty);
+			    return new DynamicNullObject();
+			}
 			var id = maybeId as string;
 			if (id != null)
 				return Load(id);

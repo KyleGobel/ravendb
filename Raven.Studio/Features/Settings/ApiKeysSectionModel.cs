@@ -31,6 +31,36 @@ namespace Raven.Studio.Features.Settings
 					ApiKeys = new ObservableCollection<ApiKeyDefinition>(apiKeys);
 					OnPropertyChanged(() => ApiKeys);
 				});
+
+			ApiKeys.CollectionChanged += (sender, args) => HasUnsavedChanges = true;
+		}
+
+		public override void CheckForChanges()
+		{
+			if (HasUnsavedChanges)
+				return;
+
+			if (ApiKeys.Count != OriginalApiKeys.Count)
+			{
+				HasUnsavedChanges = true;
+				return;
+			}
+
+			foreach (var apiKeyDefinition in ApiKeys)
+			{
+				var original = OriginalApiKeys.FirstOrDefault(definition => definition.Name == apiKeyDefinition.Name);
+
+				HasUnsavedChanges = apiKeyDefinition.Equals(original) == false;
+
+				if (HasUnsavedChanges)
+					return;
+			}
+		}
+
+		public override void MarkAsSaved()
+		{
+			HasUnsavedChanges = false;
+			OriginalApiKeys = ApiKeys;
 		}
 
 		public ObservableCollection<ApiKeyDefinition> ApiKeys { get; set; }

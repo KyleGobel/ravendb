@@ -20,7 +20,7 @@ namespace Raven.Database.Prefetching
 			this.workContext = workContext;
 		}
 
-		public PrefetchingBehavior GetPrefetchingBehavior(PrefetchingUser user)
+		public PrefetchingBehavior GetPrefetchingBehavior(PrefetchingUser user, BaseBatchSizeAutoTuner autoTuner)
 		{
 			PrefetchingBehavior value;
 			if (prefetchingBehaviors.TryGetValue(user, out value))
@@ -30,7 +30,7 @@ namespace Raven.Database.Prefetching
 				if (prefetchingBehaviors.TryGetValue(user, out value))
 					return value;
 
-				value = new PrefetchingBehavior(workContext, new IndexBatchSizeAutoTuner(workContext));
+				value = new PrefetchingBehavior(workContext, autoTuner ?? new IndependentBatchSizeAutoTuner(workContext));
 
 				prefetchingBehaviors = new Dictionary<PrefetchingUser, PrefetchingBehavior>(prefetchingBehaviors)
 				{
@@ -52,8 +52,24 @@ namespace Raven.Database.Prefetching
 		{
 			foreach (var behavior in prefetchingBehaviors)
 			{
-				behavior.Value.AfterDelete(key, etagBeforeUpdate);
+				behavior.Value.AfterUpdate(key, etagBeforeUpdate);
 			}
+		}
+
+		public int GetInMemoryIndexingQueueSize(PrefetchingUser user)
+		{
+			PrefetchingBehavior value;
+			if (prefetchingBehaviors.TryGetValue(user, out value))
+				return value.InMemoryIndexingQueueSize;
+			return -1;
+		}
+
+		public void AfterStorageCommitBeforeWorkNotifications(PrefetchingUser user, JsonDocument[] documents)
+		{
+			PrefetchingBehavior value;
+			if (prefetchingBehaviors.TryGetValue(user, out value) == false)
+				return;
+			value.AfterStorageCommitBeforeWorkNotifications(documents);
 		}
 	}
 }

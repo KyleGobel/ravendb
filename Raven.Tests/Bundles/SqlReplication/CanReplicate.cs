@@ -8,8 +8,12 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading;
+using Raven.Abstractions.Data;
+using Raven.Abstractions.Logging;
 using Raven.Client.Embedded;
 using Raven.Database.Bundles.SqlReplication;
+using Raven.Database.Util;
+using Raven.Tests.MailingList;
 using Xunit;
 
 namespace Raven.Tests.Bundles.SqlReplication
@@ -20,6 +24,25 @@ namespace Raven.Tests.Bundles.SqlReplication
 		{
 			configuration.Settings["Raven/ActiveBundles"] = "sqlReplication";
 		}
+
+		private const string defaultScript = @"
+var orderData = {
+	Id: documentId,
+	OrderLinesCount: this.OrderLines.length,
+	TotalCost: 0
+};
+replicateToOrders(orderData);
+
+for (var i = 0; i < this.OrderLines.length; i++) {
+	var line = this.OrderLines[i];
+	orderData.TotalCost += line.Cost;
+	replicateToOrderLines({
+		OrderId: documentId,
+		Qty: line.Quantity,
+		Product: line.Product,
+		Cost: line.Cost
+	});
+}";
 
 		private void CreateRdbmsSchema()
 		{
@@ -88,7 +111,7 @@ CREATE TABLE [dbo].[Orders]
 					session.SaveChanges();
 				}
 
-				SetupSqlReplication(store);
+				SetupSqlReplication(store, defaultScript);
 
 				eventSlim.Wait(TimeSpan.FromMinutes(5));
 
@@ -110,9 +133,67 @@ CREATE TABLE [dbo].[Orders]
 			}
 		}
 
+		[FactIfSqlServerIsAvailable]
+		public void ReplicateMultipleBatches()
+		{
+			CreateRdbmsSchema();
+			using (var store = NewDocumentStore())
+			{
+				var eventSlim = new ManualResetEventSlim(false);
+
+				int testCount = 5000;
+				store.DocumentDatabase.StartupTasks.OfType<SqlReplicationTask>()
+					.First().AfterReplicationCompleted += successCount =>
+					{
+						if (GetOrdersCount() == testCount)
+							eventSlim.Set();
+					};
+
+				using (var session = store.BulkInsert())
+				{
+					for (int i = 0; i < testCount; i++)
+					{
+						session.Store(new Order
+						              {
+							              OrderLines = new List<OrderLine>
+							                           {
+								                           new OrderLine {Cost = 3, Product = "Milk", Quantity = 3},
+								                           new OrderLine {Cost = 4, Product = "Bear", Quantity = 2},
+							                           }
+
+						              });
+					}
+				}
+
+				SetupSqlReplication(store, defaultScript);
+
+				eventSlim.Wait(TimeSpan.FromMinutes(5));
+
+				Assert.Equal(testCount, GetOrdersCount());
+
+			}
+		}
+
+		private static int GetOrdersCount()
+		{
+			var providerFactory =
+					DbProviderFactories.GetFactory(FactIfSqlServerIsAvailable.ConnectionStringSettings.ProviderName);
+			using (var con = providerFactory.CreateConnection())
+			{
+				con.ConnectionString = FactIfSqlServerIsAvailable.ConnectionStringSettings.ConnectionString;
+				con.Open();
+
+				using (var dbCommand = con.CreateCommand())
+				{
+					dbCommand.CommandText = " SELECT COUNT(*) FROM Orders";
+					return (int) dbCommand.ExecuteScalar();
+				}
+			}
+		}
+
 		protected override void CreateDefaultIndexes(Client.IDocumentStore documentStore)
 		{
-			
+
 		}
 
 		[FactIfSqlServerIsAvailable]
@@ -142,7 +223,7 @@ CREATE TABLE [dbo].[Orders]
 					session.SaveChanges();
 				}
 
-				SetupSqlReplication(store);
+				SetupSqlReplication(store, defaultScript);
 
 				eventSlim.Wait(TimeSpan.FromMinutes(5));
 
@@ -190,7 +271,7 @@ CREATE TABLE [dbo].[Orders]
 					session.SaveChanges();
 				}
 
-				SetupSqlReplication(store);
+				SetupSqlReplication(store, defaultScript);
 
 				eventSlim.Wait(TimeSpan.FromMinutes(5));
 
@@ -204,6 +285,39 @@ CREATE TABLE [dbo].[Orders]
 
 				AssertCounts(0, 0);
 
+			}
+		}
+
+		[FactIfSqlServerIsAvailable]
+		public void WillLog()
+		{
+			LogManager.RegisterTarget<DatabaseMemoryTarget>();
+
+			CreateRdbmsSchema();
+			using (var store = NewDocumentStore())
+			{
+				var eventSlim = new ManualResetEventSlim(false);
+				store.DocumentDatabase.StartupTasks.OfType<SqlReplicationTask>()
+					 .First().AfterReplicationCompleted += successCount =>
+					 {
+						 if (successCount != 0)
+							 eventSlim.Set();
+					 };
+
+				using (var session = store.OpenSession())
+				{
+					session.Store(new Order());
+					session.SaveChanges();
+				}
+
+				SetupSqlReplication(store, @"output ('Tralala');asdfsadf
+var nameArr = this.StepName.split('.');");
+
+				eventSlim.Wait(TimeSpan.FromMinutes(5));
+				
+				var databaseMemoryTarget = LogManager.GetTarget<DatabaseMemoryTarget>();
+				var foo = databaseMemoryTarget[Constants.SystemDatabase].WarnLog.First(x=>x.LoggerName == typeof(SqlReplicationTask).FullName);
+				Assert.Equal("Could parse SQL Replication script for OrdersAndLines", foo.FormattedMessage);
 			}
 		}
 
@@ -225,7 +339,7 @@ CREATE TABLE [dbo].[Orders]
 			}
 		}
 
-		private static void SetupSqlReplication(EmbeddableDocumentStore store)
+		private static void SetupSqlReplication(EmbeddableDocumentStore store, string script)
 		{
 			using (var session = store.OpenSession())
 			{
@@ -241,24 +355,7 @@ CREATE TABLE [dbo].[Orders]
 						new SqlReplicationTable {TableName = "Orders", DocumentKeyColumn = "Id"},
 						new SqlReplicationTable {TableName = "OrderLines", DocumentKeyColumn = "OrderId"},
 					},
-					Script = @"
-var orderData = {
-	Id: documentId,
-	OrderLinesCount: this.OrderLines.length,
-	TotalCost: 0
-};
-replicateToOrders(orderData);
-
-for (var i = 0; i < this.OrderLines.length; i++) {
-	var line = this.OrderLines[i];
-	orderData.TotalCost += line.Cost;
-	replicateToOrderLines({
-		OrderId: documentId,
-		Qty: line.Quantity,
-		Product: line.Product,
-		Cost: line.Cost
-	});
-}"
+					Script = script
 				});
 				session.SaveChanges();
 			}

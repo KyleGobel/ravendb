@@ -1,17 +1,14 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Raven.Abstractions.Data;
 using Raven.Abstractions.Indexing;
 using Raven.Client;
-using Raven.Client.Embedded;
 using Raven.Client.Indexes;
-using Raven.Database.Server;
 using Xunit;
 
 namespace Raven.Tests.MailingList
 {
-	public class FacetCountTest : IDisposable
+	public class FacetCountTest : RateTests
 	{
 		public class WodsProjection
 		{
@@ -20,7 +17,7 @@ namespace Raven.Tests.MailingList
 			public string Description { get; set; }
 			public string WodType { get; set; }
 			public string BenchmarkType { get; set; }
-			public double Score { get; set; }
+			public double? Score { get; set; }
 			public List<string> ExerciseList { get; set; }
 		}
 
@@ -81,7 +78,7 @@ namespace Raven.Tests.MailingList
 									   wod.WodType,
 									   wod.BenchmarkType,
 									   wod.ExerciseList,
-									   Score = MetadataFor(wod).Value<double>("Temp-Index-Score")
+									   Score = MetadataFor(wod).Value<double?>("Temp-Index-Score")
 								   };
 
 				Index(m => m.ExerciseList, FieldIndexing.Default);
@@ -104,31 +101,6 @@ namespace Raven.Tests.MailingList
 
 			public string FacetKey { get; set; }
 			public List<Facet> FacetList { get; set; }
-		}
-
-		private EmbeddableDocumentStore _documentStore;
-
-		public EmbeddableDocumentStore NewDocumentStore()
-		{
-			if (_documentStore != null) return _documentStore;
-
-			_documentStore = new EmbeddableDocumentStore
-			{
-				DataDirectory = "Data",
-				RunInMemory = true,
-				UseEmbeddedHttpServer = true
-			};
-
-			_documentStore.Configuration.AnonymousUserAccessMode = AnonymousUserAccessMode.Admin;
-
-			_documentStore.Initialize();
-
-			return _documentStore;
-		}
-
-		public void Dispose()
-		{
-			_documentStore.Dispose();
 		}
 
 		[Fact]

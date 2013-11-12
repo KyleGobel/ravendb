@@ -4,6 +4,7 @@
 //  </copyright>
 // -----------------------------------------------------------------------
 using System;
+using System.Globalization;
 using Raven.Abstractions.Data;
 using Xunit;
 
@@ -65,7 +66,9 @@ namespace Raven.Tests.Issues
 				}
 				catch (Exception e)
 				{
-					Assert.True(e.GetBaseException().Message.StartsWith("Cannot insert"));
+					Assert.True(e.GetBaseException().Message.StartsWith("Cannot insert") || // munin
+						e.GetBaseException().Message.StartsWith("Illegal duplicate key") || //esent
+						e.GetBaseException().Message.StartsWith("InsertDocument() - checkForUpdates is false")); 
 				}
 			}
 
@@ -105,11 +108,28 @@ namespace Raven.Tests.Issues
 
 					for (int i = 0; i < 1000; i++)
 					{
-						bulk.Store(new Person
+						try
 						{
-							Id = i,
-							FirstName = "FName" + i
-						}, i.ToString());
+							bulk.Store(new Person
+							{
+								Id = i,
+								FirstName = "FName" + i
+							}, i.ToString(CultureInfo.InvariantCulture));
+						}
+						catch (Exception)
+						{
+							errored = true;
+							break;
+						}
+					}
+
+					try
+					{
+						bulk.DisposeAsync().Wait();
+					}
+					catch (Exception)
+					{
+						errored = true;
 					}
 				}
 			}

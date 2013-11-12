@@ -38,7 +38,7 @@ namespace Raven.Storage.Esent.StorageActions
 		private Transaction transaction;
 		private readonly Dictionary<Etag, Etag> etagTouches = new Dictionary<Etag, Etag>();
 		private readonly EsentTransactionContext transactionContext;
-		private readonly IDisposable sharedSessionContextHolder;
+		private readonly Action sessionAndTransactionDisposer;
 
 		public JET_DBID Dbid
 		{
@@ -75,18 +75,34 @@ namespace Raven.Storage.Esent.StorageActions
 				{
 					session = new Session(instance);
 					transaction = new Transaction(session);
+					sessionAndTransactionDisposer = () =>
+					{
+						if(transaction != null)
+							transaction.Dispose();
+						if(session != null)
+							session.Dispose();
+					};
 				}
 				else
 				{
 					session = transactionContext.Session;
 					transaction = transactionContext.Transaction;
-					sharedSessionContextHolder = transactionContext.EnterSessionContext();
+					var disposable = transactionContext.EnterSessionContext();
+					sessionAndTransactionDisposer = disposable.Dispose;
 				}
 				Api.JetOpenDatabase(session, database, null, out dbid, OpenDatabaseGrbit.None);
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				Dispose();
+			    logger.WarnException("Error when trying to open a new DocumentStorageActions", ex);
+			    try
+			    {
+			        Dispose();
+			    }
+			    catch (Exception e)
+			    {
+			        logger.WarnException("Error on dispose when the ctor threw an exception, resources may have leaked", e);
+			    }
 				throw;
 			}
 		}
@@ -142,18 +158,8 @@ namespace Raven.Storage.Esent.StorageActions
 			if (Equals(dbid, JET_DBID.Nil) == false && session != null)
 				Api.JetCloseDatabase(session.JetSesid, dbid, CloseDatabaseGrbit.None);
 
-			if (transactionContext == null)
-			{
-				if (transaction != null)
-					transaction.Dispose();
-
-				if (session != null)
-					session.Dispose();
-			}
-			else
-			{
-				sharedSessionContextHolder.Dispose();
-			}
+		    if (sessionAndTransactionDisposer != null)
+		        sessionAndTransactionDisposer();
 		}
 
 		public void UseLazyCommit()

@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Text;
 using System.Linq;
 #if SILVERLIGHT || NETFX_CORE
-using Raven.Client.Silverlight.MissingFromSilverlight;
+using Raven.Abstractions.Util;
 #else
 using System.Security.Cryptography;
 #endif
@@ -41,7 +41,9 @@ namespace Raven.Abstractions.Data
 
 		public Etag(string str)
 		{
-			Parse(str);
+			var etag = Parse(str);
+			restarts = etag.restarts;
+			changes = etag.changes;
 		}
 
 		public Etag(UuidType type, long restarts, long changes)
@@ -233,6 +235,31 @@ namespace Raven.Abstractions.Data
 			return Parse(s);
 		}
 
+        public static implicit operator Etag(Guid g)
+        {
+            return Parse(g.ToByteArray());
+        }
+
+        public static implicit operator Guid?(Etag e)
+        {
+            if (e == null)
+                return null;
+            return new Guid(e.ToByteArray());
+        }
+
+
+
+        public static implicit operator Etag(Guid? g)
+        {
+            if (g == null)
+                return null;
+            return Parse(g.Value.ToByteArray());
+        }
+
+        public static implicit operator Guid(Etag e)
+        {
+            return new Guid(e.ToByteArray());
+        }
 
 		public Etag HashWith(Etag other)
 		{
@@ -250,6 +277,15 @@ namespace Raven.Abstractions.Data
 				return Parse(md5.ComputeHash(etagBytes));
 			}
 #endif
+		}
+
+		public static Etag Max(Etag first, Etag second)
+		{
+			if (first == null)
+				return second;
+			return first.CompareTo(second) > 0
+				? first
+				: second;
 		}
 	}
 
@@ -277,84 +313,4 @@ namespace Raven.Abstractions.Data
 			return objectType == typeof (Etag);
 		}
 	}
-
-	//public class Etag : IComparable, IComparable<Etag>
-	//{
-	//    public Etag()
-	//    {
-
-	//    }
-	//    public Etag(string s)
-	//    {
-	//        Value = s;
-	//    }
-
-	//    public Etag(Guid guid)
-	//    {
-	//        Value = guid.ToString();
-	//    }
-
-	//    public Etag(Guid? guid)
-	//    {
-	//        if (guid != null)
-	//            Value = guid.ToString();
-	//    }
-
-	//    public string Value { get; private set; }
-
-	//    //public static implicit operator string(Etag etag)
-	//    //{
-	//    //    return etag.Value;
-	//    //}
-
-	//    //public override string ToString()
-	//    //{
-	//    //    return Value;
-	//    //}
-
-	//    //public static implicit operator Guid(Etag etag)
-	//    //{
-	//    //    return new Guid(etag.Value);
-	//    //}
-	//    //public static implicit operator Guid?(Etag etag)
-	//    //{
-	//    //    if (string.IsNullOrWhiteSpace(etag.Value))
-	//    //        return null;
-	//    //    return new Guid(etag.Value);
-	//    //}
-
-	//    //public static implicit operator Etag(Guid guid)
-	//    //{
-	//    //    return new Etag(guid);
-	//    //}
-
-	//    //public static implicit operator Etag(Guid? guid)
-	//    //{
-	//    //    return new Etag(guid);
-	//    //}
-
-	//    //public static implicit operator Etag(string s)
-	//    //{
-	//    //    return new Etag(s);
-	//    //}
-	//    public int CompareTo(object obj)
-	//    {
-	//        var etag = obj as string;
-	//        if (etag == null)
-	//            return 1;
-	//        return Value.CompareTo(etag);
-	//    }
-
-	//    public int CompareTo(Etag other)
-	//    {
-	//        if (other == null)
-	//            return 1;
-	//        return Value.CompareTo(other.Value);
-	//    }
-
-	//    public byte[] ToByteArray()
-	//    {
-	//        return Encoding.UTF8.GetBytes(Value);
-	//    }
-	//}
 }

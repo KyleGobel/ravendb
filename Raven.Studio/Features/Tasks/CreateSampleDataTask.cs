@@ -15,6 +15,7 @@ using Raven.Abstractions.Commands;
 using Raven.Abstractions.Extensions;
 using Raven.Abstractions.Indexing;
 using Raven.Abstractions.Smuggler;
+using Raven.Abstractions.Util;
 using Raven.Client.Connection.Async;
 using Raven.Imports.Newtonsoft.Json;
 using Raven.Json.Linq;
@@ -46,17 +47,21 @@ namespace Raven.Studio.Features.Tasks
             {
                 Report("Reading documents");
 
-                var smugglerOptions = new SmugglerOptions
+                var smuggler = new SmugglerApi(DatabaseCommands, s => Report(s));
+                await smuggler.ImportData(new SmugglerOptions
                 {
                     OperateOnTypes = ItemType.Documents | ItemType.Indexes | ItemType.Transformers,
                     ShouldExcludeExpired = false,
-                };
-                var smuggler = new SmugglerApi(smugglerOptions, DatabaseCommands, s => Report(s));
-
-                await smuggler.ImportData(sampleData, smugglerOptions);
+                    BackupStream = sampleData,
+                });
             }
 
             return DatabaseTaskOutcome.Succesful;
         }
+
+		public override void OnError()
+		{
+
+		}
     }
 }

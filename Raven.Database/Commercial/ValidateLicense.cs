@@ -23,6 +23,8 @@ using System.Linq;
 
 namespace Raven.Database.Commercial
 {
+	using Raven.Abstractions;
+
 	internal class ValidateLicense : IDisposable
 	{
 		public static LicensingStatus CurrentLicense { get; set; }
@@ -35,6 +37,7 @@ namespace Raven.Database.Commercial
 		{
 			{"periodicBackup", "false"},
 			{"encryption", "false"},
+			{"fips", "false"},
 			{"compression", "false"},
 			{"quotas","false"},
 
@@ -100,12 +103,21 @@ namespace Raven.Database.Commercial
 				{
 					attributes[licenseAttribute.Key] = licenseAttribute.Value;
 				}
-		
+
+				var message = "Valid license at " + licensePath;
+				var status = "Commercial - " + licenseValidator.LicenseType;
+
+				if (licenseValidator.IsOemLicense() && licenseValidator.ExpirationDate < SystemTime.UtcNow)
+				{
+					message = string.Format("Expired ({0}) OEM license at {1}", licenseValidator.ExpirationDate.ToShortDateString(), licensePath);
+					status += " (Expired)";
+				}
+
 				CurrentLicense = new LicensingStatus
 				{
-					Status = "Commercial - " + licenseValidator.LicenseType,
+					Status = status,
 					Error = false,
-					Message = "Valid license at " + licensePath,
+					Message = message,
 					Attributes = attributes
 				};
 			}
@@ -116,13 +128,15 @@ namespace Raven.Database.Commercial
 				try
 				{
 					var xmlDocument = new XmlDocument();
-					xmlDocument.LoadXml(licensePath);
-					var sig = xmlDocument.SelectSingleNode("/license/Signature");
-					if (sig != null && sig.ParentNode != null)
-						sig.ParentNode.RemoveChild(sig);
-					var stringBuilder = new StringBuilder();
-					xmlDocument.WriteTo(XmlWriter.Create(stringBuilder));
-					licenseText = stringBuilder.ToString();
+					xmlDocument.Load(licensePath);
+					var ns = new XmlNamespaceManager(xmlDocument.NameTable);
+					ns.AddNamespace("sig", "http://www.w3.org/2000/09/xmldsig#");
+					var sig = xmlDocument.SelectSingleNode("/license/sig:Signature",ns);
+					if (sig != null)
+					{
+						sig.RemoveAll();
+					}
+					licenseText = xmlDocument.InnerXml;
 				}
 				catch (Exception)
 				{
@@ -177,10 +191,46 @@ namespace Raven.Database.Commercial
 		{
 			string version;
 			if (licenseAttributes.TryGetValue("version", out version) == false)
+			{
+				if (licenseValidator.LicenseType != LicenseType.Subscription)
 				throw new LicenseExpiredException("This is not a license for RavenDB 2.0");
 
-			if(version != "1.2" && version != "2.0")
-				throw new LicenseExpiredException("This is not a license for RavenDB 2.0");
+				// Add backward compatibility for the subscription licenses of v1
+				licenseAttributes["version"]= "2.5";
+				licenseAttributes["implicit20StandardLicenseBy10Subscription"]= "true";
+				licenseAttributes["allowWindowsClustering"]= "false";
+				licenseAttributes["numberOfDatabases"]= "unlimited";
+				licenseAttributes["periodicBackup"]= "true";
+				licenseAttributes["encryption"]= "false";
+				licenseAttributes["compression"]= "false";
+				licenseAttributes["quotas"]= "false";
+				licenseAttributes["authorization"]= "true";
+				licenseAttributes["documentExpiration"]= "true";
+				licenseAttributes["replication"]= "true";
+				licenseAttributes["versioning"]= "true";
+				licenseAttributes["maxSizeInMb"]= "unlimited";
+
+				string oem;
+				if (licenseValidator.LicenseAttributes.TryGetValue("OEM", out oem) &&
+				    "true".Equals(oem ,StringComparison.OrdinalIgnoreCase))
+				{
+					licenseAttributes["OEM"]= "true";
+					licenseAttributes["maxRamUtilization"]= "6442450944";
+					licenseAttributes["maxParallelism"]= "3";
+
+				}
+				else
+				{
+					licenseAttributes["OEM"]= "false";
+					licenseAttributes["maxRamUtilization"]= "12884901888";
+					licenseAttributes["maxParallelism"]= "6";
+				}                     
+			}
+			else
+			{
+				if (version != "1.2" && version != "2.0" && version != "2.5")
+					throw new LicenseExpiredException("This is not a license for RavenDB 2.x");
+			}
 
 			string maxRam;
 			if (licenseAttributes.TryGetValue("maxRamUtilization", out maxRam))

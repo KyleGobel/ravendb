@@ -13,6 +13,7 @@ using System.Windows.Input;
 using Microsoft.Expression.Interactivity.Core;
 using Raven.Abstractions.Data;
 using Raven.Studio.Infrastructure;
+using Raven.Studio.Messages;
 using Raven.Studio.Models;
 
 namespace Raven.Studio.Features.Stats
@@ -30,6 +31,7 @@ namespace Raven.Studio.Features.Stats
 			Statistics = new Dictionary<string, StatInfo>();
 			StatisticsToView = new Dictionary<string, StatInfo>();
 			ViewOptions = new List<string>();
+			StaleIndexes = new List<object>();
 			SelectedViewOption = new Observable<string> { Value = "All" };
 			SelectedViewOption.PropertyChanged += (sender, args) => UpdateView();
 			UpdateStatistics();
@@ -67,6 +69,16 @@ namespace Raven.Studio.Features.Stats
 						foreach (var item in items)
 						{
 							StatisticsToView.Add(item.Key, item.Value);
+						}
+					}
+					break;
+				case "Stale Indexes":
+					{
+						var indexes = Statistics.FirstOrDefault(pair => pair.Key == "Indexes");
+						foreach (var index in StaleIndexes)
+						{
+							var item = indexes.Value.ListItems.FirstOrDefault(infoItem => infoItem.Title == (string) index);
+							StatisticsToView.Add(index.ToString(), new StatInfo{ListItems = new List<StatInfoItem>{item}, IsList = true});
 						}
 					}
 					break;
@@ -116,6 +128,7 @@ namespace Raven.Studio.Features.Stats
 			SelectedViewOption.Value = index;
 		}
 
+		private int retries = 3;
 		private void UpdateStatistics()
 		{
 			StatsData = ApplicationModel.Database.Value.Statistics;
@@ -126,10 +139,17 @@ namespace Raven.Studio.Features.Stats
 
 			if (StatsData.Value == null)
 			{
+				if (retries-- == 0)
+				{
+					ApplicationModel.Current.Notifications.Add(new Notification("Could not load settings for database " + ApplicationModel.Database.Value.Name));
+					return;
+				}
 				Thread.Sleep(100);
 				UpdateStatistics();
 				return;
 			}
+
+			retries = 3;
 
 			foreach (var propertyInfo in StatsData.Value.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
 			{
@@ -138,9 +158,9 @@ namespace Raven.Studio.Features.Stats
 				if (enumerable != null)
 				{
 					var list = enumerable as List<object> ?? enumerable.ToList();
-
 					if (propertyInfo.Name == "StaleIndexes")
 					{
+						StaleIndexes = new List<object>(list);
 						if (list.Count == 0)
 						{
 							Statistics.Add(propertyInfo.Name, new StatInfo
@@ -149,12 +169,22 @@ namespace Raven.Studio.Features.Stats
 								ToolTipData = "No Stale Indexes"
 							});
 						}
-						else
+						else if (list.Count > 1)
 						{
+							ViewOptions.Add("Stale Indexes");
 							Statistics.Add(propertyInfo.Name, new StatInfo
 							{
-								Message = string.Format("There are {0} Stale indexes", list.Count),
+								Message = string.Format("There are {0} Stale Indexes: {1}", list.Count, string.Join(",", list)),
 								ToolTipData = string.Join(", ", list)
+							});
+						}
+						else // only one item
+						{
+							ViewOptions.Add("Stale Indexes");
+							Statistics.Add(propertyInfo.Name, new StatInfo
+							{
+								Message = "There is 1 Stale Index: " + list[0],
+								ToolTipData = list[0].ToString() // only one item, no need to call string.Join()
 							});
 						}
 
@@ -265,6 +295,7 @@ namespace Raven.Studio.Features.Stats
 
 			foreach (var indexingPerformanceStat in performance)
 			{
+				indexingPerformanceStat.Started = indexingPerformanceStat.Started.ToLocalTime();
 				switch (indexingPerformanceStat.Operation)
 				{
 					case "Index":
@@ -297,27 +328,27 @@ namespace Raven.Studio.Features.Stats
 		{
 			foreach (var indexingPerformanceStats in IndexesGraphData[statInfoItem.Title].IndexData)
 			{
-				statInfoItem.IndexData.Add(indexingPerformanceStats.Started, indexingPerformanceStats);
+				statInfoItem.IndexData[indexingPerformanceStats.Started] = indexingPerformanceStats;
 			}
 
 			foreach (var indexingPerformanceStats in IndexesGraphData[statInfoItem.Title].MapData)
 			{
-				statInfoItem.MapData.Add(indexingPerformanceStats.Started, indexingPerformanceStats);
+				statInfoItem.MapData[indexingPerformanceStats.Started] = indexingPerformanceStats;
 			}
 
 			foreach (var indexingPerformanceStats in IndexesGraphData[statInfoItem.Title].Level0Data)
 			{
-				statInfoItem.Level0Data.Add(indexingPerformanceStats.Started, indexingPerformanceStats);
+				statInfoItem.Level0Data[indexingPerformanceStats.Started] = indexingPerformanceStats;
 			}
 
 			foreach (var indexingPerformanceStats in IndexesGraphData[statInfoItem.Title].Level1Data)
 			{
-				statInfoItem.Level1Data.Add(indexingPerformanceStats.Started, indexingPerformanceStats);
+				statInfoItem.Level1Data[indexingPerformanceStats.Started] = indexingPerformanceStats;
 			}
 
 			foreach (var indexingPerformanceStats in IndexesGraphData[statInfoItem.Title].Level2Data)
 			{
-				statInfoItem.Level2Data.Add(indexingPerformanceStats.Started, indexingPerformanceStats);
+				statInfoItem.Level2Data[indexingPerformanceStats.Started] = indexingPerformanceStats;
 			}
 
 			TrimDictionaries(statInfoItem);
@@ -352,6 +383,7 @@ namespace Raven.Studio.Features.Stats
 		public Dictionary<string, PerformanceStats> IndexesGraphData { get; set; } 
 		public Observable<string> SelectedViewOption { get; set; }
         public string Breadcrumb { get; set; }
+		public List<object> StaleIndexes { get; set; }
 	}
 
 	public class PerformanceStats

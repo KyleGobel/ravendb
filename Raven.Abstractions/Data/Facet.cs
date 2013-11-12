@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Linq;
 using System;
@@ -14,6 +15,7 @@ namespace Raven.Abstractions.Data
 		public FacetMode Mode { get; set; }
         public FacetAggregation Aggregation { get; set; }
         public string AggregationField { get; set; }
+		public string AggregationType { get; set; }
 		public string Name { get; set; }
 		public string DisplayName
 		{
@@ -208,7 +210,7 @@ namespace Raven.Abstractions.Data
 			{
 				//The nullable stuff here it a bit weird, but it helps with trying to cast Value types
 				case "System.DateTime":
-					return RavenQuery.Escape(((DateTime)value).ToString(Default.DateTimeFormatsToWrite));
+					return RavenQuery.Escape(((DateTime)value).ToString(Default.DateTimeFormatsToWrite, CultureInfo.InvariantCulture));
 				case "System.Int32":
 					return NumberUtil.NumberToString(((int)value));
 				case "System.Int64":

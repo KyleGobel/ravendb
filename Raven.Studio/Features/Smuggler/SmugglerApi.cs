@@ -31,22 +31,19 @@ namespace Raven.Studio.Features.Smuggler
 			return str;
 		}
 
-		public SmugglerApi(SmugglerOptions smugglerOptions, IAsyncDatabaseCommands commands, Action<string> output)
-			: base(smugglerOptions)
+		public SmugglerApi(IAsyncDatabaseCommands commands, Action<string> output)
 		{
 			this.commands = commands;
 			this.output = output;
 			batch = new List<RavenJObject>();
 		}
 
-		protected override Task<RavenJArray> GetIndexes(int totalCount)
+		protected override async Task<RavenJArray> GetIndexes(int totalCount)
 		{
 			var url = ("/indexes?pageSize=" + SmugglerOptions.BatchSize + "&start=" + totalCount).NoCache();
 			var request = commands.CreateRequest(url, "GET");
 
-			return request
-				.ReadResponseJsonAsync()
-				.ContinueWith(task => ((RavenJArray)task.Result));
+		    return (RavenJArray)await request.ReadResponseJsonAsync();
 		}
 
 		protected override Task<IAsyncEnumerator<RavenJObject>> GetDocuments(Etag lastEtag)
@@ -141,10 +138,10 @@ namespace Raven.Studio.Features.Smuggler
 						switch (header.Key)
 						{
 							case "Content-Type":
-								request.ContentType = header.Value.Value<string>();
+								// request.httpClient.DefaultHeaders = header.Value.Value<string>();
 								break;
 							default:
-								request.Headers[header.Key] = StripQuotesIfNeeded(header.Value);
+								// request.Headers.Add(header.Key, StripQuotesIfNeeded(header.Value));
 								break;
 						}
 					}

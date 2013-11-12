@@ -15,6 +15,11 @@ namespace Raven.Studio.Features.Settings
 		public long MaxDocs { get; set; }
 		public long WarnDocs { get; set; }
 
+		public long OriginalMaxSize { get; set; }
+		public long OriginalWarnSize { get; set; }
+		public long OriginalMaxDocs { get; set; }
+		public long OriginalWarnDocs { get; set; }
+
         public override void LoadFor(DatabaseDocument document)
         {
 			MaxSize = ReadSettingAsInt(document, Constants.SizeHardLimitInKB) / 1024;
@@ -22,10 +27,31 @@ namespace Raven.Studio.Features.Settings
             MaxDocs = ReadSettingAsInt(document, Constants.DocsHardLimit);
             WarnDocs = ReadSettingAsInt(document, Constants.DocsSoftLimit);
 
+	        OriginalMaxSize = MaxSize;
+	        OriginalWarnSize = WarnSize;
+	        OriginalMaxDocs = MaxDocs;
+	        OriginalWarnDocs = WarnDocs;
             OnEverythingChanged();
         }
 
-		private static long ReadSettingAsInt(DatabaseDocument document, string settingName)
+	    public override void CheckForChanges()
+	    {
+		    if (MaxSize != OriginalMaxSize || WarnSize != OriginalWarnSize || MaxDocs != OriginalMaxDocs ||
+		        WarnDocs != OriginalWarnDocs)
+			    HasUnsavedChanges = true;
+	    }
+
+	    public override void MarkAsSaved()
+	    {
+		    HasUnsavedChanges = false;
+
+			OriginalMaxSize = MaxSize;
+			OriginalWarnSize = WarnSize;
+			OriginalMaxDocs = MaxDocs;
+			OriginalWarnDocs = WarnDocs;
+	    }
+
+	    private static long ReadSettingAsInt(DatabaseDocument document, string settingName)
         {
 			long value;
             if (document.Settings.ContainsKey(settingName))
@@ -35,5 +61,7 @@ namespace Raven.Studio.Features.Settings
 
             return value;
         }
+
+	   
     }
 }

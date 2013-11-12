@@ -84,11 +84,37 @@ namespace Raven.Storage.Managed
 			return Etag.Parse(match.Value<byte[]>("etag"));
 		}
 
-		public IEnumerable<JsonDocument> GetDocumentsWithIdStartingWith(string idPrefix, int start, int take)
+	    public DebugDocumentStats GetDocumentStatsVerySlowly()
+	    {
+	        var sp = Stopwatch.StartNew();
+	        var stat = new DebugDocumentStats {Total = GetDocumentsCount()};
+            foreach (var readResult in storage.Documents)
+            {
+                var key = readResult.Key.Value<string>("key");
+                if (key.StartsWith("Raven/", StringComparison.OrdinalIgnoreCase))
+                    stat.System++;
+
+                var metadata = readResult.Data().ToJObject();
+
+                var entityName = metadata.Value<string>(Constants.RavenEntityName);
+                if (string.IsNullOrEmpty(entityName))
+                    stat.NoCollection++;
+                else
+                    stat.IncrementCollection(entityName);
+
+                if (metadata.ContainsKey("Raven-Delete-Marker"))
+                    stat.Tombstones++;
+            }
+
+	        stat.TimeToGenerate = sp.Elapsed;
+	        return stat;
+	    }
+
+	    public IEnumerable<JsonDocument> GetDocumentsWithIdStartingWith(string idPrefix, int start, int take)
 		{
 			return storage.Documents["ByKey"].SkipTo(new RavenJObject { { "key", idPrefix } })
 				.Skip(start)
-				.TakeWhile(x => x.Value<string>("key").StartsWith(idPrefix))
+				.TakeWhile(x => x.Value<string>("key").StartsWith(idPrefix, StringComparison.OrdinalIgnoreCase))
 				.Select(result => DocumentByKey(result.Value<string>("key"), null))
 				.Take(take);
 		}
@@ -167,23 +193,8 @@ namespace Raven.Storage.Managed
 				Key = readResult.Key.Value<string>("key"),
 				Etag = etag,
 				Metadata = metadata,
-				LastModified = readResult.Key.Value<DateTime>("modified"),
-				NonAuthoritativeInformation = IsModifiedByTransaction(resultInTx)
+				LastModified = readResult.Key.Value<DateTime>("modified")
 			});
-		}
-
-		private bool IsModifiedByTransaction(Table.ReadResult resultInTx)
-		{
-			if (resultInTx == null)
-				return false;
-			var txId = resultInTx.Key.Value<string>("txId");
-			var tx = storage.Transactions.Read(new RavenJObject
-			{
-				{"txId", txId}
-			});
-			if (tx == null)
-				return false;
-			return SystemTime.UtcNow < tx.Key.Value<DateTime>("timeout");
 		}
 
 		private Tuple<MemoryStream, RavenJObject, int> ReadMetadata(string key, Etag etag, Func<byte[]> getData, out RavenJObject metadata)

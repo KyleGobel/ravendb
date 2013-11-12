@@ -49,14 +49,14 @@ namespace Raven.Tests.Issues
 
 			store2.Initialize();
 
-			store1.DatabaseCommands.CreateDatabase(
+			store1.DatabaseCommands.GlobalAdmin.CreateDatabase(
 				new DatabaseDocument
 				{
 					Id = "Northwind",
 					Settings = { { "Raven/ActiveBundles", "replication" }, { "Raven/DataDir", @"~\D1\N" } }
 				});
 
-			store2.DatabaseCommands.CreateDatabase(
+			store2.DatabaseCommands.GlobalAdmin.CreateDatabase(
 				new DatabaseDocument
 				{
 					Id = "Northwind",
@@ -105,14 +105,14 @@ namespace Raven.Tests.Issues
 
 			store2.Initialize();
 
-			store1.DatabaseCommands.CreateDatabase(
+			store1.DatabaseCommands.GlobalAdmin.CreateDatabase(
 				new DatabaseDocument
 				{
 					Id = "Northwind",
 					Settings = { { "Raven/ActiveBundles", "replication" }, { "Raven/DataDir", @"~\D1\N" } }
 				});
 
-			store2.DatabaseCommands.CreateDatabase(
+			store2.DatabaseCommands.GlobalAdmin.CreateDatabase(
 				new DatabaseDocument
 				{
 					Id = "Northwind",
@@ -152,7 +152,7 @@ namespace Raven.Tests.Issues
 
 			store1.Initialize();
 
-			store1.DatabaseCommands.CreateDatabase(
+			store1.DatabaseCommands.GlobalAdmin.CreateDatabase(
 				new DatabaseDocument
 				{
 					Id = "Northwind",
@@ -174,7 +174,7 @@ namespace Raven.Tests.Issues
 
 			Assert.NotNull(result);
 			Assert.Equal(1, result.Length);
-			Assert.Equal("Unable to connect to the remote server", result[0].Value<string>("Status"));
+			Assert.NotNull(result[0].Value<string>("Status"));
 			Assert.Equal(-2, result[0].Value<int>("Code"));
 		}
 
@@ -191,7 +191,7 @@ namespace Raven.Tests.Issues
 
 			store1.Initialize();
 
-			store1.DatabaseCommands.CreateDatabase(
+			store1.DatabaseCommands.GlobalAdmin.CreateDatabase(
 				new DatabaseDocument
 				{
 					Id = "Northwind",
@@ -222,7 +222,7 @@ namespace Raven.Tests.Issues
 
 			Assert.NotNull(result);
 			Assert.Equal(1, result.Length);
-			Assert.Equal("The remote name could not be resolved: 'unknown.url'", result[0].Value<string>("Status"));
+			Assert.NotNull(result[0].Value<string>("Status"));
 			Assert.Equal(-1, result[0].Value<int>("Code"));
 		}
 
@@ -257,7 +257,7 @@ namespace Raven.Tests.Issues
 
 		private RavenDbServer StartServer(RavenDbServer server)
 		{
-			return this.CreateServer(server.Database.Configuration.Port, server.Database.Configuration.DataDirectory, false);
+			return this.CreateServer(server.SystemDatabase.Configuration.Port, server.SystemDatabase.Configuration.DataDirectory, false);
 		}
 
 		public override void Dispose()
@@ -265,13 +265,13 @@ namespace Raven.Tests.Issues
 			if (server1 != null)
 			{
 				server1.Dispose();
-				IOExtensions.DeleteDirectory(server1.Database.Configuration.DataDirectory);
+				IOExtensions.DeleteDirectory(server1.SystemDatabase.Configuration.DataDirectory);
 			}
 
 			if (server2 != null)
 			{
 				server2.Dispose();
-				IOExtensions.DeleteDirectory(server2.Database.Configuration.DataDirectory);
+				IOExtensions.DeleteDirectory(server2.SystemDatabase.Configuration.DataDirectory);
 			}
 
 			if (store1 != null)

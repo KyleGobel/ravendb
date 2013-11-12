@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Raven.Abstractions.Data;
+using Raven.Abstractions.Util;
 using Raven.Client.Connection.Async;
 using Raven.Json.Linq;
 using Raven.Studio.Models;
@@ -49,7 +50,7 @@ namespace Raven.Studio.Features.Tasks
             var databaseDocument = ApplicationModel.Current.Server.Value.DocumentStore.Conventions.CreateSerializer()
                                                    .Deserialize<DatabaseDocument>(new RavenJTokenReader(doc));
 
-            await DatabaseCommands.StartBackupAsync(backupLocation, databaseDocument);
+            await DatabaseCommands.Admin.StartBackupAsync(backupLocation, databaseDocument);
 
             var hasCompleted = false;
             var lastMessageTimeStamp = DateTime.MinValue;
@@ -81,5 +82,10 @@ namespace Raven.Studio.Features.Tasks
 
             return DatabaseTaskOutcome.Succesful;
         }
+
+		public override void OnError()
+		{
+
+		}
     }
 }

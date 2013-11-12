@@ -108,6 +108,7 @@ namespace Raven.Studio.Features.Tasks
             get { return databaseName; }
         }
 
+	    private Exception innderException = null;
         public async Task<DatabaseTaskOutcome> Run()
         {
             Status = DatabaseTaskStatus.Running;
@@ -119,8 +120,9 @@ namespace Raven.Studio.Features.Tasks
             }
             catch (Exception ex)
             {
+				Outcome = DatabaseTaskOutcome.Error;
+	            OnError();
                 ReportError(ex);
-                Outcome = DatabaseTaskOutcome.Error;
             }
             finally
             {
@@ -137,8 +139,9 @@ namespace Raven.Studio.Features.Tasks
                 }
                 else if ((Outcome ?? DatabaseTaskOutcome.Abandoned) == DatabaseTaskOutcome.Error)
                 {
+					
                     ApplicationModel.Current.AddNotification(new Notification("Task " + taskName + " has failed for Database " +
-                                                                 DatabaseName, NotificationLevel.Error));
+                                                                 DatabaseName, NotificationLevel.Error, innderException));
                 }
             }
 
@@ -157,11 +160,15 @@ namespace Raven.Studio.Features.Tasks
             });
         }
 
+	    public abstract void OnError();
+
         private void ReportError(Exception exception)
         {
             var aggregate = exception as AggregateException;
             if (aggregate != null)
                 exception = aggregate.ExtractSingleInnerException();
+
+	        innderException = exception;
 
             var objects = new List<object>();
             var webException = exception as WebException;
@@ -173,15 +180,25 @@ namespace Raven.Studio.Features.Tasks
                     var stream = httpWebResponse.GetResponseStream();
                     if (stream != null)
                     {
-                        objects = ApplicationModel.ExtractError(stream, httpWebResponse);
+	                    try
+	                    {
+							objects = ApplicationModel.ExtractError(stream, httpWebResponse);
+	                    }
+	                    catch (Exception)
+	                    {
+
+	                    }
                     }
                 }
             }
 
             if (objects.Count == 0)
+			{
                 Report(exception.Message, OutputType.Error);
+			}
             else
             {
+				innderException = new Exception(string.Join(Environment.NewLine, objects));
                 foreach (var msg in objects)
                 {
                     string value = msg.ToString();

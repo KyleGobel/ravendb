@@ -11,6 +11,7 @@ using Raven.Abstractions.Indexing;
 using Raven.Json.Linq;
 using Raven.Database;
 using Xunit;
+using System.Linq;
 
 namespace Raven.Tests.Views
 {
@@ -37,7 +38,7 @@ select new {
 
 		public MapReduce()
 		{
-			store = NewDocumentStore();
+			store = NewDocumentStore(runInMemory: true);
 			db = store.DocumentDatabase;
 			db.PutIndex("CommentsCountPerBlog", new IndexDefinition{Map = map, Reduce = reduce, Indexes = {{"blog_id", FieldIndexing.NotAnalyzed}}});
 		}
@@ -74,6 +75,7 @@ select new {
 		    Assert.Equal(@"{""blog_id"":3,""comments_length"":14}", q.Results[0].ToString(Formatting.None));
 		}
 
+		//issue --> indice name : scheduled_reductions_by_view -->multi-tree key commentscountperblog
 		[Fact]
 		public void DoesNotOverReduce() 
 		{
@@ -86,9 +88,10 @@ select new {
 			Assert.False(q.IsStale);
 			Assert.Equal(@"{""blog_id"":3,""comments_length"":3}", q.Results[0].ToString(Formatting.None));
 
-			var index = db.Statistics.Indexes[0];
-			Assert.True(1024 >= index.ReduceIndexingAttempts,
-				"1024 >= " + index.ReduceIndexingAttempts + " failed");
+            var index = db.Statistics.Indexes.First(x => x.PublicName == "CommentsCountPerBlog");
+			// we add 100 because we might have reduces running in the middle of the operation
+			Assert.True((1024 + 100) >= index.ReduceIndexingAttempts,
+				"1024 + 100 >= " + index.ReduceIndexingAttempts + " failed");
 		}
 
 	    private QueryResult GetUnstableQueryResult(string query)

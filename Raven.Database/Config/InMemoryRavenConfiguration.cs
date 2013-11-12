@@ -26,6 +26,10 @@ using Raven.Imports.Newtonsoft.Json;
 
 namespace Raven.Database.Config
 {
+	using System.Runtime;
+
+	using Raven.Abstractions.Util.Encryptors;
+
 	public class InMemoryRavenConfiguration
 	{
 		private CompositionContainer container;
@@ -59,11 +63,13 @@ namespace Raven.Database.Config
 			FilterActiveBundles();
 
 			SetupOAuth();
+
+			SetupGC();
 		}
 
 		public void Initialize()
 		{
-			int defaultMaxNumberOfItemsToIndexInSingleBatch = Environment.Is64BitProcess ? 128 * 1024 : 64 * 1024;
+			int defaultMaxNumberOfItemsToIndexInSingleBatch = Environment.Is64BitProcess ? 128 * 1024 : 16 * 1024;
 			int defaultInitialNumberOfItemsToIndexInSingleBatch = Environment.Is64BitProcess ? 512 : 256;
 
 			var ravenSettings = new StronglyTypedRavenSettings(Settings);
@@ -94,6 +100,7 @@ namespace Raven.Database.Config
 			// Index settings
 			MaxIndexingRunLatency = ravenSettings.MaxIndexingRunLatency.Value;
 			MaxIndexWritesBeforeRecreate = ravenSettings.MaxIndexWritesBeforeRecreate.Value;
+			MaxIndexOutputsPerDocument = ravenSettings.MaxIndexOutputsPerDocument.Value;
 
 			MaxNumberOfItemsToIndexInSingleBatch = ravenSettings.MaxNumberOfItemsToIndexInSingleBatch.Value;
 
@@ -142,7 +149,7 @@ namespace Raven.Database.Config
 
 			if (string.IsNullOrEmpty(DefaultStorageTypeName))
 			{
-				DefaultStorageTypeName = Settings["Raven/StorageTypeName"] ?? Settings["Raven/StorageEngine"] ?? "esent";
+				DefaultStorageTypeName = Settings["Raven/StorageTypeName"] ?? Settings["Raven/StorageEngine"] ?? "voron";
 			}
 
 			CreateAutoIndexesForAdHocQueriesIfNeeded = ravenSettings.CreateAutoIndexesForAdHocQueriesIfNeeded.Value;
@@ -189,10 +196,14 @@ namespace Raven.Database.Config
 
 			DisableDocumentPreFetchingForIndexing = ravenSettings.DisableDocumentPreFetchingForIndexing.Value;
 
+			MaxNumberOfItemsToPreFetchForIndexing = ravenSettings.MaxNumberOfItemsToPreFetchForIndexing.Value;
+
 			// Misc settings
 			WebDir = ravenSettings.WebDir.Value;
 
 			PluginsDirectory = ravenSettings.PluginsDirectory.Value.ToFullPath();
+
+			CompiledIndexCacheDirectory = ravenSettings.CompiledIndexCacheDirectory.Value.ToFullPath();
 
 			var taskSchedulerType = ravenSettings.TaskScheduler.Value;
 			if (taskSchedulerType != null)
@@ -239,12 +250,9 @@ namespace Raven.Database.Config
 		{
 			get
 			{
-				var activeBundles = Settings["Raven/ActiveBundles"] ?? "";
+				var activeBundles = Settings[Constants.ActiveBundles] ?? "";
 
-				return activeBundles.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries)
-				                    .Select(x => x.Trim())
-				                    .ToList();
-
+				return activeBundles.GetSemicolonSeparatedValues();
 			}
 		} 
 
@@ -307,9 +315,14 @@ namespace Raven.Database.Config
 			OAuthTokenKey = GetOAuthKey();
 		}
 
+		private void SetupGC()
+		{
+			//GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
+		}
+
 		private static readonly Lazy<byte[]> defaultOauthKey = new Lazy<byte[]>(() =>
 		{
-			using (var rsa = new RSACryptoServiceProvider())
+			using (var rsa = Encryptor.Current.CreateAsymmetrical())
 			{
 				return rsa.ExportCspBlob(true);
 			}
@@ -468,6 +481,11 @@ namespace Raven.Database.Config
 		/// Whatever we should use SSL for this connection
 		/// </summary>
 		public bool UseSsl { get; set; }
+
+		/// <summary>
+		/// Whatever we should use FIPS compliant encryption algorithms
+		/// </summary>
+		public bool UseFips { get; set; }
 
 		/// <summary>
 		/// The port to use when creating the http listener. 
@@ -661,6 +679,12 @@ namespace Raven.Database.Config
 		public bool CreatePluginsDirectoryIfNotExisting { get; set; }
 		public bool CreateAnalyzersDirectoryIfNotExisting { get; set; }
 
+		/// <summary>
+		/// Where to cache the compiled indexes
+		/// Default: ~\Raven\CompiledIndexCache
+		/// </summary>
+		public string CompiledIndexCacheDirectory { get; set; }
+
 		public string OAuthTokenServer { get; set; }
 
 		#endregion
@@ -677,6 +701,8 @@ namespace Raven.Database.Config
 		}
 
 		public bool DisableDocumentPreFetchingForIndexing { get; set; }
+
+		public int MaxNumberOfItemsToPreFetchForIndexing { get; set; }
 
 		[JsonIgnore]
 		public AggregateCatalog Catalog { get; set; }
@@ -764,6 +790,13 @@ namespace Raven.Database.Config
 
 		public int MaxIndexWritesBeforeRecreate { get; set; }
 
+		/// <summary>
+		/// Limits the number of map outputs that an index is allowed to create for a one source document. If a map operation applied to the one document
+		/// produces more outputs than this number then an index definition will be considered as a suspicious and the index will be marked as errored.
+		/// Default value: 15. In order to disable this check set value to -1.
+		/// </summary>
+		public int MaxIndexOutputsPerDocument { get; set; }
+
 		[Browsable(false)]
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public void SetSystemDatabase()
@@ -825,7 +858,10 @@ namespace Raven.Database.Config
 				case "munin":
 					storageEngine = typeof(Raven.Storage.Managed.TransactionalStorage).AssemblyQualifiedName;
 					break;
-			}
+                case "voron":
+                    storageEngine = typeof(Raven.Storage.Voron.TransactionalStorage).AssemblyQualifiedName;
+                    break;
+            }
 			var type = Type.GetType(storageEngine);
 
 			if (type == null)
@@ -837,7 +873,7 @@ namespace Raven.Database.Config
 		private string SelectStorageEngine()
 		{
 			if (RunInMemory)
-				return typeof(Raven.Storage.Managed.TransactionalStorage).AssemblyQualifiedName;
+				return typeof(Raven.Storage.Voron.TransactionalStorage).AssemblyQualifiedName;
 
 			if (String.IsNullOrEmpty(DataDirectory) == false && Directory.Exists(DataDirectory))
 			{
@@ -845,6 +881,10 @@ namespace Raven.Database.Config
 				{
 					return typeof(Raven.Storage.Managed.TransactionalStorage).AssemblyQualifiedName;
 				}
+                if (File.Exists(Path.Combine(DataDirectory, "Raven.voron")))
+                {
+                    return typeof(Raven.Storage.Voron.TransactionalStorage).AssemblyQualifiedName;
+                }
 				if (File.Exists(Path.Combine(DataDirectory, "Data")))
 					return typeof(Raven.Storage.Esent.TransactionalStorage).AssemblyQualifiedName;
 			}

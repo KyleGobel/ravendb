@@ -23,6 +23,8 @@ namespace Raven.Studio.Features.Settings
 
 		public BindableCollection<string> AvailableIndexes { get; private set; }
 		public Dictionary<string, ScriptedIndexResults> ScriptedIndexes { get; private set; }
+		public Dictionary<string, ScriptedIndexResults> OriginalScriptedIndexes { get; private set; }
+		
 		public ScriptedIndexResults SelectedScript
 		{
 			get { return selectedScript; }
@@ -51,6 +53,7 @@ namespace Raven.Studio.Features.Settings
 			AvailableIndexes = new BindableCollection<string>(x => x);
 			SectionName = "Scripted Index";			
 			ScriptedIndexes = new Dictionary<string, ScriptedIndexResults>();
+			OriginalScriptedIndexes = new Dictionary<string, ScriptedIndexResults>();
 			IndexItem = new List<string>();
 			IndexScript = new EditorDocument { Language = IndexLanguage };
 			DeleteScript = new EditorDocument { Language = DeleteLanguage };
@@ -58,6 +61,42 @@ namespace Raven.Studio.Features.Settings
 			LoadScriptForIndex();
 			IndexScript.Language.RegisterService(new ScriptIndexIntelliPromptProvider(DocumentToSample));
 			DeleteScript.Language.RegisterService(new ScriptIndexIntelliPromptProvider(DocumentToSample, false));
+		}
+
+		public override void CheckForChanges()
+		{
+			if(HasUnsavedChanges)
+				return;
+
+			if (ScriptedIndexes.Count != OriginalScriptedIndexes.Count)
+			{
+				HasUnsavedChanges = true;
+				return;
+			}
+
+			foreach (var scriptedIndexResultse in ScriptedIndexes)
+			{
+				if (scriptedIndexResultse.Value == null)
+				{
+					if (OriginalScriptedIndexes[scriptedIndexResultse.Key] != null)
+					{
+						HasUnsavedChanges = true;
+						return;
+					}
+				}
+				else if (scriptedIndexResultse.Value.Equals(OriginalScriptedIndexes[scriptedIndexResultse.Key]) == false)
+				{
+					HasUnsavedChanges = true;
+					return;
+				}
+			}
+		}
+
+		public override void MarkAsSaved()
+		{
+			HasUnsavedChanges = false;
+
+			OriginalScriptedIndexes = ScriptedIndexes;
 		}
 
 		private void LoadScriptForIndex()
@@ -78,12 +117,15 @@ namespace Raven.Studio.Features.Settings
 				                if (doc == null)
 				                {
 					                ScriptedIndexes[indexName] = null;
+					                OriginalScriptedIndexes[indexName] = null;
 				                }
 				                else
 				                {
 					                ScriptedIndexes[indexName] =
 						                ApplicationModel.CreateSerializer()
 						                                .Deserialize<ScriptedIndexResults>(new RavenJTokenReader(doc.DataAsJson));
+									OriginalScriptedIndexes[indexName] = ApplicationModel.CreateSerializer()
+														.Deserialize<ScriptedIndexResults>(new RavenJTokenReader(doc.DataAsJson));
 				                }
 
 				                SelectedScript = ScriptedIndexes[indexName];
@@ -210,7 +252,7 @@ namespace Raven.Studio.Features.Settings
 				return;
 			}
 
-			AvailableIndexes.Match(Database.Value.Statistics.Value.Indexes.Select(i => i.Name).ToArray());
+			AvailableIndexes.Match(Database.Value.Statistics.Value.Indexes.Select(i => i.Id.ToString()).ToArray());
 			if (IndexName == null)
 				IndexName = AvailableIndexes.FirstOrDefault();
 		}

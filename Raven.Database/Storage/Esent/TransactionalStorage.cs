@@ -4,6 +4,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
@@ -153,7 +154,7 @@ namespace Raven.Storage.Esent
         public void StartBackupOperation(DocumentDatabase docDb, string backupDestinationDirectory, bool incrementalBackup, DatabaseDocument documentDatabase)
         {
             if (new InstanceParameters(instance).Recovery == false)
-                throw new InvalidOperationException("Cannot start backup operation since the recovery option is disabled. In order to enable the recovery please set the RunInUnreliableYetFastModeThatIsNotSuitableForProduction configuration parameter value to true.");
+                throw new InvalidOperationException("Cannot start backup operation since the recovery option is disabled. In order to enable the recovery please set the RunInUnreliableYetFastModeThatIsNotSuitableForProduction configuration parameter value to false.");
 
             var backupOperation = new BackupOperation(docDb, docDb.Configuration.DataDirectory, backupDestinationDirectory, incrementalBackup, documentDatabase);
             Task.Factory.StartNew(backupOperation.Execute);
@@ -349,7 +350,12 @@ namespace Raven.Storage.Esent
             });
         }
 
-	    public InFlightTransactionalState GetInFlightTransactionalState(Func<string, Etag, RavenJObject, RavenJObject, TransactionInformation, PutResult> put, Func<string, Etag, TransactionInformation, bool> delete)
+        public IList<string> ComputeDetailedStorageInformation()
+        {
+            return StorageSizes.ReportOn(this);
+        }
+
+        public InFlightTransactionalState GetInFlightTransactionalState(Func<string, Etag, RavenJObject, RavenJObject, TransactionInformation, PutResult> put, Func<string, Etag, TransactionInformation, bool> delete)
 	    {
 			var txMode = configuration.TransactionMode == TransactionMode.Lazy
 			   ? CommitTransactionGrbit.LazyFlush
@@ -450,7 +456,7 @@ namespace Raven.Storage.Esent
 
                                 ticker.Start();
 
-                                updater.Value.Init(generator);
+                                updater.Value.Init(generator, configuration);
                                 updater.Value.Update(session, dbid, Output);
                                 schemaVersion = Api.RetrieveColumnAsString(session, details, columnids["schema_version"]);
 
@@ -515,10 +521,10 @@ namespace Raven.Storage.Esent
                         {
                             using (var recoverInstance = new Instance("Recovery instance for: " + database))
                             {
-                                recoverInstance.Init();
+								new TransactionalStorageConfigurator(configuration, this).ConfigureInstance(recoverInstance.JetInstance, path);
+								recoverInstance.Init();
                                 using (var recoverSession = new Session(recoverInstance))
                                 {
-                                    new TransactionalStorageConfigurator(configuration, this).ConfigureInstance(recoverInstance.JetInstance, path);
                                     Api.JetAttachDatabase(recoverSession, database,
                                                           AttachDatabaseGrbit.DeleteCorruptIndexes);
                                     Api.JetDetachDatabase(recoverSession, database);
@@ -587,11 +593,13 @@ namespace Raven.Storage.Esent
 			});
 		}
 
-        [DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
+        //[DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
         [CLSCompliant(false)]
         public void Batch(Action<IStorageActionsAccessor> action)
         {
-            if (disposerLock.IsReadLockHeld && disableBatchNesting.Value == null) // we are currently in a nested Batch call and allow to nest batches
+	        var batchNestingAllowed = disableBatchNesting.Value == null;
+
+            if (disposerLock.IsReadLockHeld && batchNestingAllowed) // we are currently in a nested Batch call and allow to nest batches
             {
                 if (current.Value != null) // check again, just to be sure
                 {
@@ -606,7 +614,7 @@ namespace Raven.Storage.Esent
             disposerLock.EnterReadLock();
             try
             {
-                afterStorageCommit = ExecuteBatch(action, dtcTransactionContext.Value);
+				afterStorageCommit = ExecuteBatch(action, batchNestingAllowed ? dtcTransactionContext.Value : null);
 
 				if (dtcTransactionContext.Value != null)
 				{
@@ -643,7 +651,7 @@ namespace Raven.Storage.Esent
             onCommit(); // call user code after we exit the lock
         }
 
-        [DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
+        //[DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
         private Action ExecuteBatch(Action<IStorageActionsAccessor> action, EsentTransactionContext transactionContext)
         {
             var txMode = configuration.TransactionMode == TransactionMode.Lazy
@@ -665,7 +673,14 @@ namespace Raven.Storage.Esent
             }
         }
 
-        public void ExecuteImmediatelyOrRegisterForSynchronization(Action action)
+	    public IStorageActionsAccessor CreateAccessor()
+	    {
+		    var pht = new DocumentStorageActions(instance, database, tableColumnsCache, DocumentCodecs, generator,
+			    documentCacher, null, this);
+			return new StorageActionsAccessor(pht);
+	    }
+
+	    public void ExecuteImmediatelyOrRegisterForSynchronization(Action action)
         {
             if (current.Value == null)
             {
@@ -674,6 +689,11 @@ namespace Raven.Storage.Esent
             }
             current.Value.OnStorageCommit += action;
         }
+
+	    public bool IsAlreadyInBatch
+	    {
+			get { return current.Value != null; }
+	    }
 
         internal StorageActionsAccessor GetCurrentBatch()
         {

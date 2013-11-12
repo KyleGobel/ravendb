@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>3.7</ProductVersion>
+    <ProductVersion>3.8</ProductVersion>
     <ProjectGuid>2ff37223-8f38-4584-821a-9beb6d76f7a1</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputName>RavenDB.Setup</OutputName>
@@ -38,6 +38,7 @@
     <Compile Include="UI\InstallationType.wxs" />
     <Compile Include="UI\LicenseFileChooser.wxs" />
     <Compile Include="UI\Service\Settings.wxs" />
+    <Compile Include="UI\TargetEnvironment.wxs" />
     <Compile Include="UI\Wizard.wxs" />
   </ItemGroup>
   <ItemGroup>

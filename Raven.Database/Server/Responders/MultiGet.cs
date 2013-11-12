@@ -103,6 +103,17 @@ namespace Raven.Database.Server.Responders
 				Response = new MultiGetHttpResponse(getResponse, realContext.Response);
 			}
 
+			public MultiGetHttpContext(InMemoryRavenConfiguration configuration, GetRequest req, string tenantId)
+			{
+				this.configuration = configuration;
+				this.tenantId = tenantId;
+				getResponse = new GetResponse();
+				if (req == null)
+					return;
+				Request = new MultiGetHttpRequest(req, realContext.Request);
+				Response = new MultiGetHttpResponse(getResponse, realContext.Response);
+			}
+
 			public GetResponse Complete()
 			{
 				if (getResponse.Result != null)
@@ -178,18 +189,13 @@ namespace Raven.Database.Server.Responders
 		{
 			public MultiGetHttpRequest(GetRequest req, IHttpRequest realRequest)
 			{
-				var tempQueryString = HttpUtility.ParseQueryString(req.Query ?? "");
-				QueryString = new NameValueCollection();
-				foreach (string key in tempQueryString)
-				{
-					var values = tempQueryString.GetValues(key);
-					if (values == null)
-						continue;
-					foreach (var value in values)
-					{
-						QueryString.Add(key, HttpUtility.UrlDecode(value));
-					}
-				}
+			    string ravenClientVersion;
+			    req.Headers.TryGetValue(Constants.RavenClientVersion, out ravenClientVersion);
+			    QueryString = HttpRequestHelper.ParseQueryStringWithLegacySupport(
+                                                    ravenClientVersion, 
+                                                    (req.Query ?? string.Empty).Replace("+", "%2B"));
+
+				
 				Url = new UriBuilder(realRequest.Url)
 				{
 					Query = req.Query,
@@ -342,7 +348,7 @@ namespace Raven.Database.Server.Responders
 			public IDisposable Streaming()
 			{
 				bufferOutput = false;
-				return new DisposableAction(() => bufferOutput = true);
+				return null;
 			}
 
 			public Task WriteAsync(string data)
