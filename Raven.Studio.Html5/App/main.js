@@ -11,7 +11,7 @@
 define('jquery', function() { return jQuery; });
 define('knockout', ko);
 
-define(['durandal/system', 'durandal/app', 'durandal/viewLocator', 'plugins/dialog'], function (system, app, viewLocator, dialog, ace) {
+define(['durandal/system', 'durandal/app', 'durandal/viewLocator', 'plugins/dialog'], function (system, app, viewLocator, dialog) {
     //>>excludeStart("build", true);
 	system.debug(true);
 	NProgress.configure({ showSpinner: false });
