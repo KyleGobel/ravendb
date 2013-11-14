@@ -174,7 +174,7 @@ class ctor {
 
         // Enforce a max number of columns. Having many columns is unweildy to the user
         // and greatly slows down scroll speed.
-        var maxColumns = 5;
+        var maxColumns = 10;
         if (this.columns().length >= maxColumns) {
             return;
         }
@@ -205,7 +205,7 @@ class ctor {
             var newColumn = new column(prop, columnWidth);
             if (prop === "Name") {
                 this.columns.splice(2, 0, newColumn);
-            } else {
+            } else if (this.columns().length < 10) {
                 this.columns.push(newColumn);
             }
         }

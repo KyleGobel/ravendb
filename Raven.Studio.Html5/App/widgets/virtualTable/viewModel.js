@@ -179,7 +179,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             // Keep allocations to a minimum.
             // Enforce a max number of columns. Having many columns is unweildy to the user
             // and greatly slows down scroll speed.
-            var maxColumns = 5;
+            var maxColumns = 10;
             if (this.columns().length >= maxColumns) {
                 return;
             }
@@ -210,7 +210,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
                 var newColumn = new column(prop, columnWidth);
                 if (prop === "Name") {
                     this.columns.splice(2, 0, newColumn);
-                } else {
+                } else if (this.columns().length < 10) {
                     this.columns.push(newColumn);
                 }
             }
@@ -343,13 +343,9 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
         };
 
         ctor.prototype.deleteSelectedDocs = function () {
-            var _this = this;
             var documents = this.getSelectedDocs();
             var deleteDocsVm = new deleteDocuments(documents);
-            app.showDialog(deleteDocsVm).then(function () {
-                console.log("done!");
-                $(_this.gridSelector).focus();
-            });
+            app.showDialog(deleteDocsVm);
         };
         ctor.idColumnWidth = 200;
         return ctor;
