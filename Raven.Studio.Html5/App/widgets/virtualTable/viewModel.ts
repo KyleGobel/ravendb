@@ -1,4 +1,4 @@
-/// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
+﻿/// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../../../Scripts/typings/durandal/durandal.d.ts" />
 
 import widget = require("plugins/widget");
@@ -31,7 +31,7 @@ class ctor {
     gridSelector: string;
     collections: KnockoutObservableArray<collection>;
     columns = ko.observableArray<column>([
-        new column("__IsChecked", 32),
+        new column("__IsChecked", 38),
         new column("Id", ctor.idColumnWidth)
     ]);
     gridViewport: JQuery;
@@ -62,6 +62,8 @@ class ctor {
         this.virtualHeight = ko.computed(() => this.rowHeight * this.virtualRowCount());
     }
 
+    // Attached is called by Durandal when the view is attached to the DOM.
+    // We use this to setup some UI-specific things like context menus, row creation, keyboard shortcuts, etc.
     attached() {
         this.grid = $(this.gridSelector);
         if (this.grid.length !== 1) {
@@ -75,6 +77,11 @@ class ctor {
         this.ensureRowsCoverViewport();
         this.loadRowData();
         this.setupContextMenu();
+        this.setupKeyboardShortcuts();
+    }
+
+    detached() {
+        $(this.gridSelector).unbind('keydown.jwerty');
     }
 
     calculateRecycleRowCount() {
@@ -101,6 +108,13 @@ class ctor {
 
         window.clearTimeout(this.scrollThrottleTimeoutHandle);
         this.scrollThrottleTimeoutHandle = setTimeout(() => this.loadRowData());
+    }
+
+    setupKeyboardShortcuts() {
+        jwerty.key("delete", e => {
+            e.preventDefault();
+            this.deleteSelectedDocs();
+        }, this, this.gridSelector);
     }
 
     setupContextMenu() {

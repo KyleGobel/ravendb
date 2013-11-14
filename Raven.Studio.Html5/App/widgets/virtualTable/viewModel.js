@@ -1,4 +1,4 @@
-/// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
+﻿/// <reference path="../../../Scripts/typings/knockout.postbox/knockout-postbox.d.ts" />
 /// <reference path="../../../Scripts/typings/durandal/durandal.d.ts" />
 define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl", "models/document", "models/collection", "models/database", "common/pagedResultSet", "viewmodels/deleteDocuments", "viewmodels/copyDocuments", "durandal/app", "widgets/virtualTable/row", "widgets/virtualTable/column"], function(require, exports, __pagedList__, __raven__, __appUrl__, __document__, __collection__, __database__, __pagedResultSet__, __deleteDocuments__, __copyDocuments__, __app__, __row__, __column__) {
     
@@ -24,7 +24,7 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             this.viewportHeight = ko.observable(0);
             this.virtualRowCount = ko.observable(0);
             this.columns = ko.observableArray([
-                new column("__IsChecked", 32),
+                new column("__IsChecked", 38),
                 new column("Id", ctor.idColumnWidth)
             ]);
             this.scrollThrottleTimeoutHandle = 0;
@@ -54,6 +54,8 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             });
         };
 
+        // Attached is called by Durandal when the view is attached to the DOM.
+        // We use this to setup some UI-specific things like context menus, row creation, keyboard shortcuts, etc.
         ctor.prototype.attached = function () {
             var _this = this;
             this.grid = $(this.gridSelector);
@@ -70,6 +72,11 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             this.ensureRowsCoverViewport();
             this.loadRowData();
             this.setupContextMenu();
+            this.setupKeyboardShortcuts();
+        };
+
+        ctor.prototype.detached = function () {
+            $(this.gridSelector).unbind('keydown.jwerty');
         };
 
         ctor.prototype.calculateRecycleRowCount = function () {
@@ -99,6 +106,14 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
             this.scrollThrottleTimeoutHandle = setTimeout(function () {
                 return _this.loadRowData();
             });
+        };
+
+        ctor.prototype.setupKeyboardShortcuts = function () {
+            var _this = this;
+            jwerty.key("delete", function (e) {
+                e.preventDefault();
+                _this.deleteSelectedDocs();
+            }, this, this.gridSelector);
         };
 
         ctor.prototype.setupContextMenu = function () {
@@ -328,9 +343,13 @@ define(["require", "exports", "common/pagedList", "common/raven", "common/appUrl
         };
 
         ctor.prototype.deleteSelectedDocs = function () {
+            var _this = this;
             var documents = this.getSelectedDocs();
             var deleteDocsVm = new deleteDocuments(documents);
-            app.showDialog(deleteDocsVm);
+            app.showDialog(deleteDocsVm).then(function () {
+                console.log("done!");
+                $(_this.gridSelector).focus();
+            });
         };
         ctor.idColumnWidth = 200;
         return ctor;
